@@ -4,10 +4,10 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
-public class CITConverter {
+public class ResourcePackConverter {
     private final Consumer<String> logger;
 
-    public CITConverter(Consumer<String> logger) {
+    public ResourcePackConverter(Consumer<String> logger) {
         this.logger = logger;
     }
 
