@@ -131,7 +131,7 @@ public class ResourcePackConverter {
             log("Missing resource: " + resource);
             return;
         }
-        final Path newPath = outputDirectory.resolve(resource);
+        final Path newPath = outputDirectory.resolve(oldPath.getFileName());
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
     }
