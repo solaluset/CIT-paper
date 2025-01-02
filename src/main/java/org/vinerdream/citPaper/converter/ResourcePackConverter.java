@@ -69,14 +69,14 @@ public class ResourcePackConverter {
         String namespace = file.getParent().getFileName().toString();
         String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
         if (data.getModel() != null) {
-            copyModel(file.getParent(), data.getModel(), outputDirectory);
+            copyModel(file.getParent(), namespace, data.getModel(), outputDirectory);
         } else {
             final Path tmpModelPath = Paths.get("tmp", path + ".json");
             tmpModelPath.getParent().toFile().mkdirs();
             try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
-                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":" + path + "\"}, \"parent\":\"item/generated\"}");
+                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + path + "\"}, \"parent\":\"item/generated\"}");
             }
-            copyModel(tmpModelPath.getParent(), path, outputDirectory);
+            copyModel(tmpModelPath.getParent(), namespace, path, outputDirectory);
         }
         if (data.getTexture() != null) {
             copyTexture(file.getParent(), data.getTexture(), outputDirectory);
@@ -104,7 +104,7 @@ public class ResourcePackConverter {
         );
     }
 
-    private void copyModel(Path inputDirectory, String model, Path outputDirectory) throws IOException {
+    private void copyModel(Path inputDirectory, String namespace, String model, Path outputDirectory) throws IOException {
         copyResource(
                 inputDirectory,
                 model,
@@ -114,8 +114,8 @@ public class ResourcePackConverter {
                         "minecraft",
                         "models",
                         "item",
-                        inputDirectory.getFileName().toString())
-                )
+                        namespace
+                ))
         );
     }
 
