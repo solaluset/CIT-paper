@@ -10,7 +10,9 @@ public class ParsedTextureProperties {
     @Getter
     private final TextureType type;
     private final List<String> items;
+    @Getter
     private final String texture;
+    @Getter
     private final String model;
     private final String nameFilter;
     private final String damage;
