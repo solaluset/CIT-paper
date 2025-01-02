@@ -72,14 +72,7 @@ public class ResourcePackConverter {
         final Path oldPath;
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
         final String jsonData;
-        if (data.getTexture() != null) {
-            Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(data.getTexture(), "png");
-            final String bareTexture = pair.getKey();
-            final String texture = pair.getValue();
-            oldPath = file.getParent().resolve(texture);
-            newPath = outputDirectory.resolve(Paths.get("assets", namespace, "textures", texture));
-            jsonData = "{\"model\": {\"type\": \"texture\", \"texture\": \"item" + namespace + "/" + bareTexture + "\"}}";
-        } else if (data.getModel() != null) {
+        if (data.getModel() != null) {
             Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(data.getModel(), "json");
             final String bareModel = pair.getKey();
             final String model = pair.getValue();
@@ -87,6 +80,19 @@ public class ResourcePackConverter {
             oldPath = file.getParent().resolve(model);
             newPath = outputDirectory.resolve(Paths.get("assets", "minecraft", "models", "item", namespace, model));
             jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + bareModel + "\"}}";
+        } else if (data.getTexture() != null) {
+            Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(data.getTexture(), "png");
+            final String bareTexture = pair.getKey();
+            final String texture = pair.getValue();
+            oldPath = file.getParent().resolve(texture);
+            newPath = outputDirectory.resolve(Paths.get("assets", namespace, "textures", texture));
+            final Path modelPath = outputDirectory.resolve(Paths.get("assets", "minecraft", "models", "item", namespace, path + ".json"));
+            modelPath.getParent().toFile().mkdirs();
+            try (FileWriter writer = new FileWriter(modelPath.toFile())) {
+                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":" + bareTexture + "\"}, \"parent\": \"item/generated\"}");
+            }
+
+            jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + path + "\"}}";
         } else {
             log("No texture or model in " + file);
             return;
