@@ -68,44 +68,70 @@ public class ResourcePackConverter {
     private void convertItemFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
         String namespace = file.getParent().getFileName().toString();
         String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
-        final Path newPath;
-        final Path oldPath;
-        final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
-        final String jsonData;
         if (data.getModel() != null) {
-            Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(data.getModel(), "json");
-            final String bareModel = pair.getKey();
-            final String model = pair.getValue();
-
-            oldPath = file.getParent().resolve(model);
-            newPath = outputDirectory.resolve(Paths.get("assets", "minecraft", "models", "item", namespace, model));
-            jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + bareModel + "\"}}";
-        } else if (data.getTexture() != null) {
-            Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(data.getTexture(), "png");
-            final String bareTexture = pair.getKey();
-            final String texture = pair.getValue();
-            oldPath = file.getParent().resolve(texture);
-            newPath = outputDirectory.resolve(Paths.get("assets", namespace, "textures", texture));
-            final Path modelPath = outputDirectory.resolve(Paths.get("assets", "minecraft", "models", "item", namespace, path + ".json"));
-            modelPath.getParent().toFile().mkdirs();
-            try (FileWriter writer = new FileWriter(modelPath.toFile())) {
-                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":" + bareTexture + "\"}, \"parent\": \"item/generated\"}");
-            }
-
-            jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + path + "\"}}";
+            copyModel(file.getParent(), data.getModel(), outputDirectory);
         } else {
-            log("No texture or model in " + file);
-            return;
+            final Path tmpModelPath = Paths.get("tmp", path + ".json");
+            tmpModelPath.getParent().toFile().mkdirs();
+            try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
+                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":" + path + "\"}, \"parent\":\"item/generated\"}");
+            }
+            copyModel(tmpModelPath.getParent(), path, outputDirectory);
         }
-        if (!oldPath.toFile().exists()) {
-            log("Missing texture/model file: " + oldPath);
-            return;
+        if (data.getTexture() != null) {
+            copyTexture(file.getParent(), data.getTexture(), outputDirectory);
         }
+
+        final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
+        final String jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + path + "\"}}";
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
         }
+    }
 
+    private void copyTexture(Path inputDirectory, String texture, Path outputDirectory) throws IOException {
+        copyResource(
+                inputDirectory,
+                texture,
+                "png",
+                outputDirectory.resolve(Paths.get(
+                        "assets",
+                        inputDirectory.getFileName().toString(),
+                        "textures",
+                        "item"
+                ))
+        );
+    }
+
+    private void copyModel(Path inputDirectory, String model, Path outputDirectory) throws IOException {
+        copyResource(
+                inputDirectory,
+                model,
+                "json",
+                outputDirectory.resolve(Paths.get(
+                        "assets",
+                        "minecraft",
+                        "models",
+                        "item",
+                        inputDirectory.getFileName().toString())
+                )
+        );
+    }
+
+    private void copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory) throws IOException {
+        Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(resource, extension);
+        resource = pair.getValue();
+        Path oldPath;
+        do {
+            oldPath = inputDirectory.resolve(resource);
+            inputDirectory = inputDirectory.getParent();
+        } while (!oldPath.toFile().isFile() && inputDirectory != null);
+        if (!oldPath.toFile().isFile()) {
+            log("Missing resource: " + resource);
+            return;
+        }
+        final Path newPath = outputDirectory.resolve(resource);
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
     }
