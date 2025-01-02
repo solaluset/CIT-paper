@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("io.github.goooler.shadow").version("8.1.8")
 }
 
 group = "org.vinerdream"
@@ -11,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.vinerdream.citPaper:CIT-paper:1.0-SNAPSHOT")
+    implementation("org.vinerdream:CIT-paper:1.0-SNAPSHOT")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
