@@ -86,24 +86,24 @@ public class ResourcePackConverter {
         data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
         final String modelName;
         final String textureName;
+        final String forcedTexture;
         if (data.getTexture() != null) {
-            textureName = getFilenameWithoutAndWithExtension(data.getTexture(), "png").getKey();
-            copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory);
+            textureName = getFilenameWithoutAndWithExtension(copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory).getFileName().toString(), "png").getKey();
+            forcedTexture = textureName;
         } else {
             textureName = path;
+            forcedTexture = null;
         }
         if (data.getModel() != null) {
-            String[] parts = data.getModel().split("/");
-            modelName = getFilenameWithoutAndWithExtension(parts[parts.length - 1], "json").getKey();
-            copyModel(file.getParent(), namespace, data.getModel(), outputDirectory);
+            String[] parts = copyModel(file.getParent(), namespace, getFilenameWithoutAndWithExtension(data.getModel(), "json").getKey(), forcedTexture, outputDirectory).split("/");
+            modelName = parts[parts.length - 1];
         } else {
             final Path tmpModelPath = Paths.get("tmp", path + ".json");
             tmpModelPath.getParent().toFile().mkdirs();
             try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
                 writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
             }
-            modelName = path;
-            copyModel(tmpModelPath.getParent(), namespace, path, outputDirectory);
+            modelName = copyModel(tmpModelPath.getParent(), namespace, path, forcedTexture, outputDirectory);
         }
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
@@ -128,40 +128,47 @@ public class ResourcePackConverter {
         );
     }
 
-    private void copyModel(Path inputDirectory, String namespace, String model, Path outputDirectory) throws IOException {
+    private String copyModel(Path inputDirectory, String namespace, String model, String textureName, Path outputDirectory) throws IOException {
+        Path modelDirectory = outputDirectory.resolve(Paths.get(
+                "assets",
+                "minecraft",
+                "models",
+                "item",
+                namespace
+        ));
+
         Path newPath = copyResource(
                 inputDirectory,
                 model,
                 "json",
-                outputDirectory.resolve(Paths.get(
-                        "assets",
-                        "minecraft",
-                        "models",
-                        "item",
-                        namespace
-                ))
+                modelDirectory
         );
-        if (newPath == null) return;
+        if (newPath == null) return model;
         JsonObject json;
         try (FileReader reader = new FileReader(newPath.toFile())) {
             json = new Gson().fromJson(reader, JsonObject.class);
             JsonObject textures = json.get("textures").getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
-                Path outputTexture = copyTexture(inputDirectory, namespace, entry.getValue().getAsString(), outputDirectory);
-                if (outputTexture == null) continue;
-                textures.addProperty(
-                        entry.getKey(),
-                        outputTexture.getParent().getParent().getParent().getFileName()
-                                + ":item/" + getFilenameWithoutAndWithExtension(
-                                outputTexture.getFileName().toString(),
-                                "png"
-                        ).getKey()
-                );
+                if (textureName == null) {
+                    Path outputTexture = copyTexture(inputDirectory, namespace, entry.getValue().getAsString(), outputDirectory);
+                    if (outputTexture == null) continue;
+                    textures.addProperty(
+                            entry.getKey(),
+                            outputTexture.getParent().getParent().getParent().getFileName()
+                                    + ":item/" + getFilenameWithoutAndWithExtension(
+                                    outputTexture.getFileName().toString(),
+                                    "png"
+                            ).getKey()
+                    );
+                } else {
+                    textures.addProperty(entry.getKey(), namespace + ":item/" + textureName);
+                }
             }
         }
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
             writer.write(new Gson().toJson(json));
         }
+        return getFilenameWithoutAndWithExtension(newPath.getFileName().toString(), "json").getKey();
     }
 
     private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory) throws IOException {
@@ -176,14 +183,13 @@ public class ResourcePackConverter {
             log("Missing resource: " + resource);
             return null;
         }
-        final Path newPath = outputDirectory.resolve(oldPath.getFileName());
-        if (resource.contains("fbi")) {
-            log("FBI OPEN UP");
-            log(resource);
-            log(newPath.toString());
-        }
+        int i = 0;
+        Path newPath;
+        do {
+            newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension(oldPath.getFileName().toString(), extension).getKey() + i++ + "." + extension);
+        } while (newPath.toFile().exists());
         newPath.getParent().toFile().mkdirs();
-        Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(oldPath, newPath);
         return newPath;
     }
 
