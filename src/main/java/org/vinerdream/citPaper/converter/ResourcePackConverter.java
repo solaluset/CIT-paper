@@ -74,8 +74,15 @@ public class ResourcePackConverter {
         if (!file.getParent().getParent().getFileName().toString().equals("cit")) {
             namespace = file.getParent().getParent().getFileName() + "_" + namespace;
         }
-        String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
-        String modelName;
+        final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
+        final String modelName;
+        final String textureName;
+        if (data.getTexture() != null) {
+            textureName = data.getTexture();
+            copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory);
+        } else {
+            textureName = path;
+        }
         if (data.getModel() != null) {
             modelName = data.getModel();
             copyModel(file.getParent(), namespace, data.getModel(), outputDirectory);
@@ -83,13 +90,10 @@ public class ResourcePackConverter {
             final Path tmpModelPath = Paths.get("tmp", path + ".json");
             tmpModelPath.getParent().toFile().mkdirs();
             try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
-                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + path + "\"}, \"parent\":\"item/generated\"}");
+                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
             }
             modelName = path;
             copyModel(tmpModelPath.getParent(), namespace, path, outputDirectory);
-        }
-        if (data.getTexture() != null) {
-            copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory);
         }
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
@@ -163,6 +167,11 @@ public class ResourcePackConverter {
             return null;
         }
         final Path newPath = outputDirectory.resolve(oldPath.getFileName());
+        if (resource.contains("fbi")) {
+            log("FBI OPEN UP");
+            log(resource);
+            log(newPath.toString());
+        }
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
         return newPath;
