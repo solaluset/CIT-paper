@@ -1,6 +1,7 @@
 package org.vinerdream.citPaper.converter;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.bukkit.NamespacedKey;
@@ -87,6 +88,7 @@ public class ResourcePackConverter {
         final String modelName;
         final String textureName;
         final String forcedTexture;
+        Path blockingModelPath = null;
         if (data.getTexture() != null) {
             textureName = getFilenameWithoutAndWithExtension(copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory).getFileName().toString(), "png").getKey();
             forcedTexture = textureName;
@@ -95,23 +97,93 @@ public class ResourcePackConverter {
             forcedTexture = null;
         }
         if (data.getModel() != null) {
-            String[] parts = copyModel(file.getParent(), namespace, getFilenameWithoutAndWithExtension(data.getModel(), "json").getKey(), forcedTexture, outputDirectory).split("/");
-            modelName = parts[parts.length - 1];
+            Path newModelPath = copyModel(
+                    file.getParent(),
+                    namespace,
+                    getFilenameWithoutAndWithExtension(data.getModel(), "json").getKey(),
+                    forcedTexture,
+                    outputDirectory
+            );
+            if (newModelPath != null) {
+                modelName = getFilenameWithoutAndWithExtension(newModelPath.getFileName().toString(), "json").getKey();
+                if (data.getModelShieldBlocking() != null) {
+                    blockingModelPath = copyModel(
+                            file.getParent(),
+                            namespace,
+                            getFilenameWithoutAndWithExtension(data.getModelShieldBlocking(), "json").getKey(),
+                            forcedTexture,
+                            outputDirectory
+                    );
+                }
+            } else {
+                modelName = null;
+            }
         } else {
             final Path tmpModelPath = Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper", path + ".json");
             tmpModelPath.getParent().toFile().mkdirs();
             try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
                 writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
             }
-            modelName = copyModel(tmpModelPath.getParent(), namespace, path, forcedTexture, outputDirectory);
+            modelName = getFilenameWithoutAndWithExtension(Objects.requireNonNull(
+                    copyModel(tmpModelPath.getParent(), namespace, path, forcedTexture, outputDirectory),
+                    "Failed to copy generated model!"
+            ).getFileName().toString(), "json").getKey();
             tmpModelPath.getParent().toFile().delete();
         }
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
-        final String jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
+        final String jsonData;
+        if (blockingModelPath == null) {
+            jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
+        } else {
+            jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_true\": {\"type\": \"model\", \"model\": \"item/"
+                    + namespace + "/" + getFilenameWithoutAndWithExtension(blockingModelPath.getFileName().toString(), "json").getKey()
+                    + "\"}, \"on_false\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}}";
+        }
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
+        }
+    }
+
+    private void addShieldBlockingModel(
+            Path inputDirectory,
+            Path originalModelPath,
+            String blockingModel,
+            String namespace,
+            String forcedTexture,
+            Path outputDirectory
+    ) throws IOException {
+        copyModel(
+                inputDirectory,
+                namespace,
+                getFilenameWithoutAndWithExtension(blockingModel, "json").getKey(),
+                forcedTexture,
+                outputDirectory
+        );
+        final JsonObject json;
+        try (FileReader reader = new FileReader(originalModelPath.toFile())) {
+            json = new Gson().fromJson(reader, JsonObject.class);
+        }
+
+        final JsonObject newOverride = new JsonObject();
+        final JsonObject predicate = new JsonObject();
+        predicate.addProperty("blocking", 1);
+        newOverride.add("predicate", predicate);
+        newOverride.addProperty("model", "item/" + namespace + "/" + blockingModel);
+
+        final JsonElement overrides = json.get("overrides");
+        final JsonArray overridesArray;
+        if (overrides != null) {
+            overridesArray = overrides.getAsJsonArray();
+        } else {
+            overridesArray = new JsonArray();
+        }
+        overridesArray.add(newOverride);
+        json.add("overrides", overridesArray);
+
+        try (FileWriter writer = new FileWriter(originalModelPath.toFile())) {
+            writer.write(new Gson().toJson(json));
         }
     }
 
@@ -129,7 +201,7 @@ public class ResourcePackConverter {
         );
     }
 
-    private String copyModel(Path inputDirectory, String namespace, String model, String textureName, Path outputDirectory) throws IOException {
+    private Path copyModel(Path inputDirectory, String namespace, String model, String textureName, Path outputDirectory) throws IOException {
         Path modelDirectory = outputDirectory.resolve(Paths.get(
                 "assets",
                 "minecraft",
@@ -144,7 +216,7 @@ public class ResourcePackConverter {
                 "json",
                 modelDirectory
         );
-        if (newPath == null) return model;
+        if (newPath == null) return null;
         JsonObject json;
         try (FileReader reader = new FileReader(newPath.toFile())) {
             json = new Gson().fromJson(reader, JsonObject.class);
@@ -169,7 +241,7 @@ public class ResourcePackConverter {
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
             writer.write(new Gson().toJson(json));
         }
-        return getFilenameWithoutAndWithExtension(newPath.getFileName().toString(), "json").getKey();
+        return newPath;
     }
 
     private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory) throws IOException {

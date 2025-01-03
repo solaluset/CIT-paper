@@ -18,6 +18,8 @@ public class ParsedTextureProperties {
     @Getter
     private final String model;
     @Getter
+    private final String modelShieldBlocking;
+    @Getter
     private final Pattern namePattern;
     private final String damage;
     @Getter
@@ -43,8 +45,7 @@ public class ParsedTextureProperties {
             this.key = NamespacedKey.fromString(popProperty(properties, "key", null));
         }
 
-        // TODO: apply the model somehow?
-        popProperty(properties, "model.shield_blocking", null);
+        this.modelShieldBlocking = popProperty(properties, "model.shield_blocking", null);
     }
 
     public Map<String, String> asMap() {
