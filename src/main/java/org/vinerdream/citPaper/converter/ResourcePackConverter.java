@@ -72,9 +72,9 @@ public class ResourcePackConverter {
 
         if (data.getType() == TextureType.ITEM) {
             convertItemFile(file, data, outputDirectory);
+            convertedEntries.add(data);
         }
 
-        convertedEntries.add(data);
     }
 
     private void convertItemFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {

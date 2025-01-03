@@ -11,11 +11,9 @@ import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 
 public class ItemUpdater {
     private final CITPaper plugin;
-    private final NamespacedKey isManagedKey;
 
     public ItemUpdater(CITPaper plugin) {
         this.plugin = plugin;
-        this.isManagedKey = new NamespacedKey(plugin, "is_managed");
     }
 
     public void updateItem(ItemStack item) {
@@ -34,14 +32,14 @@ public class ItemUpdater {
                 continue;
             }
             meta.setItemModel(data.getKey());
-            meta.getPersistentDataContainer().set(isManagedKey, PersistentDataType.BOOLEAN, true);
+            meta.getPersistentDataContainer().set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
             item.setItemMeta(meta);
             return;
         }
 
-        if (meta.getPersistentDataContainer().has(isManagedKey)) {
+        if (meta.getPersistentDataContainer().has(plugin.getIsManagedKey())) {
             meta.setItemModel(null);
-            meta.getPersistentDataContainer().remove(isManagedKey);
+            meta.getPersistentDataContainer().remove(plugin.getIsManagedKey());
             item.setItemMeta(meta);
         }
     }

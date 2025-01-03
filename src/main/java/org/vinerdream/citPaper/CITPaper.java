@@ -2,11 +2,13 @@ package org.vinerdream.citPaper;
 
 import lombok.Getter;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.listeners.AnvilListener;
+import org.vinerdream.citPaper.listeners.BookListener;
 import org.vinerdream.citPaper.utils.ItemUpdater;
 
 import java.io.IOException;
@@ -22,10 +24,17 @@ public final class CITPaper extends JavaPlugin {
     private final List<ParsedTextureProperties> renames = new ArrayList<>();
     @Getter
     private ItemUpdater itemUpdater;
+    @Getter
+    private final NamespacedKey isManagedKey;
+
+    public CITPaper() {
+        isManagedKey = new NamespacedKey(this, "is_managed");
+    }
 
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(new AnvilListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new BookListener(this), this);
 
         loadConfigs();
 
