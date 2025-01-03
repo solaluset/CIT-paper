@@ -131,7 +131,7 @@ public class ResourcePackConverter {
             tmpModelPath.getParent().toFile().delete();
         }
 
-        final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
+        final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path.toLowerCase() + ".json"));
         final String jsonData;
         if (blockingModelPath == null) {
             jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
@@ -259,7 +259,7 @@ public class ResourcePackConverter {
         int i = 0;
         Path newPath;
         do {
-            newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension(oldPath.getFileName().toString(), extension).getKey() + i++ + "." + extension);
+            newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension(oldPath.getFileName().toString().toLowerCase(), extension).getKey() + i++ + "." + extension);
         } while (newPath.toFile().exists());
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath);
