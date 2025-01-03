@@ -1,5 +1,9 @@
 package org.vinerdream.citPaper.converter;
 
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -90,8 +94,8 @@ public class ResourcePackConverter {
         }
     }
 
-    private void copyTexture(Path inputDirectory, String texture, Path outputDirectory) throws IOException {
-        copyResource(
+    private Path copyTexture(Path inputDirectory, String texture, Path outputDirectory) throws IOException {
+        return copyResource(
                 inputDirectory,
                 texture,
                 "png",
@@ -105,7 +109,7 @@ public class ResourcePackConverter {
     }
 
     private void copyModel(Path inputDirectory, String namespace, String model, Path outputDirectory) throws IOException {
-        copyResource(
+        Path newPath = copyResource(
                 inputDirectory,
                 model,
                 "json",
@@ -117,9 +121,34 @@ public class ResourcePackConverter {
                         namespace
                 ))
         );
+        if (newPath == null) return;
+        JSONObject json;
+        try (FileReader reader = new FileReader(newPath.toFile())) {
+            json = (JSONObject) new JSONParser().parse(reader);
+            JSONObject textures = (JSONObject) json.get("textures");
+            for (Object value : textures.entrySet()) {
+                Map.Entry<String, String> entry = (Map.Entry<String, String>) value;
+                Path outputTexture = copyTexture(inputDirectory, entry.getValue(), outputDirectory);
+                if (outputTexture == null) continue;
+                textures.put(
+                        entry.getKey(),
+                        outputTexture.getParent().getParent().getParent().getFileName()
+                                + ":item/" + getFilenameWithoutAndWithExtension(
+                                        outputTexture.getFileName().toString(),
+                                "png"
+                                ).getKey()
+                );
+            }
+        } catch (ParseException e) {
+            log("Invalid model: " + namespace + ":" + model);
+            throw new RuntimeException(e);
+        }
+        try (FileWriter writer = new FileWriter(newPath.toFile())) {
+            writer.write(json.toJSONString());
+        }
     }
 
-    private void copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory) throws IOException {
+    private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory) throws IOException {
         Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(resource, extension);
         resource = pair.getValue();
         Path oldPath;
@@ -129,11 +158,12 @@ public class ResourcePackConverter {
         } while (!oldPath.toFile().isFile() && inputDirectory != null);
         if (!oldPath.toFile().isFile()) {
             log("Missing resource: " + resource);
-            return;
+            return null;
         }
         final Path newPath = outputDirectory.resolve(oldPath.getFileName());
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+        return newPath;
     }
 
     private Map.Entry<String, String> getFilenameWithoutAndWithExtension(String name, String extension) {
