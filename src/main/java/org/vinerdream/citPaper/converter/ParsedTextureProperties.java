@@ -1,10 +1,11 @@
 package org.vinerdream.citPaper.converter;
 
 import lombok.Getter;
+import lombok.Setter;
+import org.bukkit.NamespacedKey;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ParsedTextureProperties {
     @Getter
@@ -16,6 +17,9 @@ public class ParsedTextureProperties {
     private final String model;
     private final String nameFilter;
     private final String damage;
+    @Getter
+    @Setter
+    private NamespacedKey key;
 
     public ParsedTextureProperties(Properties properties) {
         this.type = TextureType.valueOf(popProperty(properties, "type", "item").toUpperCase());
@@ -28,6 +32,16 @@ public class ParsedTextureProperties {
         this.model = popProperty(properties, "model", null);
         this.nameFilter = popProperty(properties, "nbt.display.Name", null);
         this.damage = popProperty(properties, "damage", null);
+    }
+
+    public Map<String, String> asMap() {
+        Map<String, String> result = new HashMap<>();
+        result.put("items", String.join(" ", items));
+        result.put("name", nameFilter);
+        if (key != null) {
+            result.put("key", key.asString());
+        }
+        return result;
     }
 
     private String popProperty(Properties properties, String key, String defaultValue) {

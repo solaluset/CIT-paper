@@ -3,6 +3,9 @@ package org.vinerdream.citPaper.converter;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.FileReader;
@@ -12,16 +15,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class ResourcePackConverter {
     private final Consumer<String> logger;
+    private final List<ParsedTextureProperties> convertedEntries;
 
     public ResourcePackConverter(Consumer<String> logger) {
         this.logger = logger;
+        convertedEntries = new ArrayList<>();
     }
 
     public void convertResourcePack(String root, String outputDir) {
@@ -67,6 +71,8 @@ public class ResourcePackConverter {
         if (data.getType() == TextureType.ITEM) {
             convertItemFile(file, data, outputDirectory);
         }
+
+        convertedEntries.add(data);
     }
 
     private void convertItemFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
@@ -75,6 +81,7 @@ public class ResourcePackConverter {
             namespace = file.getParent().getParent().getFileName() + "_" + namespace;
         }
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
+        data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
         final String modelName;
         final String textureName;
         if (data.getTexture() != null) {
@@ -175,6 +182,12 @@ public class ResourcePackConverter {
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
         return newPath;
+    }
+
+    public void saveConfiguration(Path outputPath) throws IOException {
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("renames", convertedEntries.stream().map(ParsedTextureProperties::asMap).toList());
+        config.save(outputPath.toFile());
     }
 
     private Map.Entry<String, String> getFilenameWithoutAndWithExtension(String name, String extension) {
