@@ -71,8 +71,13 @@ public class ResourcePackConverter {
 
     private void convertItemFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
         String namespace = file.getParent().getFileName().toString();
+        if (!file.getParent().getParent().getFileName().toString().equals("cit")) {
+            namespace = file.getParent().getParent().getFileName() + "_" + namespace;
+        }
         String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
+        String modelName;
         if (data.getModel() != null) {
+            modelName = data.getModel();
             copyModel(file.getParent(), namespace, data.getModel(), outputDirectory);
         } else {
             final Path tmpModelPath = Paths.get("tmp", path + ".json");
@@ -80,28 +85,29 @@ public class ResourcePackConverter {
             try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
                 writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + path + "\"}, \"parent\":\"item/generated\"}");
             }
+            modelName = path;
             copyModel(tmpModelPath.getParent(), namespace, path, outputDirectory);
         }
         if (data.getTexture() != null) {
-            copyTexture(file.getParent(), data.getTexture(), outputDirectory);
+            copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory);
         }
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
-        final String jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + path + "\"}}";
+        final String jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
         }
     }
 
-    private Path copyTexture(Path inputDirectory, String texture, Path outputDirectory) throws IOException {
+    private Path copyTexture(Path inputDirectory, String namespace, String texture, Path outputDirectory) throws IOException {
         return copyResource(
                 inputDirectory,
-                texture,
+                texture.replaceFirst(":", "/textures/"),
                 "png",
                 outputDirectory.resolve(Paths.get(
                         "assets",
-                        inputDirectory.getFileName().toString(),
+                        namespace,
                         "textures",
                         "item"
                 ))
@@ -127,7 +133,7 @@ public class ResourcePackConverter {
             json = new Gson().fromJson(reader, JsonObject.class);
             JsonObject textures = json.get("textures").getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
-                Path outputTexture = copyTexture(inputDirectory, entry.getValue().getAsString(), outputDirectory);
+                Path outputTexture = copyTexture(inputDirectory, namespace, entry.getValue().getAsString(), outputDirectory);
                 if (outputTexture == null) continue;
                 textures.addProperty(
                         entry.getKey(),
