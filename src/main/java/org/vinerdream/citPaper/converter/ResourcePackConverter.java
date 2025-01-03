@@ -98,12 +98,13 @@ public class ResourcePackConverter {
             String[] parts = copyModel(file.getParent(), namespace, getFilenameWithoutAndWithExtension(data.getModel(), "json").getKey(), forcedTexture, outputDirectory).split("/");
             modelName = parts[parts.length - 1];
         } else {
-            final Path tmpModelPath = Paths.get("tmp", path + ".json");
+            final Path tmpModelPath = Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper", path + ".json");
             tmpModelPath.getParent().toFile().mkdirs();
             try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
                 writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
             }
             modelName = copyModel(tmpModelPath.getParent(), namespace, path, forcedTexture, outputDirectory);
+            tmpModelPath.getParent().toFile().delete();
         }
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path + ".json"));
