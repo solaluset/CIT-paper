@@ -1,8 +1,8 @@
 package org.vinerdream.citPaper.converter;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.io.FileReader;
@@ -122,29 +122,25 @@ public class ResourcePackConverter {
                 ))
         );
         if (newPath == null) return;
-        JSONObject json;
+        JsonObject json;
         try (FileReader reader = new FileReader(newPath.toFile())) {
-            json = (JSONObject) new JSONParser().parse(reader);
-            JSONObject textures = (JSONObject) json.get("textures");
-            for (Object value : textures.entrySet()) {
-                Map.Entry<String, String> entry = (Map.Entry<String, String>) value;
-                Path outputTexture = copyTexture(inputDirectory, entry.getValue(), outputDirectory);
+            json = new Gson().fromJson(reader, JsonObject.class);
+            JsonObject textures = json.get("textures").getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
+                Path outputTexture = copyTexture(inputDirectory, entry.getValue().getAsString(), outputDirectory);
                 if (outputTexture == null) continue;
-                textures.put(
+                textures.addProperty(
                         entry.getKey(),
                         outputTexture.getParent().getParent().getParent().getFileName()
                                 + ":item/" + getFilenameWithoutAndWithExtension(
-                                        outputTexture.getFileName().toString(),
+                                outputTexture.getFileName().toString(),
                                 "png"
-                                ).getKey()
+                        ).getKey()
                 );
             }
-        } catch (ParseException e) {
-            log("Invalid model: " + namespace + ":" + model);
-            throw new RuntimeException(e);
         }
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
-            writer.write(json.toJSONString());
+            writer.write(new Gson().toJson(json));
         }
     }
 
