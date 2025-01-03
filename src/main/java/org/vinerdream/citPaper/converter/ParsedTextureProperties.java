@@ -42,6 +42,9 @@ public class ParsedTextureProperties {
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popProperty(properties, "key", null));
         }
+
+        // TODO: apply the model somehow?
+        popProperty(properties, "model.shield_blocking", null);
     }
 
     public Map<String, String> asMap() {
