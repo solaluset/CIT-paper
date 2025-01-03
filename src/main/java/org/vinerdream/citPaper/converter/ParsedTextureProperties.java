@@ -33,7 +33,7 @@ public class ParsedTextureProperties {
                 "items",
                 popProperty(properties, "matchItems", "")
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
-        this.texture = popProperty(properties, "texture", null);
+        this.texture = popProperty(properties, "texture", popProperty(properties, "texture.elytra", null));
         this.model = popProperty(properties, "model", null);
         this.namePattern = NameMatcher.filterToPattern(popProperty(
                 properties,

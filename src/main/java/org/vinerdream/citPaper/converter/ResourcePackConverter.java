@@ -90,7 +90,10 @@ public class ResourcePackConverter {
         final String forcedTexture;
         Path blockingModelPath = null;
         if (data.getTexture() != null) {
-            textureName = getFilenameWithoutAndWithExtension(copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory).getFileName().toString(), "png").getKey();
+            Path newTexturePath = copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory);
+            textureName = newTexturePath != null ?
+                    getFilenameWithoutAndWithExtension(newTexturePath.getFileName().toString(), "png").getKey()
+                    : null;
             forcedTexture = textureName;
         } else {
             textureName = path;
