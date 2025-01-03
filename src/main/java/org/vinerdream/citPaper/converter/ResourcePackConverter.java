@@ -87,13 +87,14 @@ public class ResourcePackConverter {
         final String modelName;
         final String textureName;
         if (data.getTexture() != null) {
-            textureName = data.getTexture();
+            textureName = getFilenameWithoutAndWithExtension(data.getTexture(), "png").getKey();
             copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory);
         } else {
             textureName = path;
         }
         if (data.getModel() != null) {
-            modelName = data.getModel();
+            String[] parts = data.getModel().split("/");
+            modelName = getFilenameWithoutAndWithExtension(parts[parts.length - 1], "json").getKey();
             copyModel(file.getParent(), namespace, data.getModel(), outputDirectory);
         } else {
             final Path tmpModelPath = Paths.get("tmp", path + ".json");

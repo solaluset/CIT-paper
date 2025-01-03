@@ -2,8 +2,6 @@ package org.vinerdream.citPaper.utils;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.vinerdream.citPaper.CITPaper;
@@ -27,7 +25,6 @@ public class ItemUpdater {
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().asString().equals(itemKey))) {
                 continue;
             }
-            // plugin.getLogger().info(data.getNamePattern().pattern() + " " + name);
             if (!data.getNamePattern().matcher(name).find()) {
                 continue;
             }

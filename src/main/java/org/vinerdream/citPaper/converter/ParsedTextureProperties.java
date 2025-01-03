@@ -33,7 +33,11 @@ public class ParsedTextureProperties {
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
         this.texture = popProperty(properties, "texture", null);
         this.model = popProperty(properties, "model", null);
-        this.namePattern = NameMatcher.filterToPattern(popProperty(properties, "nbt.display.Name", null));
+        this.namePattern = NameMatcher.filterToPattern(popProperty(
+                properties,
+                "nbt.display.Name",
+                popProperty(properties, "name", null)
+        ));
         this.damage = popProperty(properties, "damage", null);
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popProperty(properties, "key", null));
