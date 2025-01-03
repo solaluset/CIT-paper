@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.vinerdream.citPaper.utils.PropertiesUtils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -62,9 +63,10 @@ public class ResourcePackConverter {
     public void convertFile(Path file, Path outputDirectory) throws IOException {
         Properties properties = new Properties();
         properties.load(new FileReader(file.toFile()));
+        Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
 
-        ParsedTextureProperties data = new ParsedTextureProperties(properties);
-        for (Object key : properties.keySet()) {
+        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap);
+        for (String key : propertiesMap.keySet()) {
             log("Unknown property in " + file + ": " + key);
         }
 

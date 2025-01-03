@@ -3,25 +3,28 @@ package org.vinerdream.citPaper.converter;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
+import org.vinerdream.citPaper.utils.NameMatcher;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 public class ParsedTextureProperties {
     @Getter
     private final TextureType type;
+    @Getter
     private final List<String> items;
     @Getter
     private final String texture;
     @Getter
     private final String model;
-    private final String nameFilter;
+    @Getter
+    private final Pattern namePattern;
     private final String damage;
     @Getter
     @Setter
     private NamespacedKey key;
 
-    public ParsedTextureProperties(Properties properties) {
+    public ParsedTextureProperties(Map<String, String> properties) {
         this.type = TextureType.valueOf(popProperty(properties, "type", "item").toUpperCase());
         this.items = Arrays.stream(popProperty(
                 properties,
@@ -30,22 +33,31 @@ public class ParsedTextureProperties {
         ).split(" ")).toList();
         this.texture = popProperty(properties, "texture", null);
         this.model = popProperty(properties, "model", null);
-        this.nameFilter = popProperty(properties, "nbt.display.Name", null);
+        this.namePattern = NameMatcher.filterToPattern(popProperty(properties, "nbt.display.Name", null));
         this.damage = popProperty(properties, "damage", null);
+        if (properties.containsKey("key")) {
+            this.key = NamespacedKey.fromString(popProperty(properties, "key", null));
+        }
     }
 
     public Map<String, String> asMap() {
         Map<String, String> result = new HashMap<>();
         result.put("items", String.join(" ", items));
-        result.put("name", nameFilter);
+        if (namePattern != null) {
+            String pattern = "regex:" + namePattern.pattern();
+            if ((namePattern.flags() & Pattern.CASE_INSENSITIVE) != 0) {
+                pattern = "i" + pattern;
+            }
+            result.put("name", pattern);
+        }
         if (key != null) {
             result.put("key", key.asString());
         }
         return result;
     }
 
-    private String popProperty(Properties properties, String key, String defaultValue) {
-        String value = (String) properties.remove(key);
+    private String popProperty(Map<String, String> properties, String key, String defaultValue) {
+        String value = properties.remove(key);
         return value != null ? value : defaultValue;
     }
 }
