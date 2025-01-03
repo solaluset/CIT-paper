@@ -23,15 +23,18 @@ public class ItemUpdater {
 
     public void updateItem(ItemStack item, String name) {
         for (ParsedTextureProperties data : plugin.getRenames()) {
+            if (data.getNamePattern() == null) continue;
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().asString().equals(itemKey))) {
-                return;
+                continue;
             }
+            // plugin.getLogger().info(data.getNamePattern().pattern() + " " + name);
             if (!data.getNamePattern().matcher(name).find()) {
-                return;
+                continue;
             }
             ItemMeta meta = item.getItemMeta();
             meta.setItemModel(data.getKey());
             item.setItemMeta(meta);
+            return;
         }
     }
 }

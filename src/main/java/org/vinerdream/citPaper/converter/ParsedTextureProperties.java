@@ -30,7 +30,7 @@ public class ParsedTextureProperties {
                 properties,
                 "items",
                 popProperty(properties, "matchItems", "")
-        ).split(" ")).toList();
+        ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
         this.texture = popProperty(properties, "texture", null);
         this.model = popProperty(properties, "model", null);
         this.namePattern = NameMatcher.filterToPattern(popProperty(properties, "nbt.display.Name", null));
