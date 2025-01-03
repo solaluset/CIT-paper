@@ -18,7 +18,7 @@ public class BookListener implements Listener {
     @EventHandler
     public void onBookSign(PlayerEditBookEvent event) {
         BookMeta meta = event.getNewBookMeta();
-        if (meta.getTitle() == null) return;
+        if (meta.getTitle() == null || meta.hasDisplayName()) return;
 
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (data.getNamePattern() == null) continue;
