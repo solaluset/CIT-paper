@@ -286,19 +286,42 @@ public class ResourcePackConverter {
     private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory, String outputName) throws IOException {
         Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(resource, extension);
         resource = pair.getValue();
-        Path oldPath;
-        do {
-            oldPath = inputDirectory.resolve(resource);
-            inputDirectory = inputDirectory.getParent();
-        } while (!oldPath.toFile().isFile() && inputDirectory != null);
-        if (!oldPath.toFile().isFile()) {
+        Path oldPath = resolveResource(inputDirectory, resource, extension.equals("json") ? ResourceType.MODEL : ResourceType.TEXTURE);
+        if (oldPath == null) {
             log("Missing resource: " + resource);
             return null;
         }
         Path newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension((outputName != null ? outputName : oldPath.getFileName()).toString().toLowerCase(), extension).getValue());
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
+        if (addMcmeta(oldPath).toFile().isFile()) {
+            Files.copy(addMcmeta(oldPath), addMcmeta(newPath));
+        }
         return newPath;
+    }
+
+    private Path addMcmeta(Path path) {
+        return path.getParent().resolve(path.getFileName() + ".mcmeta");
+    }
+
+    private Path resolveResource(Path currentDirectory, String resource, ResourceType type) throws IOException {
+        Path result;
+        do {
+            result = currentDirectory.resolve(resource);
+            currentDirectory = currentDirectory.getParent();
+        } while (!result.toFile().isFile() && !currentDirectory.endsWith("minecraft"));
+        if (result.toFile().isFile()) return result;
+
+        currentDirectory = currentDirectory.getParent();
+
+        result = currentDirectory.resolve(resource);
+        if (result.toFile().isFile()) return result;
+
+        try (Stream<Path> directories = Files.walk(currentDirectory, 1)) {
+            result = directories.filter(dir -> dir.resolve(type == ResourceType.MODEL ? "models" : "textures").resolve(resource).toFile().isFile()).findFirst().orElse(null);
+            if (result == null) return null;
+            return result.resolve(type == ResourceType.MODEL ? "models" : "textures").resolve(resource);
+        }
     }
 
     public void saveConfiguration(Path outputPath) throws IOException {
