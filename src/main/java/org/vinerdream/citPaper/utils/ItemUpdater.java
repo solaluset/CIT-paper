@@ -51,18 +51,20 @@ public class ItemUpdater {
     }
 
     private void setArmorTexture(ItemMeta meta, String itemName, NamespacedKey texture) {
-        EquippableComponent equippable = meta.getEquippable();
-        if (itemName != null) {
-            if (itemName.contains("helmet")) {
-                equippable.setSlot(EquipmentSlot.HEAD);
-            } else if (itemName.contains("chestplate")) {
-                equippable.setSlot(EquipmentSlot.CHEST);
-            } else if (itemName.contains("leggings")) {
-                equippable.setSlot(EquipmentSlot.LEGS);
-            } else if (itemName.contains("boots")) {
-                equippable.setSlot(EquipmentSlot.FEET);
-            } else return;
+        if (texture == null || itemName == null) {
+            meta.setEquippable(null);
+            return;
         }
+        EquippableComponent equippable = meta.getEquippable();
+        if (itemName.contains("helmet")) {
+            equippable.setSlot(EquipmentSlot.HEAD);
+        } else if (itemName.contains("chestplate")) {
+            equippable.setSlot(EquipmentSlot.CHEST);
+        } else if (itemName.contains("leggings")) {
+            equippable.setSlot(EquipmentSlot.LEGS);
+        } else if (itemName.contains("boots")) {
+            equippable.setSlot(EquipmentSlot.FEET);
+        } else return;
         equippable.setModel(texture);
         meta.setEquippable(equippable);
     }
