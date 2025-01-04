@@ -32,6 +32,9 @@ public class ItemUpdater {
                 continue;
             }
             meta.setItemModel(data.getKey());
+            if (data.getArmorTexture() != null) {
+                meta.getEquippable().setModel(NamespacedKey.fromString(data.getArmorTexture()));
+            }
             meta.getPersistentDataContainer().set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
             item.setItemMeta(meta);
             return;
@@ -39,6 +42,7 @@ public class ItemUpdater {
 
         if (meta.getPersistentDataContainer().has(plugin.getIsManagedKey())) {
             meta.setItemModel(null);
+            meta.getEquippable().setModel(null);
             meta.getPersistentDataContainer().remove(plugin.getIsManagedKey());
             item.setItemMeta(meta);
         }

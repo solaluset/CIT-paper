@@ -90,7 +90,7 @@ public class ParsedTextureProperties {
     }
 
     public boolean itemEquals(ParsedTextureProperties other) {
-        return this.items.equals(other.items) && Objects.equals(this.namePattern, other.namePattern);
+        return this.items.equals(other.items) && (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())));
     }
 
     private String popProperty(Map<String, String> properties, String key, String defaultValue) {

@@ -70,14 +70,24 @@ public class ResourcePackConverter {
         }
 
         convertItemFile(file, data, outputDirectory);
-        if (data.getType() == TextureType.ITEM) {
-            convertedEntries.add(data);
-        } else if (data.getType() == TextureType.ARMOR) {
-            for (ParsedTextureProperties savedData : convertedEntries) {
-                if (savedData.itemEquals(data)) {
+
+        boolean found = false;
+        for (ParsedTextureProperties savedData : convertedEntries) {
+            if (savedData.itemEquals(data)) {
+                if (savedData.getArmorTexture() == null) {
                     savedData.setArmorTexture(data.getArmorTexture());
+                } else {
+                    savedData.setKey(data.getKey());
                 }
+                convertedEntries.remove(savedData);
+                convertedEntries.add(new ParsedTextureProperties(savedData.asMap(), logger));
+                found = true;
+                break;
             }
+        }
+        if (!found) {
+            log("adding " + data.getNamePattern());
+            convertedEntries.add(data);
         }
 
     }
@@ -115,6 +125,7 @@ public class ResourcePackConverter {
             try (FileWriter writer = new FileWriter(modelPath.toFile())) {
                 writer.write("{\"layers\": {\"humanoid\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}], \"humanoid_leggings\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}]}}");
             }
+            data.setArmorTexture(namespace + ":" + armorTextureName);
         }
         if (data.getModel() != null) {
             Path newModelPath = copyModel(
@@ -138,7 +149,7 @@ public class ResourcePackConverter {
             } else {
                 modelName = null;
             }
-        } else {
+        } else if (data.getType() == TextureType.ITEM) {
             final Path tmpModelPath = Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper", path + ".json");
             tmpModelPath.getParent().toFile().mkdirs();
             try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
@@ -149,6 +160,8 @@ public class ResourcePackConverter {
                     "Failed to copy generated model!"
             ).getFileName().toString(), "json").getKey();
             tmpModelPath.getParent().toFile().delete();
+        } else {
+            return;
         }
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path.toLowerCase() + ".json"));
