@@ -3,8 +3,10 @@ package org.vinerdream.citPaper.utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataType;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
@@ -33,7 +35,7 @@ public class ItemUpdater {
             }
             meta.setItemModel(data.getKey());
             if (data.getArmorTexture() != null) {
-                meta.getEquippable().setModel(NamespacedKey.fromString(data.getArmorTexture()));
+                setArmorTexture(meta, item.getType().getKey().getKey(), NamespacedKey.fromString(data.getArmorTexture()));
             }
             meta.getPersistentDataContainer().set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
             item.setItemMeta(meta);
@@ -42,9 +44,26 @@ public class ItemUpdater {
 
         if (meta.getPersistentDataContainer().has(plugin.getIsManagedKey())) {
             meta.setItemModel(null);
-            meta.getEquippable().setModel(null);
+            setArmorTexture(meta, null, null);
             meta.getPersistentDataContainer().remove(plugin.getIsManagedKey());
             item.setItemMeta(meta);
         }
+    }
+
+    private void setArmorTexture(ItemMeta meta, String itemName, NamespacedKey texture) {
+        EquippableComponent equippable = meta.getEquippable();
+        if (itemName != null) {
+            if (itemName.contains("helmet")) {
+                equippable.setSlot(EquipmentSlot.HEAD);
+            } else if (itemName.contains("chestplate")) {
+                equippable.setSlot(EquipmentSlot.CHEST);
+            } else if (itemName.contains("leggings")) {
+                equippable.setSlot(EquipmentSlot.LEGS);
+            } else if (itemName.contains("boots")) {
+                equippable.setSlot(EquipmentSlot.FEET);
+            } else return;
+        }
+        equippable.setModel(texture);
+        meta.setEquippable(equippable);
     }
 }
