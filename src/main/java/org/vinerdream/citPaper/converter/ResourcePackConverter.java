@@ -69,7 +69,7 @@ public class ResourcePackConverter {
             log("Unknown property in " + file + ": " + key);
         }
 
-        convertItemFile(file, data, outputDirectory);
+        convertPropertiesFile(file, data, outputDirectory);
 
         boolean found = false;
         for (ParsedTextureProperties savedData : convertedEntries) {
@@ -86,17 +86,14 @@ public class ResourcePackConverter {
             }
         }
         if (!found) {
-            log("adding " + data.getNamePattern());
             convertedEntries.add(data);
         }
 
     }
 
-    private void convertItemFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
+    private void convertPropertiesFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
         String namespace = file.getParent().getFileName().toString();
-        if (!file.getParent().getParent().getFileName().toString().equals("cit")) {
-            namespace = file.getParent().getParent().getFileName() + "_" + namespace;
-        }
+        namespace = file.getParent().getParent().getFileName() + "_" + namespace;
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
         data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
         final String modelName;
@@ -114,7 +111,13 @@ public class ResourcePackConverter {
             forcedTexture = null;
         }
         if (data.getArmorTexture() != null) {
-            final Path armorTexturePath = copyArmorTexture(file.getParent(), namespace, data.getArmorTexture(), data.getArmorTextureType(), outputDirectory);
+            final Path armorTexturePath = copyArmorTexture(
+                    file.getParent(),
+                    namespace,
+                    data.getArmorTexture(),
+                    data.getArmorTextureType(),
+                    outputDirectory
+            );
             final String armorTextureName = getFilenameWithoutAndWithExtension(
                     armorTexturePath.getFileName().toString(), "png"
             ).getKey();
@@ -123,7 +126,13 @@ public class ResourcePackConverter {
             );
             modelPath.getParent().toFile().mkdirs();
             try (FileWriter writer = new FileWriter(modelPath.toFile())) {
-                writer.write("{\"layers\": {\"humanoid\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}], \"humanoid_leggings\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}]}}");
+                if (data.getType() != TextureType.ELYTRA) {
+                    writer.write("{\"layers\": {\"humanoid\": [{\"texture\": \"" + namespace + ":" + armorTextureName
+                            + "\"}], \"humanoid_leggings\": [{\"texture\": \"" + namespace + ":" + armorTextureName
+                            + "\"}]}}");
+                } else {
+                    writer.write("{\"layers\": {\"wings\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}]}}");
+                }
             }
             data.setArmorTexture(namespace + ":" + armorTextureName);
         }
@@ -194,7 +203,16 @@ public class ResourcePackConverter {
     }
 
     private Path copyArmorTexture(Path inputDirectory, String namespace, String texture, int textureType, Path outputDirectory) throws IOException {
-        final String subfolder = textureType == 1 ? "humanoid" : "humanoid_leggings";
+        final String subfolder = switch (textureType) {
+            case 1:
+                yield "humanoid";
+            case 2:
+                yield "humanoid_leggings";
+            case 3:
+                yield "wings";
+            default:
+                throw new IllegalStateException("Unexpected value: " + textureType);
+        };
         return copyResource(
                 inputDirectory,
                 texture,

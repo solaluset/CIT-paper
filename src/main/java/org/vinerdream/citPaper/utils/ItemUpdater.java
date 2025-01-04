@@ -58,7 +58,7 @@ public class ItemUpdater {
         EquippableComponent equippable = meta.getEquippable();
         if (itemName.contains("helmet")) {
             equippable.setSlot(EquipmentSlot.HEAD);
-        } else if (itemName.contains("chestplate")) {
+        } else if (itemName.contains("chestplate") || itemName.contains("elytra")) {
             equippable.setSlot(EquipmentSlot.CHEST);
         } else if (itemName.contains("leggings")) {
             equippable.setSlot(EquipmentSlot.LEGS);

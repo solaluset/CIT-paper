@@ -66,8 +66,13 @@ public class ParsedTextureProperties {
                 }
             }
         }
-        this.armorTexture = armorTexture;
-        this.armorTextureType = armorTextureType;
+        if (armorTexture == null && type == TextureType.ELYTRA) {
+            this.armorTexture = texture;
+            this.armorTextureType = 3;
+        } else {
+            this.armorTexture = armorTexture;
+            this.armorTextureType = armorTextureType;
+        }
     }
 
     public Map<String, String> asMap() {
