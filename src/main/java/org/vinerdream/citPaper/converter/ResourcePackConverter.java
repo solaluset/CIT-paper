@@ -73,7 +73,11 @@ public class ResourcePackConverter {
         if (data.getType() == TextureType.ITEM) {
             convertedEntries.add(data);
         } else if (data.getType() == TextureType.ARMOR) {
-
+            for (ParsedTextureProperties savedData : convertedEntries) {
+                if (savedData.itemEquals(data)) {
+                    savedData.setArmorTexture(data.getArmorTexture());
+                }
+            }
         }
 
     }

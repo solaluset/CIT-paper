@@ -21,7 +21,8 @@ public class ParsedTextureProperties {
     @Getter
     private final String shieldBlockingModel;
     @Getter
-    private final String armorTexture;
+    @Setter
+    private String armorTexture;
     @Getter
     private final int armorTextureType;
     @Getter
@@ -52,7 +53,7 @@ public class ParsedTextureProperties {
 
         this.shieldBlockingModel = popProperty(properties, "model.shield_blocking", null);
 
-        String armorTexture = null;
+        String armorTexture = popProperty(properties, "armorTexture", null);
         int armorTextureType = 0;
         for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
             if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
@@ -82,7 +83,14 @@ public class ParsedTextureProperties {
         if (key != null) {
             result.put("key", key.asString());
         }
+        if (armorTexture != null) {
+            result.put("armorTexture", armorTexture);
+        }
         return result;
+    }
+
+    public boolean itemEquals(ParsedTextureProperties other) {
+        return this.items.equals(other.items) && Objects.equals(this.namePattern, other.namePattern);
     }
 
     private String popProperty(Map<String, String> properties, String key, String defaultValue) {
