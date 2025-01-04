@@ -54,7 +54,7 @@ public final class CITPaper extends JavaPlugin {
         try (Stream<Path> contents = Files.walk(renamesPath)) {
             contents.forEach(path -> {
                 Configuration config = YamlConfiguration.loadConfiguration(path.toFile());
-                config.getMapList("renames").forEach(map -> renames.add(new ParsedTextureProperties((Map<String, String>) map)));
+                config.getMapList("renames").forEach(map -> renames.add(new ParsedTextureProperties((Map<String, String>) map, getLogger()::warning)));
             });
         } catch (IOException e) {
             throw new RuntimeException(e);

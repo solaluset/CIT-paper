@@ -1,11 +1,9 @@
 package org.vinerdream.citPaper.converter;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.vinerdream.citPaper.utils.PropertiesUtils;
 
@@ -66,7 +64,7 @@ public class ResourcePackConverter {
         properties.load(new FileReader(file.toFile()));
         Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
 
-        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap);
+        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, logger);
         for (String key : propertiesMap.keySet()) {
             log("Unknown property in " + file + ": " + key);
         }
@@ -74,6 +72,8 @@ public class ResourcePackConverter {
         if (data.getType() == TextureType.ITEM) {
             convertItemFile(file, data, outputDirectory);
             convertedEntries.add(data);
+        } else if (data.getType() == TextureType.ARMOR) {
+
         }
 
     }
@@ -109,11 +109,11 @@ public class ResourcePackConverter {
             );
             if (newModelPath != null) {
                 modelName = getFilenameWithoutAndWithExtension(newModelPath.getFileName().toString(), "json").getKey();
-                if (data.getModelShieldBlocking() != null) {
+                if (data.getShieldBlockingModel() != null) {
                     blockingModelPath = copyModel(
                             file.getParent(),
                             namespace,
-                            getFilenameWithoutAndWithExtension(data.getModelShieldBlocking(), "json").getKey(),
+                            getFilenameWithoutAndWithExtension(data.getShieldBlockingModel(), "json").getKey(),
                             forcedTexture,
                             outputDirectory
                     );
@@ -149,47 +149,6 @@ public class ResourcePackConverter {
         }
     }
 
-    private void addShieldBlockingModel(
-            Path inputDirectory,
-            Path originalModelPath,
-            String blockingModel,
-            String namespace,
-            String forcedTexture,
-            Path outputDirectory
-    ) throws IOException {
-        copyModel(
-                inputDirectory,
-                namespace,
-                getFilenameWithoutAndWithExtension(blockingModel, "json").getKey(),
-                forcedTexture,
-                outputDirectory
-        );
-        final JsonObject json;
-        try (FileReader reader = new FileReader(originalModelPath.toFile())) {
-            json = new Gson().fromJson(reader, JsonObject.class);
-        }
-
-        final JsonObject newOverride = new JsonObject();
-        final JsonObject predicate = new JsonObject();
-        predicate.addProperty("blocking", 1);
-        newOverride.add("predicate", predicate);
-        newOverride.addProperty("model", "item/" + namespace + "/" + blockingModel);
-
-        final JsonElement overrides = json.get("overrides");
-        final JsonArray overridesArray;
-        if (overrides != null) {
-            overridesArray = overrides.getAsJsonArray();
-        } else {
-            overridesArray = new JsonArray();
-        }
-        overridesArray.add(newOverride);
-        json.add("overrides", overridesArray);
-
-        try (FileWriter writer = new FileWriter(originalModelPath.toFile())) {
-            writer.write(new Gson().toJson(json));
-        }
-    }
-
     private Path copyTexture(Path inputDirectory, String namespace, String texture, Path outputDirectory) throws IOException {
         return copyResource(
                 inputDirectory,
@@ -205,19 +164,27 @@ public class ResourcePackConverter {
     }
 
     private Path copyModel(Path inputDirectory, String namespace, String model, String textureName, Path outputDirectory) throws IOException {
-        Path modelDirectory = outputDirectory.resolve(Paths.get(
+        final Path modelDirectory = outputDirectory.resolve(Paths.get(
                 "assets",
                 "minecraft",
                 "models",
                 "item",
                 namespace
         ));
+        final String outputName;
+        if (textureName != null) {
+            String[] parts = model.split("/");
+            outputName = parts[parts.length - 1] + "_" + textureName;
+        } else {
+            outputName = null;
+        }
 
         Path newPath = copyResource(
                 inputDirectory,
                 model,
                 "json",
-                modelDirectory
+                modelDirectory,
+                outputName
         );
         if (newPath == null) return null;
         JsonObject json;
@@ -248,6 +215,10 @@ public class ResourcePackConverter {
     }
 
     private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory) throws IOException {
+        return copyResource(inputDirectory, resource, extension, outputDirectory, null);
+    }
+
+    private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory, String outputName) throws IOException {
         Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(resource, extension);
         resource = pair.getValue();
         Path oldPath;
@@ -259,13 +230,9 @@ public class ResourcePackConverter {
             log("Missing resource: " + resource);
             return null;
         }
-        int i = 0;
-        Path newPath;
-        do {
-            newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension(oldPath.getFileName().toString().toLowerCase(), extension).getKey() + i++ + "." + extension);
-        } while (newPath.toFile().exists());
+        Path newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension((outputName != null ? outputName : oldPath.getFileName()).toString().toLowerCase(), extension).getValue());
         newPath.getParent().toFile().mkdirs();
-        Files.copy(oldPath, newPath);
+        Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
         return newPath;
     }
 

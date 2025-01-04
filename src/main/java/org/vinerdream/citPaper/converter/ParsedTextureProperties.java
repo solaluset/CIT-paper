@@ -6,6 +6,7 @@ import org.bukkit.NamespacedKey;
 import org.vinerdream.citPaper.utils.NameMatcher;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class ParsedTextureProperties {
@@ -18,7 +19,9 @@ public class ParsedTextureProperties {
     @Getter
     private final String model;
     @Getter
-    private final String modelShieldBlocking;
+    private final String shieldBlockingModel;
+    @Getter
+    private final String armorTexture;
     @Getter
     private final Pattern namePattern;
     private final String damage;
@@ -26,7 +29,7 @@ public class ParsedTextureProperties {
     @Setter
     private NamespacedKey key;
 
-    public ParsedTextureProperties(Map<String, String> properties) {
+    public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
         this.type = TextureType.valueOf(popProperty(properties, "type", "item").toUpperCase());
         this.items = Arrays.stream(popProperty(
                 properties,
@@ -45,7 +48,20 @@ public class ParsedTextureProperties {
             this.key = NamespacedKey.fromString(popProperty(properties, "key", null));
         }
 
-        this.modelShieldBlocking = popProperty(properties, "model.shield_blocking", null);
+        this.shieldBlockingModel = popProperty(properties, "model.shield_blocking", null);
+
+        String armorTexture = null;
+        for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
+            if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
+                String value = popProperty(properties, entry.getKey(), null);
+                if (armorTexture == null) {
+                    armorTexture = value;
+                } else if (!armorTexture.equals(value)) {
+                    logger.accept("Different armor textures not supported: " + armorTexture + " != " + value);
+                }
+            }
+        }
+        this.armorTexture = armorTexture;
     }
 
     public Map<String, String> asMap() {
