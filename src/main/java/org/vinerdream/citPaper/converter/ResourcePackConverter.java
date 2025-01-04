@@ -69,8 +69,8 @@ public class ResourcePackConverter {
             log("Unknown property in " + file + ": " + key);
         }
 
+        convertItemFile(file, data, outputDirectory);
         if (data.getType() == TextureType.ITEM) {
-            convertItemFile(file, data, outputDirectory);
             convertedEntries.add(data);
         } else if (data.getType() == TextureType.ARMOR) {
 
@@ -98,6 +98,19 @@ public class ResourcePackConverter {
         } else {
             textureName = path;
             forcedTexture = null;
+        }
+        if (data.getArmorTexture() != null) {
+            final Path armorTexturePath = copyArmorTexture(file.getParent(), namespace, data.getArmorTexture(), data.getArmorTextureType(), outputDirectory);
+            final String armorTextureName = getFilenameWithoutAndWithExtension(
+                    armorTexturePath.getFileName().toString(), "png"
+            ).getKey();
+            final Path modelPath = outputDirectory.resolve(
+                    Paths.get("assets", namespace, "equipment", armorTextureName + ".json")
+            );
+            modelPath.getParent().toFile().mkdirs();
+            try (FileWriter writer = new FileWriter(modelPath.toFile())) {
+                writer.write("{\"layers\": {\"humanoid\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}], \"humanoid_leggings\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}]}}");
+            }
         }
         if (data.getModel() != null) {
             Path newModelPath = copyModel(
@@ -159,6 +172,23 @@ public class ResourcePackConverter {
                         namespace,
                         "textures",
                         "item"
+                ))
+        );
+    }
+
+    private Path copyArmorTexture(Path inputDirectory, String namespace, String texture, int textureType, Path outputDirectory) throws IOException {
+        final String subfolder = textureType == 1 ? "humanoid" : "humanoid_leggings";
+        return copyResource(
+                inputDirectory,
+                texture,
+                "png",
+                outputDirectory.resolve(Paths.get(
+                    "assets",
+                        namespace,
+                        "textures",
+                        "entity",
+                        "equipment",
+                        subfolder
                 ))
         );
     }

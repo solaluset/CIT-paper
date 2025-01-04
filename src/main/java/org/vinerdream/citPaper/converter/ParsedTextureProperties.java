@@ -23,6 +23,8 @@ public class ParsedTextureProperties {
     @Getter
     private final String armorTexture;
     @Getter
+    private final int armorTextureType;
+    @Getter
     private final Pattern namePattern;
     private final String damage;
     @Getter
@@ -51,17 +53,20 @@ public class ParsedTextureProperties {
         this.shieldBlockingModel = popProperty(properties, "model.shield_blocking", null);
 
         String armorTexture = null;
+        int armorTextureType = 0;
         for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
             if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
                 String value = popProperty(properties, entry.getKey(), null);
                 if (armorTexture == null) {
                     armorTexture = value;
+                    armorTextureType = Integer.parseInt(entry.getKey().split("_layer_")[1]);
                 } else if (!armorTexture.equals(value)) {
                     logger.accept("Different armor textures not supported: " + armorTexture + " != " + value);
                 }
             }
         }
         this.armorTexture = armorTexture;
+        this.armorTextureType = armorTextureType;
     }
 
     public Map<String, String> asMap() {
