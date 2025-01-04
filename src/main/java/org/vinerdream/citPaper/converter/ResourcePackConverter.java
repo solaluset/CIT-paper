@@ -295,7 +295,7 @@ public class ResourcePackConverter {
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
         if (addMcmeta(oldPath).toFile().isFile()) {
-            Files.copy(addMcmeta(oldPath), addMcmeta(newPath));
+            Files.copy(addMcmeta(oldPath), addMcmeta(newPath), StandardCopyOption.REPLACE_EXISTING);
         }
         return newPath;
     }
@@ -309,7 +309,12 @@ public class ResourcePackConverter {
         do {
             result = currentDirectory.resolve(resource);
             currentDirectory = currentDirectory.getParent();
-        } while (!result.toFile().isFile() && !currentDirectory.endsWith("minecraft"));
+        } while (!result.toFile().isFile() && currentDirectory != null && !currentDirectory.endsWith("minecraft"));
+        if (result.toFile().isFile()) return result;
+
+        if (currentDirectory == null) return null;
+
+        result = currentDirectory.resolve(resource);
         if (result.toFile().isFile()) return result;
 
         currentDirectory = currentDirectory.getParent();
