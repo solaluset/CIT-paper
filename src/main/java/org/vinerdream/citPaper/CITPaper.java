@@ -47,6 +47,9 @@ public final class CITPaper extends JavaPlugin {
             if (getConfig().getBoolean("converter.clearConfigs")) {
                 FileUtils.removeDirectory(renamesPath);
             }
+            if (getConfig().getBoolean("converter.clearOutputDirectory")) {
+                FileUtils.removeDirectory(outputPath);
+            }
 
             try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
                 inputs.forEach(input -> {
