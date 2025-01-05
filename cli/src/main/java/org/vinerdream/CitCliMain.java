@@ -7,12 +7,12 @@ import java.nio.file.Paths;
 
 public class CitCliMain {
     public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.out.println("Usage: <resource pack path> <output path>");
+        if (args.length != 3) {
+            System.out.println("Usage: <resource pack path> <output path> <config output path>");
             return;
         }
         ResourcePackConverter converter = new ResourcePackConverter(System.out::println);
-        converter.convertResourcePack(args[0], args[1]);
-        converter.saveConfiguration(Paths.get("items.yml"));
+        converter.convertResourcePack(Paths.get(args[0]), Paths.get(args[1]));
+        converter.saveConfiguration(Paths.get(args[2]));
     }
 }

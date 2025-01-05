@@ -31,9 +31,7 @@ public class ResourcePackConverter {
         convertedEntries = new ArrayList<>();
     }
 
-    public void convertResourcePack(String root, String output) throws IOException {
-        Path rootPath = Paths.get(root);
-        Path outputPath = Paths.get(output);
+    public void convertResourcePack(Path rootPath, Path outputPath) throws IOException {
         if (rootPath.toFile().isFile()) {
             Path newPath = getTmpDir().resolve(UUID.randomUUID().toString());
             ZipUtils.unzip(rootPath, newPath);
