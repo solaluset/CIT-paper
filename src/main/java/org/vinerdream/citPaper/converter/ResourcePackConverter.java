@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.util.FileUtil;
+import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.PropertiesUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
 
@@ -37,6 +39,10 @@ public class ResourcePackConverter {
             ZipUtils.unzip(rootPath, newPath);
             rootPath = newPath;
         }
+
+        FileUtils.removeDirectory(outputPath);
+        FileUtils.copyDirectory(rootPath, outputPath);
+
         final Path directory = rootPath.resolve("assets").resolve("minecraft");
         convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
         convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
