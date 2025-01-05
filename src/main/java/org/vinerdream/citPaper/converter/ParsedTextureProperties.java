@@ -28,6 +28,8 @@ public class ParsedTextureProperties {
     @Getter
     private final int armorDataType;
     @Getter
+    private final BowTextureData bowTextureData;
+    @Getter
     private final Pattern namePattern;
     private final String damage;
     @Getter
@@ -79,6 +81,8 @@ public class ParsedTextureProperties {
         if (this.armorData.isEmpty()) {
             this.armorData = null;
         }
+
+        this.bowTextureData = BowTextureData.fromMap(properties, mainTextureData);
     }
 
     public Map<String, String> asMap() {
@@ -96,6 +100,22 @@ public class ParsedTextureProperties {
         }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());
+        }
+        if (bowTextureData != null) {
+            result.put("model.bow_standby", bowTextureData.getModel());
+            result.put("texture.bow_standby", bowTextureData.getTexture());
+            if (bowTextureData.getPulling_0() != null) {
+                result.put("model.bow_pulling_0", bowTextureData.getPulling_0().getModel());
+                result.put("texture.bow_pulling_0", bowTextureData.getPulling_0().getTexture());
+            }
+            if (bowTextureData.getPulling_1() != null) {
+                result.put("model.bow_pulling_1", bowTextureData.getPulling_1().getModel());
+                result.put("texture.bow_pulling_1", bowTextureData.getPulling_1().getTexture());
+            }
+            if (bowTextureData.getPulling_2() != null) {
+                result.put("model.bow_pulling_2", bowTextureData.getPulling_2().getModel());
+                result.put("texture.bow_pulling_2", bowTextureData.getPulling_2().getTexture());
+            }
         }
         return result;
     }

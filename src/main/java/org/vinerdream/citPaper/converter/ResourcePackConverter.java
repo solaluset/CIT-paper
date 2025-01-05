@@ -118,7 +118,16 @@ public class ResourcePackConverter {
             blockingModel = null;
         }
 
-        if (blockingModel == null) {
+        if (data.getBowTextureData() != null) {
+            BowTextureData bowTextureData = data.getBowTextureData();
+            normalizeBowData(file, bowTextureData, namespace, outputDirectory);
+
+            jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_false\": {\"type\": \"model\", \"model\": \"item/"
+                    + namespace + "/" + bowTextureData.getModel() + "\"}, \"on_true\": {\"type\": \"range_dispatch\", \"property\": \"use_duration\", \"scale\": 0.05, \"entries\": [{\"model\": {\"type\": \"model\", \"model\": \"item/"
+                    + namespace + "/" + bowTextureData.getPulling_1().getModel() + "\"}, \"threshold\": 0.65}, {\"model\": {\"type\": \"model\", \"model\": \"item/"
+                    + namespace + "/" + bowTextureData.getPulling_2().getModel() +"\"}, \"threshold\": 0.9}], \"fallback\": {\"type\": \"model\", \"model\": \"item/"
+                    + namespace + "/" + bowTextureData.getPulling_0().getModel() +"\"}}}}";
+        } else if (blockingModel == null) {
             jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
         } else {
             jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_true\": {\"type\": \"model\", \"model\": \"item/"
@@ -128,6 +137,30 @@ public class ResourcePackConverter {
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
+        }
+    }
+
+    private void normalizeBowData(Path file, BowTextureData data, String namespace, Path outputDirectory) throws IOException {
+        TextureData first = null;
+        for (TextureData data1 : new TextureData[]{data, data.getPulling_0(), data.getPulling_1(), data.getPulling_2()}) {
+            if (data1 == null) continue;
+            if (first == null) {
+                first = data1;
+            }
+            data1.setModel(convertTextureData(file, data1, namespace, outputDirectory));
+        }
+        assert first != null;
+        if (data.getModel() == null) {
+            data.setModel(first.getModel());
+        }
+        if (data.getPulling_0() == null) {
+            data.setPulling_0(first);
+        }
+        if (data.getPulling_1() == null) {
+            data.setPulling_1(first);
+        }
+        if (data.getPulling_2() == null) {
+            data.setPulling_2(first);
         }
     }
 
