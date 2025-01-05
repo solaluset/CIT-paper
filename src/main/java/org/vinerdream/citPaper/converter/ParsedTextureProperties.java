@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+import static org.vinerdream.citPaper.utils.MapUtils.popValue;
+
 public class ParsedTextureProperties {
     @Getter
     private final TextureType type;
@@ -33,31 +35,31 @@ public class ParsedTextureProperties {
     private NamespacedKey key;
 
     public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
-        this.type = TextureType.valueOf(popProperty(properties, "type", "item").toUpperCase());
-        this.items = Arrays.stream(popProperty(
+        this.type = TextureType.valueOf(popValue(properties, "type", "item").toUpperCase());
+        this.items = Arrays.stream(popValue(
                 properties,
                 "items",
-                popProperty(properties, "matchItems", "")
+                popValue(properties, "matchItems", "")
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
-        this.texture = popProperty(properties, "texture", popProperty(properties, "texture.elytra", null));
-        this.model = popProperty(properties, "model", null);
-        this.namePattern = NameMatcher.filterToPattern(popProperty(
+        this.texture = popValue(properties, "texture", popValue(properties, "texture.elytra", null));
+        this.model = popValue(properties, "model", popValue(properties, "model.bow_standby", null));
+        this.namePattern = NameMatcher.filterToPattern(popValue(
                 properties,
                 "nbt.display.Name",
-                popProperty(properties, "name", null)
+                popValue(properties, "name", null)
         ));
-        this.damage = popProperty(properties, "damage", null);
+        this.damage = popValue(properties, "damage", null);
         if (properties.containsKey("key")) {
-            this.key = NamespacedKey.fromString(popProperty(properties, "key", null));
+            this.key = NamespacedKey.fromString(popValue(properties, "key", null));
         }
 
-        this.shieldBlockingModel = popProperty(properties, "model.shield_blocking", null);
+        this.shieldBlockingModel = popValue(properties, "model.shield_blocking", null);
 
-        String armorTexture = popProperty(properties, "armorTexture", null);
+        String armorTexture = popValue(properties, "armorTexture", null);
         int armorTextureType = 0;
         for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
             if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
-                String value = popProperty(properties, entry.getKey(), null);
+                String value = popValue(properties, entry.getKey(), null);
                 if (armorTexture == null) {
                     armorTexture = value;
                     armorTextureType = Integer.parseInt(entry.getKey().split("_layer_")[1]);
@@ -96,10 +98,5 @@ public class ParsedTextureProperties {
 
     public boolean itemEquals(ParsedTextureProperties other) {
         return this.items.equals(other.items) && (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())));
-    }
-
-    private String popProperty(Map<String, String> properties, String key, String defaultValue) {
-        String value = properties.remove(key);
-        return value != null ? value : defaultValue;
     }
 }
