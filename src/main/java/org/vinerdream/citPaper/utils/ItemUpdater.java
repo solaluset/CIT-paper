@@ -34,8 +34,8 @@ public class ItemUpdater {
                 continue;
             }
             meta.setItemModel(data.getKey());
-            if (data.getArmorTexture() != null) {
-                setArmorTexture(meta, item.getType().getKey().getKey(), NamespacedKey.fromString(data.getArmorTexture()));
+            if (data.getArmorData() != null) {
+                setArmorTexture(meta, item.getType().getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
             }
             meta.getPersistentDataContainer().set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
             item.setItemMeta(meta);

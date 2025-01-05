@@ -24,9 +24,9 @@ public class ParsedTextureProperties {
     private final TextureData shieldBlockingData;
     @Getter
     @Setter
-    private String armorTexture;
+    private TextureData armorData;
     @Getter
-    private final int armorTextureType;
+    private final int armorDataType;
     @Getter
     private final Pattern namePattern;
     private final String damage;
@@ -56,7 +56,7 @@ public class ParsedTextureProperties {
 
         this.shieldBlockingData = TextureData.fromMap(properties, "shield_blocking");
 
-        String armorTexture = popValue(properties, "armorTexture", null);
+        String armorTexture = null;
         int armorTextureType = 0;
         for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
             if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
@@ -70,11 +70,14 @@ public class ParsedTextureProperties {
             }
         }
         if (armorTexture == null && type == TextureType.ELYTRA) {
-            this.armorTexture = mainTextureData != null ? mainTextureData.getTexture() : null;
-            this.armorTextureType = 3;
+            armorTexture = mainTextureData != null ? mainTextureData.getTexture() : null;
+            this.armorDataType = 3;
         } else {
-            this.armorTexture = armorTexture;
-            this.armorTextureType = armorTextureType;
+            this.armorDataType = armorTextureType;
+        }
+        this.armorData = new TextureData(popValue(properties, "armorModel", null), armorTexture);
+        if (this.armorData.isEmpty()) {
+            this.armorData = null;
         }
     }
 
@@ -91,8 +94,8 @@ public class ParsedTextureProperties {
         if (key != null) {
             result.put("key", key.asString());
         }
-        if (armorTexture != null) {
-            result.put("armorTexture", armorTexture);
+        if (armorData != null) {
+            result.put("armorModel", armorData.getModel());
         }
         return result;
     }

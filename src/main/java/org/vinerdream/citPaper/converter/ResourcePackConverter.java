@@ -74,8 +74,8 @@ public class ResourcePackConverter {
         boolean found = false;
         for (ParsedTextureProperties savedData : convertedEntries) {
             if (savedData.itemEquals(data)) {
-                if (savedData.getArmorTexture() == null) {
-                    savedData.setArmorTexture(data.getArmorTexture());
+                if (savedData.getArmorData() == null) {
+                    savedData.setArmorData(data.getArmorData());
                 } else {
                     savedData.setKey(data.getKey());
                 }
@@ -96,31 +96,10 @@ public class ResourcePackConverter {
         namespace = file.getParent().getParent().getFileName() + "_" + namespace;
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
         data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
-        if (data.getArmorTexture() != null) {
-            final Path armorTexturePath = copyArmorTexture(
-                    file.getParent(),
-                    namespace,
-                    data.getArmorTexture(),
-                    data.getArmorTextureType(),
-                    outputDirectory
-            );
-            final String armorTextureName = getFilenameWithoutAndWithExtension(
-                    armorTexturePath.getFileName().toString(), "png"
-            ).getKey();
-            final Path modelPath = outputDirectory.resolve(
-                    Paths.get("assets", namespace, "equipment", armorTextureName + ".json")
-            );
-            modelPath.getParent().toFile().mkdirs();
-            try (FileWriter writer = new FileWriter(modelPath.toFile())) {
-                if (data.getType() != TextureType.ELYTRA) {
-                    writer.write("{\"layers\": {\"humanoid\": [{\"texture\": \"" + namespace + ":" + armorTextureName
-                            + "\"}], \"humanoid_leggings\": [{\"texture\": \"" + namespace + ":" + armorTextureName
-                            + "\"}]}}");
-                } else {
-                    writer.write("{\"layers\": {\"wings\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}]}}");
-                }
-            }
-            data.setArmorTexture(namespace + ":" + armorTextureName);
+        if (data.getArmorData() != null) {
+            final String armorModel = convertArmorTextureData(file, data.getArmorData(), namespace, data.getArmorDataType(), outputDirectory);
+
+            data.getArmorData().setModel(namespace + ":" + armorModel);
         }
 
         final String modelName;
@@ -172,6 +151,31 @@ public class ResourcePackConverter {
         return resourceNameFromPath(modelPath);
     }
 
+    private String convertArmorTextureData(Path file, TextureData data, String namespace, int type, Path outputDirectory) throws IOException {
+        final String model = removeExtension(data.getModel());
+        final String texture = removeExtension(data.getTexture());
+
+        if (model == null) {
+            if (texture == null) {
+                return null;
+            }
+            final Path texturePath = copyArmorTexture(file.getParent(), namespace, texture, type, outputDirectory);
+            if (texturePath == null) return null;
+            final String textureName = resourceNameFromPath(texturePath);
+
+            return armorTextureToModel(file, namespace, textureName, type, outputDirectory);
+        }
+        final Path modelPath = copyResource(
+                file.getParent(),
+                texture.replaceFirst(":", "/models/"),
+                "json",
+                outputDirectory.resolve(Paths.get("assets", namespace, "equipment", model + ".json"))
+        );
+        if (modelPath == null) return null;
+
+        return resourceNameFromPath(modelPath);
+    }
+
     private String resourceNameFromPath(Path path) {
         return removeExtension(path.getFileName().toString());
     }
@@ -188,12 +192,39 @@ public class ResourcePackConverter {
             writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
         }
         final String modelName = getFilenameWithoutAndWithExtension(Objects.requireNonNull(
-                copyModel(tmpModelPath.getParent(), namespace, textureName, textureName, outputDirectory),
+                copyModel(tmpModelPath.getParent(), namespace, textureName, false, null, outputDirectory),
                 "Failed to copy generated model!"
         ).getFileName().toString(), "json").getKey();
         tmpModelPath.getParent().toFile().delete();
 
         return modelName;
+    }
+
+    private String armorTextureToModel(Path file, String namespace, String texture, int type, Path outputDirectory) throws IOException {
+        final Path armorTexturePath = copyArmorTexture(
+                file.getParent(),
+                namespace,
+                texture,
+                type,
+                outputDirectory
+        );
+        final String armorTextureName = getFilenameWithoutAndWithExtension(
+                armorTexturePath.getFileName().toString(), "png"
+        ).getKey();
+        final Path modelPath = outputDirectory.resolve(
+                Paths.get("assets", namespace, "equipment", armorTextureName + ".json")
+        );
+        modelPath.getParent().toFile().mkdirs();
+        try (FileWriter writer = new FileWriter(modelPath.toFile())) {
+            if (type != 3) {
+                writer.write("{\"layers\": {\"humanoid\": [{\"texture\": \"" + namespace + ":" + armorTextureName
+                        + "\"}], \"humanoid_leggings\": [{\"texture\": \"" + namespace + ":" + armorTextureName
+                        + "\"}]}}");
+            } else {
+                writer.write("{\"layers\": {\"wings\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}]}}");
+            }
+        }
+        return resourceNameFromPath(modelPath);
     }
 
     private Path copyTexture(Path inputDirectory, String namespace, String texture, Path outputDirectory) throws IOException {
@@ -237,6 +268,10 @@ public class ResourcePackConverter {
     }
 
     private Path copyModel(Path inputDirectory, String namespace, String model, String textureName, Path outputDirectory) throws IOException {
+        return copyModel(inputDirectory, namespace, model, true, textureName, outputDirectory);
+    }
+
+    private Path copyModel(Path inputDirectory, String namespace, String model, boolean processTextures, String textureName, Path outputDirectory) throws IOException {
         final Path modelDirectory = outputDirectory.resolve(Paths.get(
                 "assets",
                 "minecraft",
@@ -259,7 +294,7 @@ public class ResourcePackConverter {
                 modelDirectory,
                 outputName
         );
-        if (newPath == null) return null;
+        if (newPath == null || !processTextures) return newPath;
         JsonObject json;
         try (FileReader reader = new FileReader(newPath.toFile())) {
             json = new Gson().fromJson(reader, JsonObject.class);
