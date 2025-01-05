@@ -164,6 +164,8 @@ public class ParsedTextureProperties {
     }
 
     public boolean itemEquals(ParsedTextureProperties other) {
-        return this.items.equals(other.items) && (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())));
+        return this.items.equals(other.items)
+                && (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())))
+                && this.customModelData == other.customModelData;
     }
 }

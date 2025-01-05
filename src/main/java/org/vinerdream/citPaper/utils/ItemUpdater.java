@@ -20,7 +20,7 @@ public class ItemUpdater {
 
     public void updateItem(ItemStack item) {
         Component name = item.getItemMeta().displayName();
-        updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : null);
+        updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : "");
     }
 
     public void updateItem(ItemStack item, String name) {
@@ -29,8 +29,8 @@ public class ItemUpdater {
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().asString().equals(itemKey))) {
                 continue;
             }
-            boolean matched = data.getNamePattern() == null || name == null || data.getNamePattern().matcher(name).find();
-            if (data.getCustomModelData() != -1 && meta.getCustomModelData() != data.getCustomModelData()) {
+            boolean matched = data.getNamePattern() == null || data.getNamePattern().matcher(name).find();
+            if (data.getCustomModelData() != -1 && (!meta.hasCustomModelData() || meta.getCustomModelData() != data.getCustomModelData())) {
                 matched = false;
             }
             if (!matched) continue;
