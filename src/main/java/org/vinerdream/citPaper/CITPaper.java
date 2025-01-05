@@ -52,11 +52,11 @@ public final class CITPaper extends JavaPlugin {
                 inputs.forEach(input -> {
                     if (input.equals(inputPath)) return;
                     ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning);
-                    converter.convertDirectory(
-                            input,
-                            outputPath.resolve(input.getFileName())
-                    );
                     try {
+                        converter.convertResourcePack(
+                                input,
+                                outputPath.resolve(input.getFileName())
+                        );
                         converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
