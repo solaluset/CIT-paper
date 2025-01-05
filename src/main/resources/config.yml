@@ -1,0 +1,5 @@
+converter:
+  enabled: false
+  inputDirectory: ""
+  outputDirectory: ""
+  clearConfigs: true

@@ -7,14 +7,17 @@ import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
+import org.vinerdream.citPaper.converter.ResourcePackConverter;
 import org.vinerdream.citPaper.listeners.AnvilListener;
 import org.vinerdream.citPaper.listeners.BookListener;
 import org.vinerdream.citPaper.listeners.InventoryListener;
+import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ItemUpdater;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +31,37 @@ public final class CITPaper extends JavaPlugin {
     @Getter
     private final NamespacedKey isManagedKey;
 
-    public CITPaper() {
+    public CITPaper() throws IOException {
         isManagedKey = new NamespacedKey(this, "is_managed");
+
+        saveDefaultConfig();
+        if (getConfig().getBoolean("converter.enabled")) {
+            final String inputDirectory = getConfig().getString("converter.inputDirectory");
+            final String outputDirectory = getConfig().getString("converter.outputDirectory");
+            if (inputDirectory == null || outputDirectory == null) return;
+
+            final Path outputPath = Paths.get(outputDirectory);
+            final Path renamesPath = getDataPath().resolve("renames");
+
+            if (getConfig().getBoolean("converter.clearConfigs")) {
+                FileUtils.removeDirectory(renamesPath);
+            }
+
+            try (Stream<Path> inputs = Files.walk(Paths.get(inputDirectory), 1)) {
+                inputs.forEach(input -> {
+                    ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning);
+                    converter.convertDirectory(
+                            input,
+                            outputPath.resolve(input.getFileName())
+                    );
+                    try {
+                        converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        }
     }
 
     @Override
@@ -49,6 +81,7 @@ public final class CITPaper extends JavaPlugin {
     }
 
     private void loadConfigs() {
+        renames.clear();
         Path renamesPath = getDataPath().resolve("renames");
         if (!renamesPath.toFile().isDirectory()) {
             renamesPath.toFile().mkdirs();
