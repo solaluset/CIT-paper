@@ -36,6 +36,9 @@ public class BowTextureData extends TextureData {
     }
 
     public static BowTextureData fromMap(Map<String, String> map, TextureData mainData) {
+        return fromMap(map, mainData, prefix);
+    }
+    public static BowTextureData fromMap(Map<String, String> map, TextureData mainData, String prefix) {
         String model = null;
         String texture = null;
 

@@ -36,7 +36,7 @@ public class CrossbowTextureData extends BowTextureData {
     }
 
     public static CrossbowTextureData fromMap(Map<String, String> map, TextureData mainData) {
-        BowTextureData bowData = BowTextureData.fromMap(map, mainData);
+        BowTextureData bowData = BowTextureData.fromMap(map, mainData, prefix);
         final CrossbowTextureData result;
         if (bowData != null) {
             result = new CrossbowTextureData(
@@ -53,6 +53,9 @@ public class CrossbowTextureData extends BowTextureData {
         }
         result.setWithArrow(TextureData.fromMap(map, prefix + "arrow"));
         result.setWithFirework(TextureData.fromMap(map, prefix + "firework"));
+        if (result.getWithFirework() == null) {
+            result.setWithFirework(TextureData.fromMap(map, prefix + "fire"));
+        }
         if (result.isEmpty()) return null;
         if (mainData != null) {
             result.setModel(mainData.getModel());
