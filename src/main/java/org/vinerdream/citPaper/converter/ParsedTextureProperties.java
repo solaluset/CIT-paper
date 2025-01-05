@@ -17,11 +17,11 @@ public class ParsedTextureProperties {
     @Getter
     private final List<String> items;
     @Getter
-    private final String texture;
+    private final TextureData mainTextureData;
     @Getter
-    private final String model;
+    private final TextureData elytraTextureData;
     @Getter
-    private final String shieldBlockingModel;
+    private final TextureData shieldBlockingData;
     @Getter
     @Setter
     private String armorTexture;
@@ -41,8 +41,9 @@ public class ParsedTextureProperties {
                 "items",
                 popValue(properties, "matchItems", "")
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
-        this.texture = popValue(properties, "texture", popValue(properties, "texture.elytra", null));
-        this.model = popValue(properties, "model", popValue(properties, "model.bow_standby", null));
+        this.mainTextureData = TextureData.fromMap(properties, null);
+        this.elytraTextureData = TextureData.fromMap(properties, "elytra");
+//        this.model = popValue(properties, "model", popValue(properties, "model.bow_standby", null));
         this.namePattern = NameMatcher.filterToPattern(popValue(
                 properties,
                 "nbt.display.Name",
@@ -53,7 +54,7 @@ public class ParsedTextureProperties {
             this.key = NamespacedKey.fromString(popValue(properties, "key", null));
         }
 
-        this.shieldBlockingModel = popValue(properties, "model.shield_blocking", null);
+        this.shieldBlockingData = TextureData.fromMap(properties, "shield_blocking");
 
         String armorTexture = popValue(properties, "armorTexture", null);
         int armorTextureType = 0;
@@ -69,7 +70,7 @@ public class ParsedTextureProperties {
             }
         }
         if (armorTexture == null && type == TextureType.ELYTRA) {
-            this.armorTexture = texture;
+            this.armorTexture = mainTextureData != null ? mainTextureData.getTexture() : null;
             this.armorTextureType = 3;
         } else {
             this.armorTexture = armorTexture;

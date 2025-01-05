@@ -96,20 +96,6 @@ public class ResourcePackConverter {
         namespace = file.getParent().getParent().getFileName() + "_" + namespace;
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
         data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
-        final String modelName;
-        final String textureName;
-        final String forcedTexture;
-        Path blockingModelPath = null;
-        if (data.getTexture() != null) {
-            Path newTexturePath = copyTexture(file.getParent(), namespace, data.getTexture(), outputDirectory);
-            textureName = newTexturePath != null ?
-                    getFilenameWithoutAndWithExtension(newTexturePath.getFileName().toString(), "png").getKey()
-                    : null;
-            forcedTexture = textureName;
-        } else {
-            textureName = path;
-            forcedTexture = null;
-        }
         if (data.getArmorTexture() != null) {
             final Path armorTexturePath = copyArmorTexture(
                     file.getParent(),
@@ -136,41 +122,28 @@ public class ResourcePackConverter {
             }
             data.setArmorTexture(namespace + ":" + armorTextureName);
         }
-        if (data.getModel() != null) {
-            Path newModelPath = copyModel(
-                    file.getParent(),
-                    namespace,
-                    getFilenameWithoutAndWithExtension(data.getModel(), "json").getKey(),
-                    forcedTexture,
-                    outputDirectory
-            );
-            if (newModelPath != null) {
-                modelName = getFilenameWithoutAndWithExtension(newModelPath.getFileName().toString(), "json").getKey();
-                if (data.getShieldBlockingModel() != null) {
-                    blockingModelPath = copyModel(
-                            file.getParent(),
-                            namespace,
-                            getFilenameWithoutAndWithExtension(data.getShieldBlockingModel(), "json").getKey(),
-                            forcedTexture,
-                            outputDirectory
-                    );
-                }
-            } else {
-                modelName = null;
-            }
-        } else if (data.getType() == TextureType.ITEM && textureName != null) {
-            modelName = textureToModel(namespace, textureName, forcedTexture, outputDirectory);
-        } else {
-            return;
-        }
+
+        final String modelName;
+        if (data.getMainTextureData() != null) {
+            modelName = convertTextureData(file, data.getMainTextureData(), namespace, outputDirectory);
+        } else if (data.getElytraTextureData() != null) {
+            modelName = convertTextureData(file, data.getElytraTextureData(), namespace, outputDirectory);
+        } else return;
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path.toLowerCase() + ".json"));
         final String jsonData;
-        if (blockingModelPath == null) {
+        final String blockingModel;
+        if (data.getShieldBlockingData() != null) {
+            blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, outputDirectory);
+        } else {
+            blockingModel = null;
+        }
+
+        if (blockingModel == null) {
             jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
         } else {
             jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_true\": {\"type\": \"model\", \"model\": \"item/"
-                    + namespace + "/" + getFilenameWithoutAndWithExtension(blockingModelPath.getFileName().toString(), "json").getKey()
+                    + namespace + "/" + blockingModel
                     + "\"}, \"on_false\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}}";
         }
         jsonPath.getParent().toFile().mkdirs();
@@ -179,14 +152,43 @@ public class ResourcePackConverter {
         }
     }
 
-    private String textureToModel(String namespace, String textureName, String forcedTexture, Path outputDirectory) throws IOException {
+    private String convertTextureData(Path file, TextureData data, String namespace, Path outputDirectory) throws IOException {
+        final String model = removeExtension(data.getModel());
+        final String texture = removeExtension(data.getTexture());
+
+        if (model == null) {
+            if (texture == null) {
+                return null;
+            }
+            final Path texturePath = copyTexture(file.getParent(), namespace, texture, outputDirectory);
+            if (texturePath == null) return null;
+            final String textureName = resourceNameFromPath(texturePath);
+
+            return textureToModel(namespace, textureName, outputDirectory);
+        }
+        final Path modelPath = copyModel(file.getParent(), namespace, model, texture, outputDirectory);
+        if (modelPath == null) return null;
+
+        return resourceNameFromPath(modelPath);
+    }
+
+    private String resourceNameFromPath(Path path) {
+        return removeExtension(path.getFileName().toString());
+    }
+
+    private String removeExtension(String filename) {
+        if (filename == null) return null;
+        return filename.replaceFirst("\\..+$", "");
+    }
+
+    private String textureToModel(String namespace, String textureName, Path outputDirectory) throws IOException {
         final Path tmpModelPath = Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper", textureName + ".json");
         tmpModelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
             writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
         }
         final String modelName = getFilenameWithoutAndWithExtension(Objects.requireNonNull(
-                copyModel(tmpModelPath.getParent(), namespace, textureName, forcedTexture, outputDirectory),
+                copyModel(tmpModelPath.getParent(), namespace, textureName, textureName, outputDirectory),
                 "Failed to copy generated model!"
         ).getFileName().toString(), "json").getKey();
         tmpModelPath.getParent().toFile().delete();
@@ -263,20 +265,16 @@ public class ResourcePackConverter {
             json = new Gson().fromJson(reader, JsonObject.class);
             JsonObject textures = json.get("textures").getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
-                if (textureName == null) {
-                    Path outputTexture = copyTexture(inputDirectory, namespace, entry.getValue().getAsString(), outputDirectory);
-                    if (outputTexture == null) continue;
-                    textures.addProperty(
-                            entry.getKey(),
-                            outputTexture.getParent().getParent().getParent().getFileName()
-                                    + ":item/" + getFilenameWithoutAndWithExtension(
-                                    outputTexture.getFileName().toString(),
-                                    "png"
-                            ).getKey()
-                    );
-                } else {
-                    textures.addProperty(entry.getKey(), namespace + ":item/" + textureName);
-                }
+                Path outputTexture = copyTexture(inputDirectory, namespace, textureName == null ? entry.getValue().getAsString() : textureName, outputDirectory);
+                if (outputTexture == null) continue;
+                textures.addProperty(
+                        entry.getKey(),
+                        outputTexture.getParent().getParent().getParent().getFileName()
+                                + ":item/" + getFilenameWithoutAndWithExtension(
+                                outputTexture.getFileName().toString(),
+                                "png"
+                        ).getKey()
+                );
             }
         }
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
