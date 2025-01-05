@@ -23,22 +23,8 @@ public class FileUtils {
     }
 
     public static void removeDirectory(Path directory) throws IOException {
-        try (Stream<Path> contents = Files.walk(directory, 1)) {
-            List<Path> list = contents.toList();
-            if (!list.isEmpty()) {
-                list.forEach(file -> {
-                    if (file.equals(directory)) return;
-                    if (file.toFile().isDirectory()) {
-                        try {
-                            removeDirectory(file);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    } else {
-                        file.toFile().delete();
-                    }
-                });
-            }
+        try (Stream<Path> contents = Files.walk(directory)) {
+            contents.toList().reversed().forEach(file -> file.toFile().delete());
         }
     }
 }

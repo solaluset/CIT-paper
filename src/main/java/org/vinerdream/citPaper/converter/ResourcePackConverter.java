@@ -47,7 +47,7 @@ public class ResourcePackConverter {
         convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
         convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
 
-        getTmpDir().toFile().delete();
+        FileUtils.removeDirectory(getTmpDir());
     }
 
     public void convertDirectory(Path directory, Path outputDirectory) {
