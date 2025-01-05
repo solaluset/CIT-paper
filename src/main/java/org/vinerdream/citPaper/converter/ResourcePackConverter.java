@@ -111,12 +111,6 @@ public class ResourcePackConverter {
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path.toLowerCase() + ".json"));
         final String jsonData;
-        final String blockingModel;
-        if (data.getShieldBlockingData() != null) {
-            blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, outputDirectory);
-        } else {
-            blockingModel = null;
-        }
 
         if (data.getBowTextureData() != null) {
             BowTextureData bowTextureData = data.getBowTextureData();
@@ -138,7 +132,8 @@ public class ResourcePackConverter {
                     + namespace + "/" + crossbowTextureData.getPulling_1().getModel() + "\"}, \"threshold\": 0.58}, {\"model\": {\"type\": \"minecraft:model\", \"model\": \"item/"
                     + namespace + "/" + crossbowTextureData.getPulling_2().getModel() + "\"}, \"threshold\": 1.0}], \"fallback\": {\"type\": \"minecraft:model\", \"model\": \"item/"
                     + namespace + "/" + crossbowTextureData.getPulling_0().getModel() + "\"}, \"property\": \"minecraft:crossbow/pull\"}, \"property\": \"minecraft:using_item\"}}";
-        } else if (blockingModel != null) {
+        } else if (data.getShieldBlockingData() != null) {
+            final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, outputDirectory);
             jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_true\": {\"type\": \"model\", \"model\": \"item/"
                     + namespace + "/" + blockingModel
                     + "\"}, \"on_false\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}}";
