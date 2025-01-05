@@ -158,17 +158,8 @@ public class ResourcePackConverter {
             } else {
                 modelName = null;
             }
-        } else if (data.getType() == TextureType.ITEM) {
-            final Path tmpModelPath = Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper", path + ".json");
-            tmpModelPath.getParent().toFile().mkdirs();
-            try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
-                writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
-            }
-            modelName = getFilenameWithoutAndWithExtension(Objects.requireNonNull(
-                    copyModel(tmpModelPath.getParent(), namespace, path, forcedTexture, outputDirectory),
-                    "Failed to copy generated model!"
-            ).getFileName().toString(), "json").getKey();
-            tmpModelPath.getParent().toFile().delete();
+        } else if (data.getType() == TextureType.ITEM && textureName != null) {
+            modelName = textureToModel(namespace, textureName, forcedTexture, outputDirectory);
         } else {
             return;
         }
@@ -186,6 +177,21 @@ public class ResourcePackConverter {
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
         }
+    }
+
+    private String textureToModel(String namespace, String textureName, String forcedTexture, Path outputDirectory) throws IOException {
+        final Path tmpModelPath = Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper", textureName + ".json");
+        tmpModelPath.getParent().toFile().mkdirs();
+        try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
+            writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
+        }
+        final String modelName = getFilenameWithoutAndWithExtension(Objects.requireNonNull(
+                copyModel(tmpModelPath.getParent(), namespace, textureName, forcedTexture, outputDirectory),
+                "Failed to copy generated model!"
+        ).getFileName().toString(), "json").getKey();
+        tmpModelPath.getParent().toFile().delete();
+
+        return modelName;
     }
 
     private Path copyTexture(Path inputDirectory, String namespace, String texture, Path outputDirectory) throws IOException {
