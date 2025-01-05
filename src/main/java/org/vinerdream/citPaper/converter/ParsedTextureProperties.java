@@ -45,7 +45,7 @@ public class ParsedTextureProperties {
                 "items",
                 popValue(properties, "matchItems", "")
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
-        this.mainTextureData = TextureData.fromMap(properties, null);
+        TextureData mainTextureData = TextureData.fromMap(properties, null);
         this.elytraTextureData = TextureData.fromMap(properties, "elytra");
         this.namePattern = NameMatcher.filterToPattern(popValue(
                 properties,
@@ -84,7 +84,14 @@ public class ParsedTextureProperties {
         }
 
         this.bowTextureData = BowTextureData.fromMap(properties, mainTextureData);
+        if (mainTextureData == null) {
+            mainTextureData = bowTextureData;
+        }
         this.crossbowTextureData = CrossbowTextureData.fromMap(properties, mainTextureData);
+        if (mainTextureData == null) {
+            mainTextureData = crossbowTextureData;
+        }
+        this.mainTextureData = mainTextureData;
     }
 
     public Map<String, String> asMap() {
