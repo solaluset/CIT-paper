@@ -163,9 +163,16 @@ public class ParsedTextureProperties {
         return result;
     }
 
-    public boolean itemEquals(ParsedTextureProperties other) {
-        return this.items.equals(other.items)
-                && (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())))
+    public boolean itemEquals(ParsedTextureProperties other, Consumer<String> logger) {
+        boolean almostEquals = (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())))
                 && this.customModelData == other.customModelData;
+        if (!almostEquals) return false;
+        if (this.items.equals(other.items)) {
+            return true;
+        }
+        if (this.items.stream().anyMatch(other.items::contains)) {
+            logger.accept("Potential item conflict in " + this.namePattern);
+        }
+        return false;
     }
 }

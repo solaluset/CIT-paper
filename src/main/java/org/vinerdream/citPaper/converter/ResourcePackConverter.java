@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.vinerdream.citPaper.utils.PropertiesUtils;
+import org.vinerdream.citPaper.utils.ZipUtils;
 
 import java.io.File;
 import java.io.FileReader;
@@ -28,10 +29,19 @@ public class ResourcePackConverter {
         convertedEntries = new ArrayList<>();
     }
 
-    public void convertResourcePack(String root, String outputDir) {
-        String directory = Paths.get(root, "assets", "minecraft").toString();
-        convertDirectory(Paths.get(directory, "optifine", "cit"), Paths.get(outputDir));
-        convertDirectory(Paths.get(directory, "mcpatcher", "cit"), Paths.get(outputDir));
+    public void convertResourcePack(String root, String output) throws IOException {
+        Path rootPath = Paths.get(root);
+        Path outputPath = Paths.get(output);
+        if (rootPath.toFile().isFile()) {
+            Path newPath = getTmpDir().resolve(UUID.randomUUID().toString());
+            ZipUtils.unzip(rootPath, newPath);
+            rootPath = newPath;
+        }
+        final Path directory = rootPath.resolve("assets").resolve("minecraft");
+        convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
+        convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
+
+        getTmpDir().toFile().delete();
     }
 
     public void convertDirectory(Path directory, Path outputDirectory) {
@@ -73,7 +83,7 @@ public class ResourcePackConverter {
 
         boolean found = false;
         for (ParsedTextureProperties savedData : convertedEntries) {
-            if (savedData.itemEquals(data)) {
+            if (savedData.itemEquals(data, logger)) {
                 if (savedData.getArmorData() == null) {
                     savedData.setArmorData(data.getArmorData());
                 } else {
@@ -233,18 +243,16 @@ public class ResourcePackConverter {
     }
 
     private String textureToModel(String namespace, String textureName, Path outputDirectory) throws IOException {
-        final Path tmpModelPath = Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper", textureName + ".json");
+        final Path tmpModelPath = getTmpDir().resolve("models").resolve(textureName + ".json");
         tmpModelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
             writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
         }
-        final String modelName = getFilenameWithoutAndWithExtension(Objects.requireNonNull(
+
+        return getFilenameWithoutAndWithExtension(Objects.requireNonNull(
                 copyModel(tmpModelPath.getParent(), namespace, textureName, false, null, outputDirectory),
                 "Failed to copy generated model!"
         ).getFileName().toString(), "json").getKey();
-        tmpModelPath.getParent().toFile().delete();
-
-        return modelName;
     }
 
     private String armorTextureToModel(Path file, String namespace, String texture, int type, Path outputDirectory) throws IOException {
@@ -426,6 +434,10 @@ public class ResourcePackConverter {
             return Map.entry(name.replaceFirst("\\." + extension + "$", ""), name);
         }
         return Map.entry(name, name + "." + extension);
+    }
+
+    private Path getTmpDir() {
+        return Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper");
     }
 
     private void log(String text) {
