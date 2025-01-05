@@ -215,7 +215,7 @@ public class ResourcePackConverter {
 
     private String removeExtension(String filename) {
         if (filename == null) return null;
-        return filename.replaceFirst("\\..+$", "");
+        return filename.replaceFirst("\\.[^/]+$", "");
     }
 
     private String textureToModel(String namespace, String textureName, Path outputDirectory) throws IOException {
@@ -360,7 +360,7 @@ public class ResourcePackConverter {
         resource = pair.getValue();
         Path oldPath = resolveResource(inputDirectory, resource, extension.equals("json") ? ResourceType.MODEL : ResourceType.TEXTURE);
         if (oldPath == null) {
-            log("Missing resource: " + resource);
+            log("Missing resource: " + resource + " (path: " + inputDirectory + ")");
             return null;
         }
         Path newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension((outputName != null ? outputName : oldPath.getFileName()).toString().toLowerCase(), extension).getValue());

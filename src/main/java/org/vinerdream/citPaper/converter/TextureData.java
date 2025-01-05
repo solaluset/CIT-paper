@@ -7,12 +7,11 @@ import java.util.Map;
 
 import static org.vinerdream.citPaper.utils.MapUtils.popValue;
 
+@Setter
+@Getter
 public class TextureData {
-    @Getter
-    @Setter
     private String model;
-    @Getter
-    private final String texture;
+    private String texture;
 
     public TextureData(String model, String texture) {
         this.model = model;
