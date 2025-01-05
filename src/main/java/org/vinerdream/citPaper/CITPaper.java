@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.listeners.AnvilListener;
 import org.vinerdream.citPaper.listeners.BookListener;
+import org.vinerdream.citPaper.listeners.InventoryListener;
 import org.vinerdream.citPaper.utils.ItemUpdater;
 
 import java.io.IOException;
@@ -35,6 +36,7 @@ public final class CITPaper extends JavaPlugin {
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(new AnvilListener(this), this);
         Bukkit.getPluginManager().registerEvents(new BookListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new InventoryListener(this), this);
 
         loadConfigs();
 

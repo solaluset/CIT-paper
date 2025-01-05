@@ -29,7 +29,7 @@ public class ItemUpdater {
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().asString().equals(itemKey))) {
                 continue;
             }
-            boolean matched = data.getNamePattern() == null || data.getNamePattern().matcher(name).find();
+            boolean matched = data.getNamePattern() == null || name == null || data.getNamePattern().matcher(name).find();
             if (data.getCustomModelData() != -1 && meta.getCustomModelData() != data.getCustomModelData()) {
                 matched = false;
             }
