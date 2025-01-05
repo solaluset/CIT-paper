@@ -50,7 +50,7 @@ public class ParsedTextureProperties {
         this.namePattern = NameMatcher.filterToPattern(popValue(
                 properties,
                 "nbt.display.Name",
-                popValue(properties, "name", null)
+                popValue(properties, "name", popValue(properties, "nbt.title", null))
         ));
         this.damage = popValue(properties, "damage", null);
         if (properties.containsKey("key")) {
