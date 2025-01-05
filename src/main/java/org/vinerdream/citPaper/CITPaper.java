@@ -40,6 +40,7 @@ public final class CITPaper extends JavaPlugin {
             final String outputDirectory = getConfig().getString("converter.outputDirectory");
             if (inputDirectory == null || outputDirectory == null) return;
 
+            final Path inputPath = Paths.get(inputDirectory);
             final Path outputPath = Paths.get(outputDirectory);
             final Path renamesPath = getDataPath().resolve("renames");
 
@@ -47,8 +48,9 @@ public final class CITPaper extends JavaPlugin {
                 FileUtils.removeDirectory(renamesPath);
             }
 
-            try (Stream<Path> inputs = Files.walk(Paths.get(inputDirectory), 1)) {
+            try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
                 inputs.forEach(input -> {
+                    if (input.equals(inputPath)) return;
                     ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning);
                     converter.convertDirectory(
                             input,
