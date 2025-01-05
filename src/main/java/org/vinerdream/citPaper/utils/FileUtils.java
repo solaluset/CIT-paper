@@ -3,7 +3,6 @@ package org.vinerdream.citPaper.utils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.stream.Stream;
 
 public class FileUtils {
@@ -23,6 +22,7 @@ public class FileUtils {
     }
 
     public static void removeDirectory(Path directory) throws IOException {
+        if (!directory.toFile().exists()) return;
         try (Stream<Path> contents = Files.walk(directory)) {
             contents.toList().reversed().forEach(file -> file.toFile().delete());
         }

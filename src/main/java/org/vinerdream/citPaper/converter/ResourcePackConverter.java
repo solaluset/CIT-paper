@@ -39,13 +39,28 @@ public class ResourcePackConverter {
             ZipUtils.unzip(rootPath, newPath);
             rootPath = newPath;
         }
+        final Path zipPath;
+        if (outputPath.toString().endsWith(".zip")) {
+            zipPath = outputPath;
+            outputPath = getTmpDir().resolve(UUID.randomUUID().toString());
+        } else {
+            zipPath = null;
+        }
 
         FileUtils.removeDirectory(outputPath);
-        FileUtils.copyDirectory(rootPath, outputPath);
+        if (zipPath == null) {
+            FileUtils.copyDirectory(rootPath, outputPath);
+        } else {
+            outputPath = rootPath;
+        }
 
         final Path directory = rootPath.resolve("assets").resolve("minecraft");
         convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
         convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
+
+        if (zipPath != null) {
+            ZipUtils.zip(outputPath, zipPath);
+        }
 
         FileUtils.removeDirectory(getTmpDir());
     }
