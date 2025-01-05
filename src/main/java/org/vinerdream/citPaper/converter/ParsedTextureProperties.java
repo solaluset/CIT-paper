@@ -35,6 +35,8 @@ public class ParsedTextureProperties {
     private final Pattern namePattern;
     private final String damage;
     @Getter
+    private final int customModelData;
+    @Getter
     @Setter
     private NamespacedKey key;
 
@@ -53,6 +55,7 @@ public class ParsedTextureProperties {
                 popValue(properties, "name", popValue(properties, "nbt.title", null))
         ));
         this.damage = popValue(properties, "damage", null);
+        this.customModelData = Integer.parseInt(popValue(properties, "nbt.CustomModelData", "-1"));
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popValue(properties, "key", null));
         }

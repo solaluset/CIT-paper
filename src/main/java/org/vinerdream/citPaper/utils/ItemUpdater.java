@@ -26,13 +26,14 @@ public class ItemUpdater {
     public void updateItem(ItemStack item, String name) {
         ItemMeta meta = item.getItemMeta();
         for (ParsedTextureProperties data : plugin.getRenames()) {
-            if (data.getNamePattern() == null) continue;
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().asString().equals(itemKey))) {
                 continue;
             }
-            if (!data.getNamePattern().matcher(name).find()) {
-                continue;
+            boolean matched = data.getNamePattern() == null || data.getNamePattern().matcher(name).find();
+            if (data.getCustomModelData() != -1 && meta.getCustomModelData() != data.getCustomModelData()) {
+                matched = false;
             }
+            if (!matched) continue;
             meta.setItemModel(data.getKey());
             if (data.getArmorData() != null) {
                 setArmorTexture(meta, item.getType().getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
