@@ -55,7 +55,11 @@ public class ParsedTextureProperties {
                 popValue(properties, "name", popValue(properties, "nbt.title", null))
         ));
         this.damage = popValue(properties, "damage", null);
-        this.customModelData = Integer.parseInt(popValue(properties, "nbt.CustomModelData", "-1"));
+        this.customModelData = Integer.parseInt(popValue(
+                properties,
+                "nbt.CustomModelData",
+                popValue(properties, "customModelData", "-1")
+        ));
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popValue(properties, "key", null));
         }
@@ -152,6 +156,9 @@ public class ParsedTextureProperties {
                 result.put("model.crossbow_firework", crossbowTextureData.getWithFirework().getModel());
                 result.put("texture.crossbow_firework", crossbowTextureData.getWithFirework().getTexture());
             }
+        }
+        if (customModelData != -1) {
+            result.put("customModelData", String.valueOf(customModelData));
         }
         return result;
     }
