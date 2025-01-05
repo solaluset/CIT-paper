@@ -6,6 +6,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.vinerdream.citPaper.commands.CITPaperReloadCommand;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.converter.ResourcePackConverter;
 import org.vinerdream.citPaper.listeners.AnvilListener;
@@ -21,6 +22,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public final class CITPaper extends JavaPlugin {
@@ -75,7 +77,9 @@ public final class CITPaper extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BookListener(this), this);
         Bukkit.getPluginManager().registerEvents(new InventoryListener(this), this);
 
-        loadConfigs();
+        Objects.requireNonNull(getCommand("cit-paper-reload")).setExecutor(new CITPaperReloadCommand(this));
+
+        loadRenames();
 
         itemUpdater = new ItemUpdater(this);
     }
@@ -85,7 +89,7 @@ public final class CITPaper extends JavaPlugin {
         // Plugin shutdown logic
     }
 
-    private void loadConfigs() {
+    public void loadRenames() {
         renames.clear();
         Path renamesPath = getDataPath().resolve("renames");
         if (!renamesPath.toFile().isDirectory()) {

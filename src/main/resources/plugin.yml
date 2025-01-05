@@ -2,3 +2,8 @@ name: CIT-paper
 version: '1.0-SNAPSHOT'
 main: org.vinerdream.citPaper.CITPaper
 api-version: '1.21'
+commands:
+  cit-paper-reload:
+    description: Reload config
+    usage: /cit-paper-reload
+    permission: cit-paper.reload
