@@ -25,6 +25,16 @@ public class BowTextureData extends TextureData {
         this.pulling_2 = pulling_2;
     }
 
+    @Override
+    public boolean isEmpty() {
+        return super.isEmpty() && pulling_0 == null && pulling_1 == null && pulling_2 == null;
+    }
+
+    @Override
+    public TextureData[] getAll() {
+        return new TextureData[]{this, pulling_0, pulling_1, pulling_2};
+    }
+
     public static BowTextureData fromMap(Map<String, String> map, TextureData mainData) {
         String model = null;
         String texture = null;
@@ -48,10 +58,5 @@ public class BowTextureData extends TextureData {
             result.setTexture(mainData.getTexture());
         }
         return result;
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return super.isEmpty() && pulling_0 == null && pulling_1 == null && pulling_2 == null;
     }
 }

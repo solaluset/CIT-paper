@@ -22,6 +22,10 @@ public class TextureData {
         return model == null && texture == null;
     }
 
+    public TextureData[] getAll() {
+        return new TextureData[]{this};
+    }
+
     public static TextureData fromMap(Map<String, String> map, String key) {
         final TextureData result;
         if (key == null) {

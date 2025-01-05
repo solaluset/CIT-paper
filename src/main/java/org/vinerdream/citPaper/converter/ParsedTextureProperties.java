@@ -30,6 +30,8 @@ public class ParsedTextureProperties {
     @Getter
     private final BowTextureData bowTextureData;
     @Getter
+    private final CrossbowTextureData crossbowTextureData;
+    @Getter
     private final Pattern namePattern;
     private final String damage;
     @Getter
@@ -45,7 +47,6 @@ public class ParsedTextureProperties {
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
         this.mainTextureData = TextureData.fromMap(properties, null);
         this.elytraTextureData = TextureData.fromMap(properties, "elytra");
-//        this.model = popValue(properties, "model", popValue(properties, "model.bow_standby", null));
         this.namePattern = NameMatcher.filterToPattern(popValue(
                 properties,
                 "nbt.display.Name",
@@ -83,6 +84,7 @@ public class ParsedTextureProperties {
         }
 
         this.bowTextureData = BowTextureData.fromMap(properties, mainTextureData);
+        this.crossbowTextureData = CrossbowTextureData.fromMap(properties, mainTextureData);
     }
 
     public Map<String, String> asMap() {
@@ -115,6 +117,30 @@ public class ParsedTextureProperties {
             if (bowTextureData.getPulling_2() != null) {
                 result.put("model.bow_pulling_2", bowTextureData.getPulling_2().getModel());
                 result.put("texture.bow_pulling_2", bowTextureData.getPulling_2().getTexture());
+            }
+        }
+        if (crossbowTextureData != null) {
+            result.put("model.crossbow_standby", crossbowTextureData.getModel());
+            result.put("texture.crossbow_standby", crossbowTextureData.getTexture());
+            if (crossbowTextureData.getPulling_0() != null) {
+                result.put("model.crossbow_pulling_0", crossbowTextureData.getPulling_0().getModel());
+                result.put("texture.crossbow_pulling_0", crossbowTextureData.getPulling_0().getTexture());
+            }
+            if (crossbowTextureData.getPulling_1() != null) {
+                result.put("model.crossbow_pulling_1", crossbowTextureData.getPulling_1().getModel());
+                result.put("texture.crossbow_pulling_1", crossbowTextureData.getPulling_1().getTexture());
+            }
+            if (crossbowTextureData.getPulling_2() != null) {
+                result.put("model.crossbow_pulling_2", crossbowTextureData.getPulling_2().getModel());
+                result.put("texture.crossbow_pulling_2", crossbowTextureData.getPulling_2().getTexture());
+            }
+            if (crossbowTextureData.getWithArrow() != null) {
+                result.put("model.crossbow_arrow", crossbowTextureData.getWithArrow().getModel());
+                result.put("texture.crossbow_arrow", crossbowTextureData.getWithArrow().getTexture());
+            }
+            if (crossbowTextureData.getWithFirework() != null) {
+                result.put("model.crossbow_firework", crossbowTextureData.getWithFirework().getModel());
+                result.put("texture.crossbow_firework", crossbowTextureData.getWithFirework().getTexture());
             }
         }
         return result;

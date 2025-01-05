@@ -125,14 +125,25 @@ public class ResourcePackConverter {
             jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_false\": {\"type\": \"model\", \"model\": \"item/"
                     + namespace + "/" + bowTextureData.getModel() + "\"}, \"on_true\": {\"type\": \"range_dispatch\", \"property\": \"use_duration\", \"scale\": 0.05, \"entries\": [{\"model\": {\"type\": \"model\", \"model\": \"item/"
                     + namespace + "/" + bowTextureData.getPulling_1().getModel() + "\"}, \"threshold\": 0.65}, {\"model\": {\"type\": \"model\", \"model\": \"item/"
-                    + namespace + "/" + bowTextureData.getPulling_2().getModel() +"\"}, \"threshold\": 0.9}], \"fallback\": {\"type\": \"model\", \"model\": \"item/"
-                    + namespace + "/" + bowTextureData.getPulling_0().getModel() +"\"}}}}";
-        } else if (blockingModel == null) {
-            jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
-        } else {
+                    + namespace + "/" + bowTextureData.getPulling_2().getModel() + "\"}, \"threshold\": 0.9}], \"fallback\": {\"type\": \"model\", \"model\": \"item/"
+                    + namespace + "/" + bowTextureData.getPulling_0().getModel() + "\"}}}}";
+        } else if (data.getCrossbowTextureData() != null) {
+            CrossbowTextureData crossbowTextureData = data.getCrossbowTextureData();
+            normalizeBowData(file, crossbowTextureData, namespace, outputDirectory);
+
+            jsonData = "{\"model\": {\"type\": \"minecraft:condition\", \"on_false\": {\"type\": \"minecraft:select\", \"cases\": [{\"model\": {\"type\": \"minecraft:model\", \"model\": \"item/"
+                    + namespace + "/" + crossbowTextureData.getWithArrow().getModel() + "\"}, \"when\": \"arrow\"}, {\"model\": {\"type\": \"minecraft:model\", \"model\": \"item/"
+                    + namespace + "/" + crossbowTextureData.getWithFirework().getModel() + "\"}, \"when\": \"rocket\"}], \"fallback\": {\"type\": \"minecraft:model\", \"model\": \"item/"
+                    + namespace + "/" + crossbowTextureData.getModel() + "\"}, \"property\": \"minecraft:charge_type\"}, \"on_true\": {\"type\": \"minecraft:range_dispatch\", \"entries\": [{\"model\": {\"type\": \"minecraft:model\", \"model\": \"minecraft:item/"
+                    + namespace + "/" + crossbowTextureData.getPulling_1().getModel() + "\"}, \"threshold\": 0.58}, {\"model\": {\"type\": \"minecraft:model\", \"model\": \"item/"
+                    + namespace + "/" + crossbowTextureData.getPulling_2().getModel() + "\"}, \"threshold\": 1.0}], \"fallback\": {\"type\": \"minecraft:model\", \"model\": \"item/"
+                    + namespace + "/" + crossbowTextureData.getPulling_0().getModel() + "\"}, \"property\": \"minecraft:crossbow/pull\"}, \"property\": \"minecraft:using_item\"}}";
+        } else if (blockingModel != null) {
             jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_true\": {\"type\": \"model\", \"model\": \"item/"
                     + namespace + "/" + blockingModel
                     + "\"}, \"on_false\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}}";
+        } else {
+            jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}";
         }
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
@@ -142,7 +153,7 @@ public class ResourcePackConverter {
 
     private void normalizeBowData(Path file, BowTextureData data, String namespace, Path outputDirectory) throws IOException {
         TextureData first = null;
-        for (TextureData data1 : new TextureData[]{data, data.getPulling_0(), data.getPulling_1(), data.getPulling_2()}) {
+        for (TextureData data1 : data.getAll()) {
             if (data1 == null) continue;
             if (first == null) {
                 first = data1;
@@ -161,6 +172,14 @@ public class ResourcePackConverter {
         }
         if (data.getPulling_2() == null) {
             data.setPulling_2(first);
+        }
+        if (data instanceof CrossbowTextureData crossbow) {
+            if (crossbow.getWithArrow() == null) {
+                crossbow.setWithArrow(first);
+            }
+            if (crossbow.getWithFirework() == null) {
+                crossbow.setWithFirework(first);
+            }
         }
     }
 
