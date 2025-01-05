@@ -42,7 +42,8 @@ public class BowTextureData extends TextureData {
                 TextureData.fromMap(map, prefix + "pulling_1"),
                 TextureData.fromMap(map, prefix + "pulling_2")
         );
-        if (result.isEmpty()) return null;if (mainData != null) {
+        if (result.isEmpty()) return null;
+        if (mainData != null) {
             result.setModel(mainData.getModel());
             result.setTexture(mainData.getTexture());
         }
