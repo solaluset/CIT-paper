@@ -3,10 +3,11 @@ package org.vinerdream.citPaper;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.vinerdream.citPaper.commands.CITPaperReloadCommand;
+import org.vinerdream.citPaper.commands.CITPaperCommand;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.converter.ResourcePackConverter;
 import org.vinerdream.citPaper.listeners.AnvilListener;
@@ -37,38 +38,8 @@ public final class CITPaper extends JavaPlugin {
         isManagedKey = new NamespacedKey(this, "is_managed");
 
         saveDefaultConfig();
-        if (getConfig().getBoolean("converter.enabled")) {
-            final String inputDirectory = getConfig().getString("converter.inputDirectory");
-            final String outputDirectory = getConfig().getString("converter.outputDirectory");
-            if (inputDirectory == null || outputDirectory == null) return;
 
-            final Path inputPath = Paths.get(inputDirectory);
-            final Path outputPath = Paths.get(outputDirectory);
-            final Path renamesPath = getDataPath().resolve("renames");
-
-            if (getConfig().getBoolean("converter.clearConfigs")) {
-                FileUtils.removeDirectory(renamesPath);
-            }
-            if (getConfig().getBoolean("converter.clearOutputDirectory")) {
-                FileUtils.removeDirectory(outputPath);
-            }
-
-            try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
-                inputs.forEach(input -> {
-                    if (input.equals(inputPath)) return;
-                    ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning);
-                    try {
-                        converter.convertResourcePack(
-                                input,
-                                outputPath.resolve(input.getFileName())
-                        );
-                        converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            }
-        }
+        generateResourcePacks();
     }
 
     @Override
@@ -77,7 +48,10 @@ public final class CITPaper extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BookListener(this), this);
         Bukkit.getPluginManager().registerEvents(new InventoryListener(this), this);
 
-        Objects.requireNonNull(getCommand("cit-paper-reload")).setExecutor(new CITPaperReloadCommand(this));
+        PluginCommand command = Objects.requireNonNull(getCommand("cit-paper"));
+        CITPaperCommand executor = new CITPaperCommand(this);
+        command.setExecutor(executor);
+        command.setTabCompleter(executor);
 
         loadRenames();
 
@@ -103,5 +77,43 @@ public final class CITPaper extends JavaPlugin {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean generateResourcePacks() throws IOException {
+        if (!getConfig().getBoolean("converter.enabled")) {
+            return false;
+        }
+        final String inputDirectory = getConfig().getString("converter.inputDirectory");
+        final String outputDirectory = getConfig().getString("converter.outputDirectory");
+        if (inputDirectory == null || outputDirectory == null) return false;
+
+        final Path inputPath = Paths.get(inputDirectory);
+        final Path outputPath = Paths.get(outputDirectory);
+        final Path renamesPath = getDataPath().resolve("renames");
+
+        if (getConfig().getBoolean("converter.clearConfigs")) {
+            FileUtils.removeDirectory(renamesPath);
+        }
+        if (getConfig().getBoolean("converter.clearOutputDirectory")) {
+            FileUtils.removeDirectory(outputPath);
+        }
+
+        try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
+            inputs.forEach(input -> {
+                if (input.equals(inputPath)) return;
+                ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning);
+                try {
+                    converter.convertResourcePack(
+                            input,
+                            outputPath.resolve(input.getFileName())
+                    );
+                    converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+
+        return true;
     }
 }
