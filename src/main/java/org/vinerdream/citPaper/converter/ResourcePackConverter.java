@@ -133,9 +133,9 @@ public class ResourcePackConverter {
 
         final String modelName;
         if (data.getMainTextureData() != null) {
-            modelName = convertTextureData(file, data.getMainTextureData(), namespace, outputDirectory);
+            modelName = convertTextureData(file, data.getMainTextureData(), namespace, "generated", outputDirectory);
         } else if (data.getElytraTextureData() != null) {
-            modelName = convertTextureData(file, data.getElytraTextureData(), namespace, outputDirectory);
+            modelName = convertTextureData(file, data.getElytraTextureData(), namespace, "generated", outputDirectory);
         } else return;
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path.toLowerCase() + ".json"));
@@ -162,7 +162,7 @@ public class ResourcePackConverter {
                     + namespace + "/" + crossbowTextureData.getPulling_2().getModel() + "\"}, \"threshold\": 1.0}], \"fallback\": {\"type\": \"minecraft:model\", \"model\": \"item/"
                     + namespace + "/" + crossbowTextureData.getPulling_0().getModel() + "\"}, \"property\": \"minecraft:crossbow/pull\"}, \"property\": \"minecraft:using_item\"}}";
         } else if (data.getShieldBlockingData() != null) {
-            final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, outputDirectory);
+            final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", outputDirectory);
             jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_true\": {\"type\": \"model\", \"model\": \"item/"
                     + namespace + "/" + blockingModel
                     + "\"}, \"on_false\": {\"type\": \"model\", \"model\": \"item/" + namespace + "/" + modelName + "\"}}}";
@@ -177,12 +177,18 @@ public class ResourcePackConverter {
 
     private void normalizeBowData(Path file, BowTextureData data, String namespace, Path outputDirectory) throws IOException {
         TextureData first = null;
+        final String parent;
+        if (data instanceof CrossbowTextureData) {
+            parent = "crossbow";
+        } else {
+            parent = "bow";
+        }
         for (TextureData data1 : data.getAll()) {
             if (data1 == null) continue;
             if (first == null) {
                 first = data1;
             }
-            data1.setModel(convertTextureData(file, data1, namespace, outputDirectory));
+            data1.setModel(convertTextureData(file, data1, namespace, parent, outputDirectory));
         }
         assert first != null;
         if (data.getModel() == null) {
@@ -207,7 +213,7 @@ public class ResourcePackConverter {
         }
     }
 
-    private String convertTextureData(Path file, TextureData data, String namespace, Path outputDirectory) throws IOException {
+    private String convertTextureData(Path file, TextureData data, String namespace, String parent, Path outputDirectory) throws IOException {
         final String model = removeExtension(data.getModel());
         final String texture = removeExtension(data.getTexture());
 
@@ -219,7 +225,7 @@ public class ResourcePackConverter {
             if (texturePath == null) return null;
             final String textureName = resourceNameFromPath(texturePath);
 
-            return textureToModel(namespace, textureName, outputDirectory);
+            return textureToModel(namespace, textureName, parent, outputDirectory);
         }
         final Path modelPath = copyModel(file.getParent(), namespace, model, texture, outputDirectory);
         if (modelPath == null) return null;
@@ -261,11 +267,11 @@ public class ResourcePackConverter {
         return filename.replaceFirst("\\.[^/]+$", "");
     }
 
-    private String textureToModel(String namespace, String textureName, Path outputDirectory) throws IOException {
+    private String textureToModel(String namespace, String textureName, String parent, Path outputDirectory) throws IOException {
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(textureName + ".json");
         tmpModelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
-            writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/generated\"}");
+            writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/" + parent + "\"}");
         }
 
         return getFilenameWithoutAndWithExtension(Objects.requireNonNull(
