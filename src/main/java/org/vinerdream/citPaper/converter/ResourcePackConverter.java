@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.util.FileUtil;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.PropertiesUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
@@ -334,7 +333,7 @@ public class ResourcePackConverter {
         };
         return copyResource(
                 inputDirectory,
-                texture,
+                texture.replaceFirst(":", "/textures/"),
                 "png",
                 outputDirectory.resolve(Paths.get(
                     "assets",
@@ -368,7 +367,7 @@ public class ResourcePackConverter {
 
         Path newPath = copyResource(
                 inputDirectory,
-                model,
+                model.replaceFirst(":", "/models/"),
                 "json",
                 modelDirectory,
                 outputName
