@@ -61,7 +61,7 @@ public class ParsedTextureProperties {
                 "components.custom_name",
                 "components.minecraft:custom_name",
                 "nbt.title"
-        ));
+        ), logger);
         final String damageString = popValue(properties, null, "damage");
         this.damage = damageString != null ? DamageData.fromString(damageString) : null;
         this.customModelData = Integer.parseInt(popValue(

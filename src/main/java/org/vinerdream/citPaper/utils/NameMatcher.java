@@ -1,12 +1,13 @@
 package org.vinerdream.citPaper.utils;
 
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 public class NameMatcher {
     public static final int CASE_INSENSITIVE_FLAGS = Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
 
-    public static Pattern filterToPattern(String filter) {
+    public static Pattern filterToPattern(String filter, Consumer<String> logger) {
         if (filter == null) return null;
 
         try {
@@ -21,6 +22,7 @@ public class NameMatcher {
             }
             return Pattern.compile(Pattern.quote(filter));
         } catch (PatternSyntaxException e) {
+            logger.accept("Invalid filter: " + filter);
             return Pattern.compile(Pattern.quote(filter.replaceFirst("[^:]+:", "")));
         }
     }
