@@ -43,7 +43,7 @@ public class ItemUpdater {
                 matched = false;
             }
             if (data.getDamage() != null && meta instanceof Damageable damageable) {
-                if (!data.getDamage().check(item.getType().getMaxDurability() - damageable.getDamage() - damage, item.getType().getMaxDurability())) {
+                if (!data.getDamage().check(damageable.getDamage() + damage, item.getType().getMaxDurability())) {
                     matched = false;
                 }
             }
