@@ -41,27 +41,31 @@ public class ParsedTextureProperties {
     private NamespacedKey key;
 
     public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
-        this.type = TextureType.valueOf(popValue(properties, "type", "item").toUpperCase());
+        this.type = TextureType.valueOf(popValue(properties, "item", "type").toUpperCase());
         this.items = Arrays.stream(popValue(
                 properties,
-                "items",
-                popValue(properties, "matchItems", "")
+                "",
+                "matchItems",
+                "items"
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
         TextureData mainTextureData = TextureData.fromMap(properties, null);
         this.elytraTextureData = TextureData.fromMap(properties, "elytra");
         this.namePattern = NameMatcher.filterToPattern(popValue(
                 properties,
+                null,
+                "name",
                 "nbt.display.Name",
-                popValue(properties, "name", popValue(properties, "nbt.title", null))
+                "nbt.title"
         ));
-        this.damage = popValue(properties, "damage", null);
+        this.damage = popValue(properties, null, "damage");
         this.customModelData = Integer.parseInt(popValue(
                 properties,
-                "nbt.CustomModelData",
-                popValue(properties, "customModelData", "-1")
+                "-1",
+                "customModelData",
+                "nbt.CustomModelData"
         ));
         if (properties.containsKey("key")) {
-            this.key = NamespacedKey.fromString(popValue(properties, "key", null));
+            this.key = NamespacedKey.fromString(popValue(properties, null, "key"));
         }
 
         this.shieldBlockingData = TextureData.fromMap(properties, "shield_blocking");
@@ -70,7 +74,7 @@ public class ParsedTextureProperties {
         int armorTextureType = 0;
         for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
             if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
-                String value = popValue(properties, entry.getKey(), null);
+                String value = popValue(properties, null, entry.getKey());
                 if (armorTexture == null) {
                     armorTexture = value;
                     armorTextureType = Integer.parseInt(entry.getKey().split("_layer_")[1]);
@@ -85,7 +89,7 @@ public class ParsedTextureProperties {
         } else {
             this.armorDataType = armorTextureType;
         }
-        this.armorData = new TextureData(popValue(properties, "armorModel", null), armorTexture);
+        this.armorData = new TextureData(popValue(properties, null, "armorModel"), armorTexture);
         if (this.armorData.isEmpty()) {
             this.armorData = null;
         }

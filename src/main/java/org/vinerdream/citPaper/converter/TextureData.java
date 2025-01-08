@@ -29,11 +29,11 @@ public class TextureData {
     public static TextureData fromMap(Map<String, String> map, String key) {
         final TextureData result;
         if (key == null) {
-            result = new TextureData(popValue(map, "model", null), popValue(map, "texture", null));
+            result = new TextureData(popValue(map, null, "model"), popValue(map, null, "texture"));
         } else {
             result = new TextureData(
-                    popValue(map, "model." + key, null),
-                    popValue(map, "texture." + key, null)
+                    popValue(map, null, "model." + key),
+                    popValue(map, null, "texture." + key)
             );
         }
         if (result.isEmpty()) return null;
