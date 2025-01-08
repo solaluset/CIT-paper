@@ -9,10 +9,7 @@ import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.PropertiesUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -144,29 +141,41 @@ public class ResourcePackConverter {
             BowTextureData bowTextureData = data.getBowTextureData();
             normalizeBowData(file, bowTextureData, namespace, outputDirectory);
 
-            jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_false\": {\"type\": \"model\", \"model\": \""
-                    + namespace + ":item/" + bowTextureData.getModel() + "\"}, \"on_true\": {\"type\": \"range_dispatch\", \"property\": \"use_duration\", \"scale\": 0.05, \"entries\": [{\"model\": {\"type\": \"model\", \"model\": \""
-                    + namespace + ":item/" + bowTextureData.getPulling_1().getModel() + "\"}, \"threshold\": 0.65}, {\"model\": {\"type\": \"model\", \"model\": \""
-                    + namespace + ":item/" + bowTextureData.getPulling_2().getModel() + "\"}, \"threshold\": 0.9}], \"fallback\": {\"type\": \"model\", \"model\": \""
-                    + namespace + ":item/" + bowTextureData.getPulling_0().getModel() + "\"}}}}";
+            jsonData = String.format(
+                    readResource("/models/bow.json"),
+                    namespace,
+                    bowTextureData.getModel(),
+                    namespace,
+                    bowTextureData.getPulling_1().getModel(),
+                    namespace,
+                    bowTextureData.getPulling_2().getModel(),
+                    namespace,
+                    bowTextureData.getPulling_0().getModel()
+            );
         } else if (data.getCrossbowTextureData() != null) {
             CrossbowTextureData crossbowTextureData = data.getCrossbowTextureData();
             normalizeBowData(file, crossbowTextureData, namespace, outputDirectory);
 
-            jsonData = "{\"model\": {\"type\": \"minecraft:condition\", \"on_false\": {\"type\": \"minecraft:select\", \"cases\": [{\"model\": {\"type\": \"minecraft:model\", \"model\": \""
-                    + namespace + ":item/" + crossbowTextureData.getWithArrow().getModel() + "\"}, \"when\": \"arrow\"}, {\"model\": {\"type\": \"minecraft:model\", \"model\": \""
-                    + namespace + ":item/" + crossbowTextureData.getWithFirework().getModel() + "\"}, \"when\": \"rocket\"}], \"fallback\": {\"type\": \"minecraft:model\", \"model\": \""
-                    + namespace + ":item/" + crossbowTextureData.getModel() + "\"}, \"property\": \"minecraft:charge_type\"}, \"on_true\": {\"type\": \"minecraft:range_dispatch\", \"entries\": [{\"model\": {\"type\": \"minecraft:model\", \"model\": \""
-                    + namespace + ":item/" + crossbowTextureData.getPulling_1().getModel() + "\"}, \"threshold\": 0.58}, {\"model\": {\"type\": \"minecraft:model\", \"model\": \""
-                    + namespace + ":item/" + crossbowTextureData.getPulling_2().getModel() + "\"}, \"threshold\": 1.0}], \"fallback\": {\"type\": \"minecraft:model\", \"model\": \""
-                    + namespace + ":item/" + crossbowTextureData.getPulling_0().getModel() + "\"}, \"property\": \"minecraft:crossbow/pull\"}, \"property\": \"minecraft:using_item\"}}";
+            jsonData = String.format(
+                    readResource("/models/crossbow.json"),
+                    namespace,
+                    crossbowTextureData.getWithArrow().getModel(),
+                    namespace,
+                    crossbowTextureData.getWithFirework().getModel(),
+                    namespace,
+                    crossbowTextureData.getModel(),
+                    namespace,
+                    crossbowTextureData.getPulling_1().getModel(),
+                    namespace,
+                    crossbowTextureData.getPulling_2().getModel(),
+                    namespace,
+                    crossbowTextureData.getPulling_0().getModel()
+            );
         } else if (data.getShieldBlockingData() != null) {
             final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", outputDirectory);
-            jsonData = "{\"model\": {\"type\": \"condition\", \"property\": \"using_item\", \"on_true\": {\"type\": \"model\", \"model\": \""
-                    + namespace + ":item/" + blockingModel
-                    + "\"}, \"on_false\": {\"type\": \"model\", \"model\": \"" + namespace + ":item/" + modelName + "\"}}}";
+            jsonData = String.format(readResource("/models/shield.json"), namespace, modelName, namespace, blockingModel);
         } else {
-            jsonData = "{\"model\": {\"type\": \"model\", \"model\": \"" + namespace + ":item/" + modelName + "\"}}";
+            jsonData = String.format(readResource("/models/default.json"), namespace, modelName);
         }
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
@@ -270,7 +279,7 @@ public class ResourcePackConverter {
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(textureName + ".json");
         tmpModelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
-            writer.write("{\"textures\":{\"layer0\":\"" + namespace + ":item/" + textureName + "\"}, \"parent\":\"item/" + parent + "\"}");
+            writer.write(String.format(readResource("/models/item.json"), parent, namespace, textureName));
         }
 
         return getFilenameWithoutAndWithExtension(Objects.requireNonNull(
@@ -296,11 +305,21 @@ public class ResourcePackConverter {
         modelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(modelPath.toFile())) {
             if (type != 3) {
-                writer.write("{\"layers\": {\"humanoid\": [{\"texture\": \"" + namespace + ":" + armorTextureName
-                        + "\"}], \"humanoid_leggings\": [{\"texture\": \"" + namespace + ":" + armorTextureName
-                        + "\"}]}}");
+                writer.write(String.format(
+                        readResource("/models/armor.json"),
+                        namespace,
+                        armorTextureName,
+                        namespace,
+                        armorTextureName,
+                        namespace,
+                        armorTextureName
+                ));
             } else {
-                writer.write("{\"layers\": {\"wings\": [{\"texture\": \"" + namespace + ":" + armorTextureName + "\"}]}}");
+                writer.write(String.format(
+                        readResource("/models/elytra.json"),
+                        namespace,
+                        armorTextureName
+                ));
             }
         }
         return resourceNameFromPath(modelPath);
@@ -461,6 +480,20 @@ public class ResourcePackConverter {
 
     private Path getTmpDir() {
         return Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper");
+    }
+
+    private String readResource(String path) throws IOException {
+        try (InputStream input = getClass().getResourceAsStream(path)) {
+            assert input != null;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+                StringBuilder builder = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    builder.append(line.strip());
+                }
+                return builder.toString();
+            }
+        }
     }
 
     private void log(String text) {
