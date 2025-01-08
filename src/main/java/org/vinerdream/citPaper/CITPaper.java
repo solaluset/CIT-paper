@@ -13,6 +13,7 @@ import org.vinerdream.citPaper.converter.ResourcePackConverter;
 import org.vinerdream.citPaper.listeners.AnvilListener;
 import org.vinerdream.citPaper.listeners.BookListener;
 import org.vinerdream.citPaper.listeners.InventoryListener;
+import org.vinerdream.citPaper.listeners.ItemDamageListener;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ItemUpdater;
 
@@ -47,6 +48,7 @@ public final class CITPaper extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new AnvilListener(this), this);
         Bukkit.getPluginManager().registerEvents(new BookListener(this), this);
         Bukkit.getPluginManager().registerEvents(new InventoryListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new ItemDamageListener(this), this);
 
         PluginCommand command = Objects.requireNonNull(getCommand("cit-paper"));
         CITPaperCommand executor = new CITPaperCommand(this);

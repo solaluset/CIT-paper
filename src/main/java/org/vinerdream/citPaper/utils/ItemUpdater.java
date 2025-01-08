@@ -5,6 +5,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataType;
@@ -18,12 +19,20 @@ public class ItemUpdater {
         this.plugin = plugin;
     }
 
-    public void updateItem(ItemStack item) {
+    public void updateItem(ItemStack item, int damage) {
         Component name = item.getItemMeta().displayName();
-        updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : "");
+        updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : "", damage);
+    }
+
+    public void updateItem(ItemStack item) {
+        updateItem(item, 0);
     }
 
     public void updateItem(ItemStack item, String name) {
+        updateItem(item, name, 0);
+    }
+
+    public void updateItem(ItemStack item, String name, int damage) {
         ItemMeta meta = item.getItemMeta();
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().asString().equals(itemKey))) {
@@ -32,6 +41,11 @@ public class ItemUpdater {
             boolean matched = data.getNamePattern() == null || data.getNamePattern().matcher(name).find();
             if (data.getCustomModelData() != -1 && (!meta.hasCustomModelData() || meta.getCustomModelData() != data.getCustomModelData())) {
                 matched = false;
+            }
+            if (data.getDamage() != null && meta instanceof Damageable damageable) {
+                if (!data.getDamage().check(item.getType().getMaxDurability() - damageable.getDamage() - damage, item.getType().getMaxDurability())) {
+                    matched = false;
+                }
             }
             if (!matched) continue;
             meta.setItemModel(data.getKey());

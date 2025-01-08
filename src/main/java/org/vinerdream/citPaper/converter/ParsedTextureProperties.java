@@ -33,7 +33,8 @@ public class ParsedTextureProperties {
     private final CrossbowTextureData crossbowTextureData;
     @Getter
     private final Pattern namePattern;
-    private final String damage;
+    @Getter
+    private final DamageData damage;
     @Getter
     private final int customModelData;
     @Getter
@@ -59,7 +60,8 @@ public class ParsedTextureProperties {
                 "components.minecraft:custom_name",
                 "nbt.title"
         ));
-        this.damage = popValue(properties, null, "damage");
+        final String damageString = popValue(properties, null, "damage");
+        this.damage = damageString != null ? DamageData.fromString(damageString) : null;
         this.customModelData = Integer.parseInt(popValue(
                 properties,
                 "-1",
@@ -119,6 +121,9 @@ public class ParsedTextureProperties {
         }
         if (key != null) {
             result.put("key", key.asString());
+        }
+        if (damage != null) {
+            result.put("damage", damage.toString());
         }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());
