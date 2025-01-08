@@ -55,6 +55,8 @@ public class ParsedTextureProperties {
                 null,
                 "name",
                 "nbt.display.Name",
+                "components.custom_name",
+                "components.minecraft:custom_name",
                 "nbt.title"
         ));
         this.damage = popValue(properties, null, "damage");
