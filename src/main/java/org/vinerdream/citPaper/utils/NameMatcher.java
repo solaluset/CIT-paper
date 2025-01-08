@@ -26,7 +26,7 @@ public class NameMatcher {
     }
 
     private static String patternToRegex(String pattern) {
-        return "^" + pattern.replace("*", ".*") + "$";
+        return "^" + pattern.replace("*", ".*").replace('?', '.') + "$";
     }
 
     private static String removePrefix(String string, String prefix) {
