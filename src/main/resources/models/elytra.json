@@ -3,7 +3,7 @@
     "wings": [
       {
         "texture": "%s:%s",
-        "use_player_texture": true
+        "use_player_texture": false
       }
     ]
   }
