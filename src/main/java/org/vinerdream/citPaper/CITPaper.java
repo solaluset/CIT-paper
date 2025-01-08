@@ -21,10 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 public final class CITPaper extends JavaPlugin {
@@ -79,6 +76,7 @@ public final class CITPaper extends JavaPlugin {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        renames.sort(Comparator.comparingInt(ParsedTextureProperties::getWeight).reversed());
     }
 
     public boolean generateResourcePacks() throws IOException {

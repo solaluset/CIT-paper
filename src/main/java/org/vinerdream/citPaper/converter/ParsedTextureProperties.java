@@ -36,6 +36,8 @@ public class ParsedTextureProperties {
     @Getter
     private final DamageData damage;
     @Getter
+    private final int weight;
+    @Getter
     private final int customModelData;
     @Getter
     @Setter
@@ -71,6 +73,8 @@ public class ParsedTextureProperties {
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popValue(properties, null, "key"));
         }
+
+        this.weight = Integer.parseInt(popValue(properties, "0", "weight"));
 
         this.shieldBlockingData = TextureData.fromMap(properties, "shield_blocking");
 
@@ -170,6 +174,9 @@ public class ParsedTextureProperties {
         }
         if (customModelData != -1) {
             result.put("customModelData", String.valueOf(customModelData));
+        }
+        if (weight != 0) {
+            result.put("weight", String.valueOf(weight));
         }
         return result;
     }
