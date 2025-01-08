@@ -1,21 +1,27 @@
 package org.vinerdream.citPaper.converter;
 
+import lombok.Getter;
+
 public class DamageData {
     private final int minimum;
     private final int maximum;
     private final boolean isPercents;
+    @Getter
+    private final int mask;
 
-    public DamageData(int minimum, int maximum, boolean isPercents) {
+    public DamageData(int minimum, int maximum, boolean isPercents, int mask) {
         this.minimum = minimum;
         this.maximum = maximum;
         this.isPercents = isPercents;
+        this.mask = mask;
     }
 
-    public boolean check(int currentDurability, int maxDurability) {
+    public boolean check(int damage, int maxDurability) {
+        damage ^= mask;
         if (isPercents) {
-            currentDurability = (int) ((double) currentDurability / maxDurability * 100);
+            damage = (int) ((double) damage / maxDurability * 100);
         }
-        return currentDurability >= minimum && currentDurability <= maximum;
+        return damage >= minimum && damage <= maximum;
     }
 
     public String toString() {
@@ -24,7 +30,7 @@ public class DamageData {
         return result;
     }
 
-    public static DamageData fromString(String data) {
+    public static DamageData fromString(String data, String mask) {
         final int min, max;
         final boolean isPercents;
         if (data.endsWith("%")) {
@@ -44,6 +50,6 @@ public class DamageData {
         } else {
             min = max = Integer.parseInt(data);
         }
-        return new DamageData(min, max, isPercents);
+        return new DamageData(min, max, isPercents, Integer.parseInt(mask));
     }
 }

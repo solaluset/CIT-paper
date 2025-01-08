@@ -63,7 +63,10 @@ public class ParsedTextureProperties {
                 "nbt.title"
         ), logger);
         final String damageString = popValue(properties, null, "damage");
-        this.damage = damageString != null ? DamageData.fromString(damageString) : null;
+        this.damage = damageString != null ? DamageData.fromString(
+                damageString,
+                popValue(properties, "0", "damageMask")
+        ) : null;
         this.customModelData = Integer.parseInt(popValue(
                 properties,
                 "-1",
@@ -128,6 +131,9 @@ public class ParsedTextureProperties {
         }
         if (damage != null) {
             result.put("damage", damage.toString());
+            if (damage.getMask() != 0) {
+                result.put("damageMask", String.valueOf(damage.getMask()));
+            }
         }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());
