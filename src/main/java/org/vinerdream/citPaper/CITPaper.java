@@ -24,6 +24,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static org.vinerdream.citPaper.utils.MapUtils.mapToStringMap;
+
 public final class CITPaper extends JavaPlugin {
     @Getter
     private final List<ParsedTextureProperties> renames = new ArrayList<>();
@@ -71,7 +73,7 @@ public final class CITPaper extends JavaPlugin {
         try (Stream<Path> contents = Files.walk(renamesPath)) {
             contents.forEach(path -> {
                 Configuration config = YamlConfiguration.loadConfiguration(path.toFile());
-                config.getMapList("renames").forEach(map -> renames.add(new ParsedTextureProperties((Map<String, String>) map, getLogger()::warning)));
+                config.getMapList("renames").forEach(map -> renames.add(new ParsedTextureProperties(mapToStringMap(map), getLogger()::warning)));
             });
         } catch (IOException e) {
             throw new RuntimeException(e);

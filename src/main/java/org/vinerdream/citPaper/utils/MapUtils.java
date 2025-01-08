@@ -1,5 +1,6 @@
 package org.vinerdream.citPaper.utils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class MapUtils {
@@ -12,5 +13,13 @@ public class MapUtils {
             }
         }
         return result != null ? result : defaultValue;
+    }
+
+    public static Map<String, String> mapToStringMap(Map<?, ?> map) {
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            result.put(entry.getKey().toString(), entry.getValue().toString());
+        }
+        return result;
     }
 }
