@@ -25,7 +25,7 @@ public class ItemUpdater {
     }
 
     public void updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
-        Component name = item.getItemMeta().displayName();
+        Component name = item.getItemMeta().customName();
         updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : "", damage, enchantments);
     }
 
