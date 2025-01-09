@@ -23,4 +23,12 @@ public class MapUtils {
         }
         return result;
     }
+
+    public static <K, V> Map<K, V> mergeMaps(Map<K, V> map1, Map<K, V> map2) {
+        Map<K, V> result = new HashMap<>(map1);
+
+        result.putAll(map2);
+
+        return result;
+    }
 }

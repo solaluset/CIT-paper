@@ -6,14 +6,12 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.vinerdream.citPaper.commands.CITPaperCommand;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.converter.ResourcePackConverter;
-import org.vinerdream.citPaper.listeners.AnvilListener;
-import org.vinerdream.citPaper.listeners.BookListener;
-import org.vinerdream.citPaper.listeners.InventoryListener;
-import org.vinerdream.citPaper.listeners.ItemDamageListener;
+import org.vinerdream.citPaper.listeners.*;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ItemUpdater;
 
@@ -44,10 +42,13 @@ public final class CITPaper extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(new AnvilListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new BookListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new InventoryListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new ItemDamageListener(this), this);
+        registerEvents(
+                new AnvilListener(this),
+                new BookListener(this),
+                new InventoryListener(this),
+                new ItemDamageListener(this),
+                new EnchantListener(this)
+        );
 
         PluginCommand command = Objects.requireNonNull(getCommand("cit-paper"));
         CITPaperCommand executor = new CITPaperCommand(this);
@@ -62,6 +63,12 @@ public final class CITPaper extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+    }
+
+    private void registerEvents(Listener ...listeners) {
+        for (Listener listener : listeners) {
+            Bukkit.getPluginManager().registerEvents(listener, this);
+        }
     }
 
     public void loadRenames() {

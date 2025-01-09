@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -12,6 +13,10 @@ import org.bukkit.persistence.PersistentDataType;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 
+import java.util.Map;
+
+import static org.vinerdream.citPaper.utils.MapUtils.mergeMaps;
+
 public class ItemUpdater {
     private final CITPaper plugin;
 
@@ -19,20 +24,28 @@ public class ItemUpdater {
         this.plugin = plugin;
     }
 
-    public void updateItem(ItemStack item, int damage) {
+    public void updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
         Component name = item.getItemMeta().displayName();
-        updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : "", damage);
+        updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : "", damage, enchantments);
     }
 
     public void updateItem(ItemStack item) {
-        updateItem(item, 0);
+        updateItem(item, 0, null);
+    }
+
+    public void updateItem(ItemStack item, Map<Enchantment, Integer> enchantments) {
+        updateItem(item, 0, enchantments);
+    }
+
+    public void updateItem(ItemStack item, int damage) {
+        updateItem(item, damage, null);
     }
 
     public void updateItem(ItemStack item, String name) {
-        updateItem(item, name, 0);
+        updateItem(item, name, 0, null);
     }
 
-    public void updateItem(ItemStack item, String name, int damage) {
+    public void updateItem(ItemStack item, String name, int damage, Map<Enchantment, Integer> enchantments) {
         ItemMeta meta = item.getItemMeta();
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().asString().equals(itemKey))) {
@@ -47,7 +60,7 @@ public class ItemUpdater {
                     matched = false;
                 }
             }
-            if (data.getEnchantments() != null && !data.getEnchantments().check(meta.getEnchants())) {
+            if (data.getEnchantments() != null && !data.getEnchantments().check(mergeMaps(meta.getEnchants(), enchantments))) {
                 matched = false;
             }
             if (!matched) continue;
