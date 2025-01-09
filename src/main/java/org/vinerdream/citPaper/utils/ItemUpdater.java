@@ -1,7 +1,5 @@
 package org.vinerdream.citPaper.utils;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
@@ -51,9 +49,11 @@ public class ItemUpdater {
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        if (result instanceof Component component) {
-            return PlainTextComponentSerializer.plainText().serialize(component);
-        } else if (result instanceof String str) {
+        if (ReflectionUtils.isClassPresent("net.kyori.adventure.text.Component")) {
+            String name = ComponentUtils.componentToString(result);
+            if (name != null) return name;
+        }
+        if (result instanceof String str) {
             return str;
         } else {
             return "";
