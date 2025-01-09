@@ -13,6 +13,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 import static org.vinerdream.citPaper.utils.MapUtils.mergeMaps;
@@ -20,13 +22,46 @@ import static org.vinerdream.citPaper.utils.MapUtils.mergeMaps;
 public class ItemUpdater {
     private final CITPaper plugin;
 
+    private final static Method getCustomName;
+
+    static {
+        Method customName = null;
+        try {
+            customName = ItemMeta.class.getMethod("customName");
+        } catch (NoSuchMethodException e) {
+            try {
+                customName = ItemMeta.class.getMethod("getDisplayName");
+            } catch (NoSuchMethodException ignored) {}
+        }
+        getCustomName = customName;
+    }
+
     public ItemUpdater(CITPaper plugin) {
         this.plugin = plugin;
     }
 
+    private static String getItemName(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return "";
+        }
+        final Object result;
+        try {
+            result = getCustomName.invoke(meta);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        if (result instanceof Component component) {
+            return PlainTextComponentSerializer.plainText().serialize(component);
+        } else if (result instanceof String str) {
+            return str;
+        } else {
+            return "";
+        }
+    }
+
     public void updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
-        Component name = item.getItemMeta().customName();
-        updateItem(item, name != null ? PlainTextComponentSerializer.plainText().serialize(name) : "", damage, enchantments);
+        updateItem(item, getItemName(item), damage, enchantments);
     }
 
     public void updateItem(ItemStack item) {
