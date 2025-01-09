@@ -17,7 +17,8 @@ public class ParsedTextureProperties {
     @Getter
     private final List<String> items;
     @Getter
-    private final TextureData mainTextureData;
+    @Setter
+    private TextureData mainTextureData;
     @Getter
     private final TextureData elytraTextureData;
     @Getter
@@ -195,5 +196,10 @@ public class ParsedTextureProperties {
             logger.accept("Potential item conflict in " + this.namePattern);
         }
         return false;
+    }
+
+    public boolean hasAnyData() {
+        return mainTextureData != null || elytraTextureData != null || shieldBlockingData != null
+                || armorData != null || bowTextureData != null || crossbowTextureData != null;
     }
 }

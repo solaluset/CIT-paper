@@ -119,7 +119,17 @@ public class ResourcePackConverter {
     private void convertPropertiesFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
         final String namespace = file.getParent().getParent().getFileName() + "_" + file.getParent().getFileName().toString();
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
+
         data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
+
+        if (!data.hasAnyData()) {
+            if (file.getParent().resolve(path + ".json").toFile().isFile()) {
+                data.setMainTextureData(new TextureData(path, null));
+            } else if (file.getParent().resolve(path + ".png").toFile().isFile()) {
+                data.setMainTextureData(new TextureData(null, path));
+            }
+        }
+
         if (data.getArmorData() != null) {
             final String armorModel = convertArmorTextureData(file, data.getArmorData(), namespace, data.getArmorDataType(), outputDirectory);
 
