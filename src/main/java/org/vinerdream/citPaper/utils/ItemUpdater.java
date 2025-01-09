@@ -38,28 +38,6 @@ public class ItemUpdater {
         this.plugin = plugin;
     }
 
-    private static String getItemName(ItemStack item) {
-        ItemMeta meta = item.getItemMeta();
-        if (meta == null) {
-            return "";
-        }
-        final Object result;
-        try {
-            result = getCustomName.invoke(meta);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-        if (ReflectionUtils.isClassPresent("net.kyori.adventure.text.Component")) {
-            String name = ComponentUtils.componentToString(result);
-            if (name != null) return name;
-        }
-        if (result instanceof String str) {
-            return str;
-        } else {
-            return "";
-        }
-    }
-
     public void updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
         updateItem(item, getItemName(item), damage, enchantments);
     }
@@ -81,6 +59,7 @@ public class ItemUpdater {
     }
 
     public void updateItem(ItemStack item, String name, int damage, Map<Enchantment, Integer> enchantments) {
+        if (item == null) return;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
         for (ParsedTextureProperties data : plugin.getRenames()) {
@@ -134,5 +113,29 @@ public class ItemUpdater {
         } else return;
         equippable.setModel(texture);
         meta.setEquippable(equippable);
+    }
+
+    private static String getItemName(ItemStack item) {
+        if (item == null) return "";
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return "";
+        }
+
+        final Object result;
+        try {
+            result = getCustomName.invoke(meta);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+        if (ReflectionUtils.isClassPresent("net.kyori.adventure.text.Component")) {
+            String name = ComponentUtils.componentToString(result);
+            if (name != null) return name;
+        }
+        if (result instanceof String str) {
+            return str;
+        } else {
+            return "";
+        }
     }
 }

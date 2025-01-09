@@ -47,7 +47,8 @@ public final class CITPaper extends JavaPlugin {
                 new BookListener(this),
                 new InventoryListener(this),
                 new ItemDamageListener(this),
-                new EnchantListener(this)
+                new EnchantListener(this),
+                new GrindstoneListener(this)
         );
 
         PluginCommand command = Objects.requireNonNull(getCommand("cit-paper"));
