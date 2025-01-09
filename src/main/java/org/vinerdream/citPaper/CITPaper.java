@@ -71,9 +71,13 @@ public final class CITPaper extends JavaPlugin {
         }
     }
 
+    private Path getRenamesPath() {
+        return getDataFolder().toPath().resolve("renames");
+    }
+
     public void loadRenames() {
         renames.clear();
-        Path renamesPath = getDataPath().resolve("renames");
+        Path renamesPath = getRenamesPath();
         if (!renamesPath.toFile().isDirectory()) {
             renamesPath.toFile().mkdirs();
         }
@@ -98,7 +102,7 @@ public final class CITPaper extends JavaPlugin {
 
         final Path inputPath = Paths.get(inputDirectory);
         final Path outputPath = Paths.get(outputDirectory);
-        final Path renamesPath = getDataPath().resolve("renames");
+        final Path renamesPath = getRenamesPath();
 
         if (getConfig().getBoolean("converter.clearConfigs")) {
             FileUtils.removeDirectory(renamesPath);
