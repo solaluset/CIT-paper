@@ -17,8 +17,6 @@ public class InventoryListener implements Listener {
 
     @EventHandler
     public void onInventoryOpen(InventoryOpenEvent event) {
-//        for (int i = 0; i < event.getInventory().getSize(); i++)
-
         event.getInventory().setContents(Arrays.stream(event.getInventory().getContents()).map(item -> {
             if (item == null) return null;
             plugin.getItemUpdater().updateItem(item);
