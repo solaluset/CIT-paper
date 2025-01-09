@@ -47,6 +47,7 @@ public class ItemUpdater {
 
     public void updateItem(ItemStack item, String name, int damage, Map<Enchantment, Integer> enchantments) {
         ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().toString().equals(itemKey))) {
                 continue;
