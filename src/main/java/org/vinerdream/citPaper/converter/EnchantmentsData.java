@@ -22,7 +22,7 @@ public class EnchantmentsData {
     public boolean check(Map<Enchantment, Integer> itemEnchantments) {
         Set<Map.Entry<Enchantment, Integer>> entries = itemEnchantments.entrySet();
         if (enchantments != null) {
-            entries = entries.stream().filter(entry -> enchantments.contains(entry.getKey().getKey().asString())).collect(Collectors.toSet());
+            entries = entries.stream().filter(entry -> enchantments.contains(entry.getKey().getKey().toString())).collect(Collectors.toSet());
             if (entries.size() != enchantments.size()) {
                 return false;
             }

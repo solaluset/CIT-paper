@@ -127,7 +127,7 @@ public class ParsedTextureProperties {
             result.put("name", pattern);
         }
         if (key != null) {
-            result.put("key", key.asString());
+            result.put("key", key.toString());
         }
         if (damage != null) {
             damage.toMap(result);
