@@ -37,6 +37,8 @@ public class ParsedTextureProperties {
     @Getter
     private final DamageData damage;
     @Getter
+    private final EnchantmentsData enchantments;
+    @Getter
     private final int weight;
     @Getter
     private final int customModelData;
@@ -64,6 +66,7 @@ public class ParsedTextureProperties {
                 "nbt.title"
         ), logger);
         this.damage = DamageData.fromMap(properties);
+        this.enchantments = EnchantmentsData.fromMap(properties);
         this.customModelData = Integer.parseInt(popValue(
                 properties,
                 "-1",
@@ -128,6 +131,9 @@ public class ParsedTextureProperties {
         }
         if (damage != null) {
             damage.toMap(result);
+        }
+        if (enchantments != null) {
+            enchantments.toMap(result);
         }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());

@@ -47,6 +47,9 @@ public class ItemUpdater {
                     matched = false;
                 }
             }
+            if (data.getEnchantments() != null && !data.getEnchantments().check(meta.getEnchants())) {
+                matched = false;
+            }
             if (!matched) continue;
             meta.setItemModel(data.getKey());
             if (data.getArmorData() != null) {
