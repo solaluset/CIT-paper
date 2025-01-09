@@ -32,20 +32,22 @@ public class DamageData {
 
     public static DamageData fromString(String data, String mask) {
         final int min, max;
-        final boolean isPercents;
+        boolean isPercents = false;
         if (data.endsWith("%")) {
             isPercents = true;
             data = data.substring(0, data.length() - 1);
-        } else {
-            isPercents = false;
         }
         if (data.contains("-")) {
             String[] parts = data.split("-");
-            min = Integer.parseInt(parts[0]);
+            if (parts[0].endsWith("%")) {
+                isPercents = true;
+                parts[0] = parts[0].substring(0, parts[0].length() - 1);
+            }
+            min = parts[0].isEmpty() ? 0 : Integer.parseInt(parts[0]);
             if (parts.length >= 2) {
                 max = Integer.parseInt(parts[1]);
             } else {
-                max = Integer.MAX_VALUE;
+                max = isPercents ? 100 : Integer.MAX_VALUE;
             }
         } else {
             min = max = Integer.parseInt(data);
