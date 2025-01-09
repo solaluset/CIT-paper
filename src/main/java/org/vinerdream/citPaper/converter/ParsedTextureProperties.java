@@ -130,10 +130,7 @@ public class ParsedTextureProperties {
             result.put("key", key.asString());
         }
         if (damage != null) {
-            result.put("damage", damage.toString());
-            if (damage.getMask() != 0) {
-                result.put("damageMask", String.valueOf(damage.getMask()));
-            }
+            damage.toMap(result);
         }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());

@@ -1,35 +1,28 @@
 package org.vinerdream.citPaper.converter;
 
-import lombok.Getter;
-
-import java.util.List;
+import java.util.Map;
 
 public class DamageData {
-    private final List<Range> ranges;
-    @Getter
+    private final Range range;
     private final int mask;
 
-    public DamageData(List<Range> ranges, int mask) {
-        this.ranges = ranges;
+    public DamageData(Range range, int mask) {
+        this.range = range;
         this.mask = mask;
     }
 
     public boolean check(int damage, int maxDurability) {
-        damage ^= mask;
-
-        for (Range range : ranges) {
-            if (range.check(damage, maxDurability)) {
-                return true;
-            }
-        }
-        return false;
+        return range.check(damage ^ mask, maxDurability);
     }
 
-    public String toString() {
-        return Range.serialize(ranges);
+    public void toMap(Map<String, String> map) {
+        map.put("damage", range.toString());
+        if (mask != 0) {
+            map.put("damageMask", String.valueOf(mask));
+        }
     }
 
     public static DamageData fromString(String data, String mask) {
-        return new DamageData(Range.deserialize(data), Integer.parseInt(mask));
+        return new DamageData(new Range(data), Integer.parseInt(mask));
     }
 }
