@@ -18,6 +18,7 @@ public class MapUtils {
     public static Map<String, String> mapToStringMap(Map<?, ?> map) {
         Map<String, String> result = new HashMap<>();
         for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) continue;
             result.put(entry.getKey().toString(), entry.getValue().toString());
         }
         return result;
