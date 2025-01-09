@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.vinerdream"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 
 repositories {
     mavenLocal()
@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation("org.vinerdream:CIT-paper:1.0-SNAPSHOT")
+    implementation("org.vinerdream:CIT-paper:1.0")
     implementation("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
