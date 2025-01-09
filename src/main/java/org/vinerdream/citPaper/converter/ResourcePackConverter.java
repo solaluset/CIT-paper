@@ -117,8 +117,7 @@ public class ResourcePackConverter {
     }
 
     private void convertPropertiesFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
-        String namespace = file.getParent().getFileName().toString();
-        namespace = file.getParent().getParent().getFileName() + "_" + namespace;
+        final String namespace = file.getParent().getParent().getFileName() + "_" + file.getParent().getFileName().toString();
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
         data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
         if (data.getArmorData() != null) {
