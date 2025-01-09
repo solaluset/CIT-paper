@@ -2,6 +2,8 @@ package org.vinerdream.citPaper.converter;
 
 import java.util.Map;
 
+import static org.vinerdream.citPaper.utils.MapUtils.popValue;
+
 public class DamageData {
     private final Range range;
     private final int mask;
@@ -22,7 +24,9 @@ public class DamageData {
         }
     }
 
-    public static DamageData fromString(String data, String mask) {
-        return new DamageData(new Range(data), Integer.parseInt(mask));
+    public static DamageData fromMap(Map<String, String> map) {
+        final String data = popValue(map, null, "damage");
+        if (data == null) return null;
+        return new DamageData(new Range(data), Integer.parseInt(popValue(map, "0", "damageMask")));
     }
 }

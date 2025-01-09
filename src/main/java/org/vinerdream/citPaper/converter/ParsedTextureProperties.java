@@ -63,11 +63,7 @@ public class ParsedTextureProperties {
                 "components.minecraft:custom_name",
                 "nbt.title"
         ), logger);
-        final String damageString = popValue(properties, null, "damage");
-        this.damage = damageString != null ? DamageData.fromString(
-                damageString,
-                popValue(properties, "0", "damageMask")
-        ) : null;
+        this.damage = DamageData.fromMap(properties);
         this.customModelData = Integer.parseInt(popValue(
                 properties,
                 "-1",
