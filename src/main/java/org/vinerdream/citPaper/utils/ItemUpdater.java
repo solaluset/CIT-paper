@@ -1,9 +1,11 @@
 package org.vinerdream.citPaper.utils;
 
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.components.EquippableComponent;
@@ -62,8 +64,22 @@ public class ItemUpdater {
         if (item == null) return;
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return;
+        updateMeta(meta, item.getType(), name, damage, enchantments);
+        item.setItemMeta(meta);
+    }
+
+    public void updateMeta(BookMeta meta) {
+        String title = getItemName(meta);
+        if (title.isEmpty()) {
+            title = meta.getTitle();
+            if (title == null) return;
+        }
+        updateMeta(meta, Material.WRITTEN_BOOK, title, 0, null);
+    }
+
+    public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
         for (ParsedTextureProperties data : plugin.getRenames()) {
-            if (data.getItems().stream().noneMatch(itemKey -> item.getType().getKey().toString().equals(itemKey))) {
+            if (data.getItems().stream().noneMatch(itemKey -> type.getKey().toString().equals(itemKey))) {
                 continue;
             }
             boolean matched = data.getNamePattern() == null || data.getNamePattern().matcher(name).find();
@@ -71,7 +87,7 @@ public class ItemUpdater {
                 matched = false;
             }
             if (data.getDamage() != null && meta instanceof Damageable damageable) {
-                if (!data.getDamage().check(damageable.getDamage() + damage, item.getType().getMaxDurability())) {
+                if (!data.getDamage().check(damageable.getDamage() + damage, type.getMaxDurability())) {
                     matched = false;
                 }
             }
@@ -81,10 +97,9 @@ public class ItemUpdater {
             if (!matched) continue;
             meta.setItemModel(data.getKey());
             if (data.getArmorData() != null) {
-                setArmorTexture(meta, item.getType().getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
+                setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
             }
             meta.getPersistentDataContainer().set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
-            item.setItemMeta(meta);
             return;
         }
 
@@ -92,7 +107,6 @@ public class ItemUpdater {
             meta.setItemModel(null);
             setArmorTexture(meta, null, null);
             meta.getPersistentDataContainer().remove(plugin.getIsManagedKey());
-            item.setItemMeta(meta);
         }
     }
 
@@ -117,7 +131,10 @@ public class ItemUpdater {
 
     private static String getItemName(ItemStack item) {
         if (item == null) return "";
-        ItemMeta meta = item.getItemMeta();
+        return getItemName(item.getItemMeta());
+    }
+
+    private static String getItemName(ItemMeta meta) {
         if (meta == null) {
             return "";
         }
