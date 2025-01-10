@@ -258,11 +258,7 @@ public class ResourcePackConverter {
             if (texture == null) {
                 return null;
             }
-            final Path texturePath = copyArmorTexture(file.getParent(), namespace, texture, type, outputDirectory);
-            if (texturePath == null) return null;
-            final String textureName = resourceNameFromPath(texturePath);
-
-            return armorTextureToModel(file, namespace, textureName, type, outputDirectory);
+            return armorTextureToModel(file, namespace, texture, type, outputDirectory);
         }
         final Path modelPath = copyResource(
                 file.getParent(),
@@ -359,6 +355,10 @@ public class ResourcePackConverter {
             default:
                 throw new IllegalStateException("Unexpected value: " + textureType);
         };
+        log(texture);
+        if (texture.equals("owl_mask")) {
+            throw new RuntimeException();
+        }
         return copyResource(
                 inputDirectory,
                 texture.replaceFirst(":", "/textures/"),
