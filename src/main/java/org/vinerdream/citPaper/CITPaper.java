@@ -50,7 +50,8 @@ public final class CITPaper extends JavaPlugin {
                 new EnchantListener(this),
                 new GrindstoneListener(this),
                 new MendingListener(this),
-                new SmithingListener(this)
+                new SmithingListener(this),
+                new CraftListener(this)
         );
 
         PluginCommand command = Objects.requireNonNull(getCommand("cit-paper"));
