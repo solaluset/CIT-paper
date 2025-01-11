@@ -355,10 +355,6 @@ public class ResourcePackConverter {
             default:
                 throw new IllegalStateException("Unexpected value: " + textureType);
         };
-        log(texture);
-        if (texture.equals("owl_mask")) {
-            throw new RuntimeException();
-        }
         return copyResource(
                 inputDirectory,
                 texture.replaceFirst(":", "/textures/"),
@@ -385,20 +381,13 @@ public class ResourcePackConverter {
                 "models",
                 "item"
         ));
-        final String outputName;
-        if (textureName != null) {
-            String[] parts = model.split("/");
-            outputName = parts[parts.length - 1] + "_" + textureName;
-        } else {
-            outputName = null;
-        }
 
         Path newPath = copyResource(
                 inputDirectory,
                 model.replaceFirst(":", "/models/"),
                 "json",
                 modelDirectory,
-                outputName
+                textureName
         );
         if (newPath == null || !processTextures) return newPath;
         JsonObject json;
@@ -428,7 +417,7 @@ public class ResourcePackConverter {
         return copyResource(inputDirectory, resource, extension, outputDirectory, null);
     }
 
-    private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory, String outputName) throws IOException {
+    private Path copyResource(Path inputDirectory, String resource, String extension, Path outputDirectory, String outputSuffix) throws IOException {
         Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(resource, extension);
         resource = pair.getValue();
         Path oldPath = resolveResource(inputDirectory, resource, extension.equals("json") ? ResourceType.MODEL : ResourceType.TEXTURE);
@@ -436,7 +425,11 @@ public class ResourcePackConverter {
             log("Missing resource: " + resource + " (path: " + inputDirectory + ")");
             return null;
         }
-        Path newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension((outputName != null ? outputName : oldPath.getFileName()).toString().toLowerCase(), extension).getValue());
+        String outputName = String.join("_", pair.getKey().split("/"));
+        if (outputSuffix != null) {
+            outputName += "_" + outputSuffix;
+        }
+        Path newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension(outputName.toLowerCase(), extension).getValue());
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
         if (addMcmeta(oldPath).toFile().isFile()) {
