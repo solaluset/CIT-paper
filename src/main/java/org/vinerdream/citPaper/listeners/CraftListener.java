@@ -26,6 +26,8 @@ public class CraftListener implements Listener {
 
     @EventHandler
     public void onCraft(CraftItemEvent event) {
+        // setting the result will have no effect
+        // we need to modify the inventory after operation
         Bukkit.getScheduler().runTaskLater(
                 plugin,
                 () -> {
