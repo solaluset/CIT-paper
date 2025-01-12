@@ -5,7 +5,7 @@ import lombok.Setter;
 
 import java.util.Map;
 
-import static org.vinerdream.citPaper.utils.MapUtils.popValue;
+import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
 @Setter
 @Getter

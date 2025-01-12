@@ -2,7 +2,7 @@ package org.vinerdream.citPaper.converter;
 
 import java.util.Map;
 
-import static org.vinerdream.citPaper.utils.MapUtils.popValue;
+import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
 public class DamageData {
     private final Range range;

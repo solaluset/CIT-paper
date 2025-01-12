@@ -22,7 +22,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static org.vinerdream.citPaper.utils.MapUtils.mapToStringMap;
+import static org.vinerdream.citPaper.utils.CollectionUtils.mapToStringMap;
 
 public final class CITPaper extends JavaPlugin {
     @Getter

@@ -9,7 +9,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-import static org.vinerdream.citPaper.utils.MapUtils.popValue;
+import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
 public class ParsedTextureProperties {
     @Getter

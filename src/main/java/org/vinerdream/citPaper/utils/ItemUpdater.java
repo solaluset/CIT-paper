@@ -17,7 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import static org.vinerdream.citPaper.utils.MapUtils.mergeMaps;
+import static org.vinerdream.citPaper.utils.CollectionUtils.mergeMaps;
 
 public class ItemUpdater {
     private final CITPaper plugin;

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.vinerdream.citPaper.utils.MapUtils.popValue;
+import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
 public class EnchantmentsData {
     private final List<String> enchantments;

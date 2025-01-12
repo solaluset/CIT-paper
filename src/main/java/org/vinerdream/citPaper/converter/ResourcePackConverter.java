@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static org.vinerdream.citPaper.utils.CollectionUtils.allHaveAnySuffix;
+
 public class ResourcePackConverter {
     private final Consumer<String> logger;
     private final List<ParsedTextureProperties> convertedEntries;
@@ -138,7 +140,7 @@ public class ResourcePackConverter {
 
         final String modelName;
         if (data.getMainTextureData() != null) {
-            modelName = convertTextureData(file, data.getMainTextureData(), namespace, "generated", outputDirectory);
+            modelName = convertTextureData(file, data.getMainTextureData(), namespace, guessParent(data), outputDirectory);
         } else if (data.getElytraTextureData() != null) {
             modelName = convertTextureData(file, data.getElytraTextureData(), namespace, "generated", outputDirectory);
         } else return;
@@ -190,6 +192,21 @@ public class ResourcePackConverter {
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
         }
+    }
+
+    private String guessParent(ParsedTextureProperties data) {
+        if (allHaveAnySuffix(data.getItems(), List.of("mace"))) {
+            return "handheld_mace";
+        }
+        if (allHaveAnySuffix(data.getItems(), List.of("carrot_on_a_stick", "fishing_rod", "warped_fungus_on_a_stick"))) {
+            return "handheld_rod";
+        }
+        if (allHaveAnySuffix(data.getItems(), List.of(
+                "_axe", "_pickaxe", "_sword", "_rod", "_hoe", "_shovel", "stick", "bone", "bamboo"
+        ))) {
+            return "handheld";
+        }
+        return "generated";
     }
 
     private void normalizeBowData(Path file, BowTextureData data, String namespace, Path outputDirectory) throws IOException {
