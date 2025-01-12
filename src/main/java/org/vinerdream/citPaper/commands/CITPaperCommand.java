@@ -1,5 +1,6 @@
 package org.vinerdream.citPaper.commands;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -25,29 +26,31 @@ public class CITPaperCommand implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        plugin.reloadConfig();
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            plugin.reloadConfig();
 
-        final String message;
+            final String message;
 
-        if (args[0].equals("regenerate")) {
-            try {
-                if (plugin.generateResourcePacks()) {
-                    message = "Regenerated resource packs and reloaded successfully!";
-                } else {
-                    message = "Failed to regenerate resource packs!";
+            if (args[0].equals("regenerate")) {
+                try {
+                    if (plugin.generateResourcePacks()) {
+                        message = "Regenerated resource packs and reloaded successfully!";
+                    } else {
+                        message = "Failed to regenerate resource packs!";
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    sender.sendMessage("Failed to regenerate resource packs!");
+                    return;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-                sender.sendMessage("Failed to regenerate resource packs!");
-                return true;
+            } else {
+                message = "Reloaded successfully!";
             }
-        } else {
-            message = "Reloaded successfully!";
-        }
 
-        plugin.loadRenames();
+            plugin.loadRenames();
 
-        sender.sendMessage(message);
+            sender.sendMessage(message);
+        });
 
         return true;
     }
