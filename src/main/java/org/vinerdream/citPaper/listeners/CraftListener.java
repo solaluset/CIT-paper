@@ -1,16 +1,12 @@
 package org.vinerdream.citPaper.listeners;
 
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.CrafterCraftEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 import org.vinerdream.citPaper.CITPaper;
-
-import java.util.Arrays;
 
 public class CraftListener implements Listener {
     private final CITPaper plugin;
@@ -26,19 +22,9 @@ public class CraftListener implements Listener {
 
     @EventHandler
     public void onCraft(CraftItemEvent event) {
-        // setting the result will have no effect
-        // we need to modify the inventory after operation
-        Bukkit.getScheduler().runTaskLater(
-                plugin,
-                () -> {
-                    plugin.getItemUpdater().updateItem(event.getWhoClicked().getItemOnCursor());
-                    PlayerInventory inventory = event.getWhoClicked().getInventory();
-                    inventory.setContents(Arrays.stream(
-                            inventory.getContents()
-                    ).peek(plugin.getItemUpdater()::updateItem).toArray(ItemStack[]::new));
-                },
-                1
-        );
+        ItemStack result = event.getInventory().getResult();
+        plugin.getItemUpdater().updateItem(result);
+        event.getInventory().setResult(result);
     }
 
     @EventHandler
