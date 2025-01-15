@@ -9,6 +9,7 @@ import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.components.EquippableComponent;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
@@ -16,11 +17,15 @@ import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.mergeMaps;
 
 public class ItemUpdater {
     private final CITPaper plugin;
+    private final NamespacedKey originalDataKey;
+    private final NamespacedKey originalModelKey;
+    private final NamespacedKey originalArmorModelKey;
 
     private final static Method getCustomName;
 
@@ -38,6 +43,9 @@ public class ItemUpdater {
 
     public ItemUpdater(CITPaper plugin) {
         this.plugin = plugin;
+        this.originalDataKey = new NamespacedKey(plugin, "original-data");
+        this.originalModelKey = new NamespacedKey(plugin, "model");
+        this.originalArmorModelKey = new NamespacedKey(plugin, "armor-model");
     }
 
     public void updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
@@ -95,18 +103,45 @@ public class ItemUpdater {
                 matched = false;
             }
             if (!matched) continue;
+            final PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            if (!pdc.has(originalDataKey)) {
+                PersistentDataContainer container = pdc.getAdapterContext().newPersistentDataContainer();
+                if (meta.getItemModel() != null) {
+                    container.set(originalModelKey, PersistentDataType.STRING, meta.getItemModel().toString());
+                }
+                if (meta.getEquippable().getModel() != null) {
+                    container.set(originalArmorModelKey, PersistentDataType.STRING, meta.getEquippable().getModel().toString());
+                }
+                pdc.set(originalDataKey, PersistentDataType.TAG_CONTAINER, container);
+            }
+            pdc.set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
             meta.setItemModel(data.getKey());
             if (data.getArmorData() != null) {
                 setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
             }
-            meta.getPersistentDataContainer().set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
             return;
         }
 
         if (meta.getPersistentDataContainer().has(plugin.getIsManagedKey())) {
-            meta.setItemModel(null);
-            setArmorTexture(meta, null, null);
-            meta.getPersistentDataContainer().remove(plugin.getIsManagedKey());
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            PersistentDataContainer container = pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER);
+            assert container != null;
+            if (container.has(originalModelKey)) {
+                meta.setItemModel(NamespacedKey.fromString(Objects.requireNonNull(container.get(originalModelKey, PersistentDataType.STRING))));
+            } else {
+                meta.setItemModel(null);
+            }
+            if (container.has(originalArmorModelKey)) {
+                setArmorTexture(
+                        meta,
+                        type.getKey().getKey(),
+                        NamespacedKey.fromString(Objects.requireNonNull(container.get(originalArmorModelKey, PersistentDataType.STRING)))
+                );
+            } else {
+                setArmorTexture(meta, null, null);
+            }
+            pdc.remove(originalDataKey);
+            pdc.remove(plugin.getIsManagedKey());
         }
     }
 
