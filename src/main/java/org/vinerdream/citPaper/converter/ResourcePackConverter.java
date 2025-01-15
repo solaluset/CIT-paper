@@ -150,7 +150,7 @@ public class ResourcePackConverter {
 
         if (data.getBowTextureData() != null) {
             BowTextureData bowTextureData = data.getBowTextureData();
-            normalizeBowData(file, bowTextureData, namespace, outputDirectory);
+            normalizeData(file, bowTextureData, namespace, outputDirectory);
 
             jsonData = String.format(
                     readResource("/models/bow.json"),
@@ -165,7 +165,7 @@ public class ResourcePackConverter {
             );
         } else if (data.getCrossbowTextureData() != null) {
             CrossbowTextureData crossbowTextureData = data.getCrossbowTextureData();
-            normalizeBowData(file, crossbowTextureData, namespace, outputDirectory);
+            normalizeData(file, crossbowTextureData, namespace, outputDirectory);
 
             jsonData = String.format(
                     readResource("/models/crossbow.json"),
@@ -181,6 +181,19 @@ public class ResourcePackConverter {
                     crossbowTextureData.getPulling_2().getModel(),
                     namespace,
                     crossbowTextureData.getPulling_0().getModel()
+            );
+        } else if (data.getTridentTextureData() != null) {
+            TridentTextureData tridentData = data.getTridentTextureData();
+            normalizeData(file, tridentData, namespace, outputDirectory);
+
+            jsonData = String.format(
+                    readResource("/models/trident.json"),
+                    namespace,
+                    tridentData.getModel(),
+                    namespace,
+                    tridentData.getInHand().getModel(),
+                    namespace,
+                    tridentData.getThrowing().getModel()
             );
         } else if (data.getShieldBlockingData() != null) {
             final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", outputDirectory);
@@ -209,13 +222,15 @@ public class ResourcePackConverter {
         return "generated";
     }
 
-    private void normalizeBowData(Path file, BowTextureData data, String namespace, Path outputDirectory) throws IOException {
+    private void normalizeData(Path file, TextureData data, String namespace, Path outputDirectory) throws IOException {
         TextureData first = null;
         final String parent;
         if (data instanceof CrossbowTextureData) {
             parent = "crossbow";
-        } else {
+        } else if (data instanceof BowTextureData) {
             parent = "bow";
+        } else {
+            parent = "generated";
         }
         for (TextureData data1 : data.getAll()) {
             if (data1 == null) continue;
@@ -228,14 +243,16 @@ public class ResourcePackConverter {
         if (data.getModel() == null) {
             data.setModel(first.getModel());
         }
-        if (data.getPulling_0() == null) {
-            data.setPulling_0(first);
-        }
-        if (data.getPulling_1() == null) {
-            data.setPulling_1(first);
-        }
-        if (data.getPulling_2() == null) {
-            data.setPulling_2(first);
+        if (data instanceof BowTextureData bow) {
+            if (bow.getPulling_0() == null) {
+                bow.setPulling_0(first);
+            }
+            if (bow.getPulling_1() == null) {
+                bow.setPulling_1(first);
+            }
+            if (bow.getPulling_2() == null) {
+                bow.setPulling_2(first);
+            }
         }
         if (data instanceof CrossbowTextureData crossbow) {
             if (crossbow.getWithArrow() == null) {
@@ -243,6 +260,14 @@ public class ResourcePackConverter {
             }
             if (crossbow.getWithFirework() == null) {
                 crossbow.setWithFirework(first);
+            }
+        }
+        if (data instanceof TridentTextureData trident) {
+            if (trident.getInHand() == null) {
+                trident.setInHand(first);
+            }
+            if (trident.getThrowing() == null) {
+                trident.setThrowing(first);
             }
         }
     }

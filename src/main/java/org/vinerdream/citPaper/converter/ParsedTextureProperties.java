@@ -33,6 +33,8 @@ public class ParsedTextureProperties {
     @Getter
     private final CrossbowTextureData crossbowTextureData;
     @Getter
+    private final TridentTextureData tridentTextureData;
+    @Getter
     private final Pattern namePattern;
     @Getter
     private final DamageData damage;
@@ -113,6 +115,10 @@ public class ParsedTextureProperties {
         if (mainTextureData == null) {
             mainTextureData = crossbowTextureData;
         }
+        this.tridentTextureData = TridentTextureData.fromMap(properties, mainTextureData);
+        if (mainTextureData == null) {
+            mainTextureData = tridentTextureData;
+        }
         this.mainTextureData = mainTextureData;
     }
 
@@ -176,6 +182,18 @@ public class ParsedTextureProperties {
             if (crossbowTextureData.getWithFirework() != null) {
                 result.put("model.crossbow_firework", crossbowTextureData.getWithFirework().getModel());
                 result.put("texture.crossbow_firework", crossbowTextureData.getWithFirework().getTexture());
+            }
+        }
+        if (tridentTextureData != null) {
+            result.put("model.trident", tridentTextureData.getModel());
+            result.put("texture.trident", tridentTextureData.getTexture());
+            if (tridentTextureData.getInHand() != null) {
+                result.put("model.trident_in_hand", tridentTextureData.getInHand().getModel());
+                result.put("texture.trident_in_hand", tridentTextureData.getInHand().getTexture());
+            }
+            if (tridentTextureData.getThrowing() != null) {
+                result.put("model.trident_throwing", tridentTextureData.getThrowing().getModel());
+                result.put("texture.trident_throwing", tridentTextureData.getThrowing().getTexture());
             }
         }
         if (customModelData != -1) {

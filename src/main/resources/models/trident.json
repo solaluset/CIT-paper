@@ -1,0 +1,31 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "cases": [
+      {
+        "model": {
+          "type": "minecraft:model",
+          "model": "%s:item/%s"
+        },
+        "when": [
+          "gui",
+          "ground",
+          "fixed"
+        ]
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:condition",
+      "on_false": {
+        "type": "minecraft:model",
+        "model": "%s:item/%s"
+      },
+      "on_true": {
+        "type": "minecraft:model",
+        "model": "%s:item/%s"
+      },
+      "property": "minecraft:using_item"
+    },
+    "property": "minecraft:display_context"
+  }
+}

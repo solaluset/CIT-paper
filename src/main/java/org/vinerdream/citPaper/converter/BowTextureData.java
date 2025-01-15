@@ -57,8 +57,12 @@ public class BowTextureData extends TextureData {
         );
         if (result.isEmpty()) return null;
         if (mainData != null) {
-            result.setModel(mainData.getModel());
-            result.setTexture(mainData.getTexture());
+            if (result.getModel() == null) {
+                result.setModel(mainData.getModel());
+            }
+            if (result.getTexture() == null) {
+                result.setTexture(mainData.getTexture());
+            }
         }
         return result;
     }
