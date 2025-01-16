@@ -122,7 +122,9 @@ public class ResourcePackConverter {
         final String namespace = file.getParent().getParent().getFileName() + "_" + file.getParent().getFileName().toString();
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
 
-        data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
+        if (data.getKey() == null) {
+            data.setKey(new NamespacedKey(namespace.toLowerCase(), path.toLowerCase()));
+        } else return;
 
         if (!data.hasAnyData()) {
             if (file.getParent().resolve(path + ".json").toFile().isFile()) {
