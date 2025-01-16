@@ -86,6 +86,7 @@ public class ItemUpdater {
     }
 
     public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
+        final PersistentDataContainer pdc = meta.getPersistentDataContainer();
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (data.getItems().stream().noneMatch(itemKey -> type.getKey().toString().equals(itemKey))) {
                 continue;
@@ -103,7 +104,6 @@ public class ItemUpdater {
                 matched = false;
             }
             if (!matched) continue;
-            final PersistentDataContainer pdc = meta.getPersistentDataContainer();
             if (!pdc.has(originalDataKey)) {
                 PersistentDataContainer container = pdc.getAdapterContext().newPersistentDataContainer();
                 if (meta.getItemModel() != null) {
@@ -114,7 +114,6 @@ public class ItemUpdater {
                 }
                 pdc.set(originalDataKey, PersistentDataType.TAG_CONTAINER, container);
             }
-            pdc.set(plugin.getIsManagedKey(), PersistentDataType.BOOLEAN, true);
             meta.setItemModel(data.getKey());
             if (data.getArmorData() != null) {
                 setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
@@ -122,8 +121,7 @@ public class ItemUpdater {
             return;
         }
 
-        if (meta.getPersistentDataContainer().has(plugin.getIsManagedKey())) {
-            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        if (pdc.has(originalDataKey)) {
             PersistentDataContainer container = pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER);
             assert container != null;
             if (container.has(originalModelKey)) {
@@ -141,7 +139,6 @@ public class ItemUpdater {
                 setArmorTexture(meta, null, null);
             }
             pdc.remove(originalDataKey);
-            pdc.remove(plugin.getIsManagedKey());
         }
     }
 

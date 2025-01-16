@@ -29,12 +29,8 @@ public final class CITPaper extends JavaPlugin {
     private final List<ParsedTextureProperties> renames = new ArrayList<>();
     @Getter
     private ItemUpdater itemUpdater;
-    @Getter
-    private final NamespacedKey isManagedKey;
 
     public CITPaper() throws IOException {
-        isManagedKey = new NamespacedKey(this, "is_managed");
-
         saveDefaultConfig();
 
         generateResourcePacks();
