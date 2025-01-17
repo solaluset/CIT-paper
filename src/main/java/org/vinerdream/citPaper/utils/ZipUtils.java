@@ -25,7 +25,9 @@ public class ZipUtils {
     }
 
     public static void zip(Path directory, Path outputFile) throws IOException {
-        outputFile.getParent().toFile().mkdirs();
+        if (outputFile.getParent() != null) {
+            outputFile.getParent().toFile().mkdirs();
+        }
         OutputStream stream = new FileOutputStream(outputFile.toFile());
         try (ZipOutputStream zip = new ZipOutputStream(stream)) {
             try (Stream<Path> files = Files.walk(directory)) {
