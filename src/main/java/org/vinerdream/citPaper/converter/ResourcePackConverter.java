@@ -44,11 +44,7 @@ public class ResourcePackConverter {
         }
 
         FileUtils.removeDirectory(outputPath);
-        if (zipPath == null) {
-            FileUtils.copyDirectory(rootPath, outputPath);
-        } else {
-            outputPath = rootPath;
-        }
+        FileUtils.copyDirectory(rootPath, outputPath);
 
         final Path directory = rootPath.resolve("assets").resolve("minecraft");
         convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
