@@ -11,7 +11,10 @@ public class CitCliMain {
             System.out.println("Usage: <resource pack path> <output path> <config output path>");
             return;
         }
-        ResourcePackConverter converter = new ResourcePackConverter(System.out::println);
+        ResourcePackConverter converter = new ResourcePackConverter(
+                System.out::println,
+                Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper")
+        );
         converter.convertResourcePack(Paths.get(args[0]), Paths.get(args[1]));
         converter.saveConfiguration(Paths.get(args[2]));
     }

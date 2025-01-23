@@ -23,10 +23,12 @@ import static org.vinerdream.citPaper.utils.CollectionUtils.allHaveAnySuffix;
 public class ResourcePackConverter {
     private final Consumer<String> logger;
     private final List<ParsedTextureProperties> convertedEntries;
+    private final Path tempPath;
 
-    public ResourcePackConverter(Consumer<String> logger) {
+    public ResourcePackConverter(Consumer<String> logger, Path tempPath) {
         this.logger = logger;
         convertedEntries = new ArrayList<>();
+        this.tempPath = tempPath;
     }
 
     public void convertResourcePack(Path rootPath, Path outputPath) throws IOException {
@@ -531,7 +533,7 @@ public class ResourcePackConverter {
     }
 
     private Path getTmpDir() {
-        return Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper");
+        return tempPath;
     }
 
     private String readResource(String path) throws IOException {

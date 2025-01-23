@@ -75,6 +75,10 @@ public final class CITPaper extends JavaPlugin {
         return getDataFolder().toPath().resolve("renames");
     }
 
+    private Path getCachePath() {
+        return getDataFolder().toPath().resolve("cache");
+    }
+
     public void loadRenames() {
         renames.clear();
         Path renamesPath = getRenamesPath();
@@ -114,7 +118,7 @@ public final class CITPaper extends JavaPlugin {
         try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
             inputs.forEach(input -> {
                 if (input.equals(inputPath)) return;
-                ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning);
+                ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning, getCachePath());
                 try {
                     converter.convertResourcePack(
                             input,
