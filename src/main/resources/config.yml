@@ -4,3 +4,4 @@ converter:
   outputDirectory: ""
   clearOutputDirectory: true
   clearConfigs: true
+  preserveCitDirectories: true

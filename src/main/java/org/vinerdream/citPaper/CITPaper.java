@@ -118,7 +118,8 @@ public final class CITPaper extends JavaPlugin {
                 try {
                     converter.convertResourcePack(
                             input,
-                            outputPath.resolve(input.getFileName())
+                            outputPath.resolve(input.getFileName()),
+                            getConfig().getBoolean("converter.preserveCitDirectories")
                     );
                     converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
                 } catch (IOException e) {

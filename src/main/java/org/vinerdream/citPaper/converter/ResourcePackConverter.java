@@ -30,6 +30,10 @@ public class ResourcePackConverter {
     }
 
     public void convertResourcePack(Path rootPath, Path outputPath) throws IOException {
+        convertResourcePack(rootPath, outputPath, true);
+    }
+
+    public void convertResourcePack(Path rootPath, Path outputPath, boolean preserveCitDirectories) throws IOException {
         if (rootPath.toFile().isFile()) {
             Path newPath = getTmpDir().resolve(UUID.randomUUID().toString());
             ZipUtils.unzip(rootPath, newPath);
@@ -46,9 +50,15 @@ public class ResourcePackConverter {
         FileUtils.removeDirectory(outputPath);
         FileUtils.copyDirectory(rootPath, outputPath);
 
-        final Path directory = rootPath.resolve("assets").resolve("minecraft");
+        Path directory = rootPath.resolve("assets").resolve("minecraft");
         convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
         convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
+
+        if (!preserveCitDirectories) {
+            directory = outputPath.resolve("assets").resolve("minecraft");
+            FileUtils.removeDirectory(directory.resolve("optifine").resolve("cit"));
+            FileUtils.removeDirectory(directory.resolve("mcpatcher").resolve("cit"));
+        }
 
         if (zipPath != null) {
             ZipUtils.zip(outputPath, zipPath);
