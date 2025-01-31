@@ -477,7 +477,7 @@ public class ResourcePackConverter {
             log("Missing resource: " + resource + " (path: " + inputDirectory + ")");
             return null;
         }
-        String outputName = String.join("_", pair.getKey().split("/"));
+        String outputName = getFilenameWithoutAndWithExtension(joinPath(inputDirectory.relativize(oldPath)), extension).getKey();
         if (outputSuffix != null) {
             outputName += "_" + outputSuffix;
         }
@@ -488,6 +488,19 @@ public class ResourcePackConverter {
             Files.copy(addMcmeta(oldPath), addMcmeta(newPath), StandardCopyOption.REPLACE_EXISTING);
         }
         return newPath;
+    }
+
+    private String joinPath(Path path) {
+        final StringBuilder builder = new StringBuilder();
+        while (path != null) {
+            final String part = path.getFileName().toString();
+            if (!part.equals(".") && !part.equals("..")) {
+                builder.insert(0, part);
+                builder.insert(0, '_');
+            }
+            path = path.getParent();
+        }
+        return builder.substring(1);
     }
 
     private Path addMcmeta(Path path) {
