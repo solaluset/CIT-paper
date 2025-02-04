@@ -207,7 +207,7 @@ public class ParsedTextureProperties {
 
     public boolean itemEquals(ParsedTextureProperties other, Consumer<String> logger) {
         boolean almostEquals = (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())))
-                && this.customModelData == other.customModelData;
+                && this.customModelData == other.customModelData && Objects.equals(this.damage, other.damage);
         if (!almostEquals) return false;
         if (this.items.equals(other.items)) {
             return true;
