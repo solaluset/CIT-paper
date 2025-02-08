@@ -434,12 +434,13 @@ public class ResourcePackConverter {
                 "item"
         ));
 
+        final Path texturePath = textureName != null ? resolveResource(inputDirectory, textureName, ResourceType.TEXTURE) : null;
         Path newPath = copyResource(
                 inputDirectory,
                 model.replaceFirst(":", "/models/"),
                 "json",
                 modelDirectory,
-                textureName
+                texturePath != null ? removeExtension(texturePath.getFileName().toString()) : null
         );
         if (newPath == null || !processTextures) return newPath;
         JsonObject json;
