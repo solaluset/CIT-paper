@@ -434,7 +434,7 @@ public class ResourcePackConverter {
                 "item"
         ));
 
-        final Path texturePath = textureName != null ? resolveResource(inputDirectory, textureName, ResourceType.TEXTURE) : null;
+        final Path texturePath = textureName != null ? resolveResource(inputDirectory, getFilenameWithoutAndWithExtension(textureName, "png").getValue(), ResourceType.TEXTURE) : null;
         Path newPath = copyResource(
                 inputDirectory,
                 model.replaceFirst(":", "/models/"),
