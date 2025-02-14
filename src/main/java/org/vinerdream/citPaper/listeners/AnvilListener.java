@@ -14,6 +14,11 @@ public class AnvilListener implements Listener {
 
     @EventHandler
     public void onAnvilPrepare(PrepareAnvilEvent event) {
-        plugin.getItemUpdater().updateItem(event.getResult(), event.getView().getRenameText());
+        final String renameText = event.getView().getRenameText();
+        if (renameText != null && !renameText.isEmpty()) {
+            plugin.getItemUpdater().updateItem(event.getResult(), renameText);
+        } else {
+            plugin.getItemUpdater().updateItem(event.getResult());
+        }
     }
 }

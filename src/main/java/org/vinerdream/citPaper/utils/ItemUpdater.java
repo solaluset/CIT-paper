@@ -183,6 +183,8 @@ public class ItemUpdater {
         }
         if (result instanceof String str) {
             return str;
+        } else if (meta instanceof BookMeta bookMeta) {
+            return bookMeta.getTitle();
         } else {
             return "";
         }
