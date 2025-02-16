@@ -11,6 +11,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 
@@ -77,12 +78,7 @@ public class ItemUpdater {
     }
 
     public void updateMeta(BookMeta meta) {
-        String title = getItemName(meta);
-        if (title.isEmpty()) {
-            title = meta.getTitle();
-            if (title == null) return;
-        }
-        updateMeta(meta, Material.WRITTEN_BOOK, title, 0, null);
+        updateMeta(meta, Material.WRITTEN_BOOK, getItemName(meta), 0, null);
     }
 
     public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
@@ -166,7 +162,7 @@ public class ItemUpdater {
         return getItemName(item.getItemMeta());
     }
 
-    private static String getItemName(ItemMeta meta) {
+    private static @NotNull String getItemName(ItemMeta meta) {
         if (meta == null) {
             return "";
         }
@@ -184,7 +180,8 @@ public class ItemUpdater {
         if (result instanceof String str) {
             return str;
         } else if (meta instanceof BookMeta bookMeta) {
-            return bookMeta.getTitle();
+            final String title = bookMeta.getTitle();
+            return title != null ? title : "";
         } else {
             return "";
         }
