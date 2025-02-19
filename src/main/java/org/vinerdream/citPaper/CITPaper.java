@@ -96,7 +96,7 @@ public final class CITPaper extends JavaPlugin {
         }
         renames.sort(
                 Comparator.comparingInt(ParsedTextureProperties::getWeight)
-                        .thenComparing(properties -> properties.getNamePattern().pattern().length())
+                        .thenComparing(properties -> properties.getNamePattern() != null ? properties.getNamePattern().pattern().length() : 0)
                         .reversed()
         );
     }
