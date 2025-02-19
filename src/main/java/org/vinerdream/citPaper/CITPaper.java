@@ -94,7 +94,11 @@ public final class CITPaper extends JavaPlugin {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        renames.sort(Comparator.comparingInt(ParsedTextureProperties::getWeight).reversed());
+        renames.sort(
+                Comparator.comparingInt(ParsedTextureProperties::getWeight)
+                        .thenComparing(properties -> properties.getNamePattern().pattern().length())
+                        .reversed()
+        );
     }
 
     public boolean generateResourcePacks() throws IOException {
