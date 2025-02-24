@@ -2,12 +2,12 @@ package org.vinerdream.citPaper;
 
 import lombok.Getter;
 import org.bukkit.Bukkit;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.vinerdream.citPaper.api.events.ResourcePacksPostGenerateEvent;
 import org.vinerdream.citPaper.commands.CITPaperCommand;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.converter.ResourcePackConverter;
@@ -135,6 +135,13 @@ public final class CITPaper extends JavaPlugin {
                     throw new RuntimeException(e);
                 }
             });
+        }
+
+        if (isEnabled()) {
+            Bukkit.getScheduler().runTask(
+                    this,
+                    () -> Bukkit.getPluginManager().callEvent(new ResourcePacksPostGenerateEvent())
+            );
         }
 
         return true;
