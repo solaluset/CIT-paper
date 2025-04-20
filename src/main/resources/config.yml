@@ -1,7 +1,7 @@
 converter:
-  enabled: false
-  inputDirectory: ""
-  outputDirectory: ""
+  enabled: true
+  inputDirectory: "plugins/CIT-paper/packs"
+  outputDirectory: "plugins/CIT-paper/converted-packs"
   clearOutputDirectory: true
   clearConfigs: true
   preserveCitDirectories: true
