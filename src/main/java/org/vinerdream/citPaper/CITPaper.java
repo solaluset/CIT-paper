@@ -113,6 +113,9 @@ public final class CITPaper extends JavaPlugin {
         final Path outputPath = Paths.get(outputDirectory);
         final Path renamesPath = getRenamesPath();
 
+        if (!inputPath.toFile().isDirectory()) {
+            inputPath.toFile().mkdirs();
+        }
         if (getConfig().getBoolean("converter.clearConfigs")) {
             FileUtils.removeDirectory(renamesPath);
         }
