@@ -35,7 +35,7 @@ public class ZipUtils {
                     File file = filePath.toFile();
                     if (file.isDirectory()) return;
                     try {
-                        zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString()));
+                        zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString().replace(File.separator, "/")));
                         byte[] data = new byte[1024];
                         try (FileInputStream reader = new FileInputStream(file)) {
                             int read;
