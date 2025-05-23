@@ -84,10 +84,15 @@ public class ParsedTextureProperties {
         this.shieldBlockingData = TextureData.fromMap(properties, "shield_blocking");
 
         String armorTexture = null;
+        String armorOverlay = null;
         int armorTextureType = 0;
         for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
             if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
                 String value = popValue(properties, null, entry.getKey());
+                if (entry.getKey().endsWith("_overlay")) {
+                    armorOverlay = value;
+                    continue;
+                }
                 if (armorTexture == null) {
                     armorTexture = value;
                     armorTextureType = Integer.parseInt(entry.getKey().split("_layer_")[1]);
@@ -102,7 +107,7 @@ public class ParsedTextureProperties {
         } else {
             this.armorDataType = armorTextureType;
         }
-        this.armorData = new TextureData(popValue(properties, null, "armorModel"), armorTexture);
+        this.armorData = new TextureData(popValue(properties, null, "armorModel"), armorTexture, armorOverlay);
         if (this.armorData.isEmpty()) {
             this.armorData = null;
         }
