@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.converter;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.vinerdream.citPaper.utils.FileUtils;
@@ -445,19 +446,27 @@ public class ResourcePackConverter {
         if (newPath == null || !processTextures) return newPath;
         JsonObject json;
         try (FileReader reader = new FileReader(newPath.toFile())) {
-            json = new Gson().fromJson(reader, JsonObject.class);
-            JsonObject textures = json.get("textures").getAsJsonObject();
-            for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
-                Path outputTexture = copyTexture(inputDirectory, namespace, textureName == null ? entry.getValue().getAsString() : textureName, outputDirectory);
-                if (outputTexture == null) continue;
-                textures.addProperty(
-                        entry.getKey(),
-                        outputTexture.getParent().getParent().getParent().getFileName()
-                                + ":item/" + getFilenameWithoutAndWithExtension(
-                                outputTexture.getFileName().toString(),
-                                "png"
-                        ).getKey()
-                );
+            try {
+                json = new Gson().fromJson(reader, JsonObject.class);
+            } catch (JsonSyntaxException ignored) {
+                log("Invalid JSON: " + newPath);
+                return newPath;
+            }
+            JsonElement texturesElement = json.get("textures");
+            if (texturesElement != null) {
+                JsonObject textures = texturesElement.getAsJsonObject();
+                for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
+                    Path outputTexture = copyTexture(inputDirectory, namespace, textureName == null ? entry.getValue().getAsString() : textureName, outputDirectory);
+                    if (outputTexture == null) continue;
+                    textures.addProperty(
+                            entry.getKey(),
+                            outputTexture.getParent().getParent().getParent().getFileName()
+                                    + ":item/" + getFilenameWithoutAndWithExtension(
+                                    outputTexture.getFileName().toString(),
+                                    "png"
+                            ).getKey()
+                    );
+                }
             }
         }
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
