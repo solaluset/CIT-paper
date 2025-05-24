@@ -423,7 +423,7 @@ public class ResourcePackConverter {
                 }
             } else {
                 writer.write(String.format(
-                        readResource("/models/elytra.json"),
+                        readResource("/models/armor_elytra.json"),
                         namespace,
                         armorTextureName
                 ));
