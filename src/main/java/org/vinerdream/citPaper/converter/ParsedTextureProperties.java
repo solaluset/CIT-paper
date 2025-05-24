@@ -87,6 +87,8 @@ public class ParsedTextureProperties {
         String armorTexture = null;
         String armorOverlay = null;
         int armorTextureType = 0;
+        String itemTexture = null;
+        String itemOverlay = null;
         for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
             if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
                 String value = popValue(properties, null, entry.getKey());
@@ -100,6 +102,12 @@ public class ParsedTextureProperties {
                 } else if (!armorTexture.equals(value)) {
                     logger.accept("Different armor textures not supported: " + armorTexture + " != " + value);
                 }
+            } else if (entry.getKey().startsWith("texture.leather_")) {
+                if (entry.getKey().endsWith("_overlay")) {
+                    itemOverlay = popValue(properties, null, entry.getKey());
+                } else {
+                    itemTexture = popValue(properties, null, entry.getKey());
+                }
             }
         }
         if (armorTexture == null && type == TextureType.ELYTRA) {
@@ -111,6 +119,19 @@ public class ParsedTextureProperties {
         this.armorData = new TextureData(popValue(properties, null, "armorModel"), armorTexture, armorOverlay);
         if (this.armorData.isEmpty()) {
             this.armorData = null;
+        }
+        if (mainTextureData == null) {
+            mainTextureData = new TextureData(null, itemTexture, itemOverlay);
+            if (mainTextureData.isEmpty()) {
+                mainTextureData = null;
+            }
+        } else {
+            if (mainTextureData.getTexture() == null) {
+                mainTextureData.setTexture(itemTexture);
+            }
+            if (mainTextureData.getOverlay() == null) {
+                mainTextureData.setOverlay(itemOverlay);
+            }
         }
 
         this.elytraTextureData = ElytraTextureData.fromMap(properties, mainTextureData);

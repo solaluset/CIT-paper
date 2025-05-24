@@ -320,6 +320,7 @@ public class ResourcePackConverter {
         } else {
             texture = removeExtension(fallbackTexture);
         }
+        final String overlay = removeExtension(data.getOverlay());
 
         if (model == null) {
             if (texture == null) {
@@ -328,8 +329,15 @@ public class ResourcePackConverter {
             final Path texturePath = copyTexture(List.of(file.getParent()), namespace, texture, outputDirectory);
             if (texturePath == null) return null;
             final String textureName = resourceNameFromPath(texturePath);
+            String overlayName = null;
+            if (overlay != null) {
+                final Path overlayPath = copyTexture(List.of(file.getParent()), namespace, overlay, outputDirectory);
+                if (overlayPath != null) {
+                    overlayName = resourceNameFromPath(overlayPath);
+                }
+            }
 
-            return textureToModel(namespace, textureName, parent, outputDirectory);
+            return textureToModel(namespace, textureName, overlayName, parent, outputDirectory);
         }
         final Path modelPath = copyModel(file.getParent(), namespace, model, texture, outputDirectory);
         if (modelPath == null) return null;
@@ -373,11 +381,15 @@ public class ResourcePackConverter {
         return filename.replaceFirst("\\.[^/]+$", "");
     }
 
-    private String textureToModel(String namespace, String textureName, String parent, Path outputDirectory) throws IOException {
+    private String textureToModel(String namespace, String textureName, String overlayName, String parent, Path outputDirectory) throws IOException {
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(textureName + ".json");
         tmpModelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
-            writer.write(String.format(readResource("/models/item.json"), parent, namespace, textureName));
+            if (overlayName == null) {
+                writer.write(String.format(readResource("/models/item.json"), parent, namespace, textureName));
+            } else {
+                writer.write(String.format(readResource("/models/item_with_overlay.json"), parent, namespace, textureName, namespace, overlayName));
+            }
         }
 
         return getFilenameWithoutAndWithExtension(Objects.requireNonNull(

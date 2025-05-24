@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/%s",
+  "textures": {
+    "layer0": "%s:item/%s",
+    "layer1": "%s:item/%s"
+  }
+}
