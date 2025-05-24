@@ -20,7 +20,7 @@ public class ParsedTextureProperties {
     @Setter
     private TextureData mainTextureData;
     @Getter
-    private final TextureData elytraTextureData;
+    private final ElytraTextureData elytraTextureData;
     @Getter
     private final TextureData shieldBlockingData;
     @Getter
@@ -59,7 +59,6 @@ public class ParsedTextureProperties {
                 "items"
         ).split(" ")).map(item -> item.contains(":") ? item : "minecraft:" + item).toList();
         TextureData mainTextureData = TextureData.fromMap(properties, null);
-        this.elytraTextureData = TextureData.fromMap(properties, "elytra");
         this.namePattern = NameMatcher.filterToPattern(popValue(
                 properties,
                 null,
@@ -114,6 +113,10 @@ public class ParsedTextureProperties {
             this.armorData = null;
         }
 
+        this.elytraTextureData = ElytraTextureData.fromMap(properties, mainTextureData);
+        if (mainTextureData == null) {
+            mainTextureData = elytraTextureData;
+        }
         this.bowTextureData = BowTextureData.fromMap(properties, mainTextureData);
         if (mainTextureData == null) {
             mainTextureData = bowTextureData;
@@ -154,6 +157,12 @@ public class ParsedTextureProperties {
         }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());
+        }
+        if (elytraTextureData != null) {
+            result.put("model.elytra", elytraTextureData.getModel());
+            result.put("texture.elytra", elytraTextureData.getTexture());
+            result.put("model.broken_elytra", elytraTextureData.getBroken().getModel());
+            result.put("texture.broken_elytra", elytraTextureData.getBroken().getTexture());
         }
         if (bowTextureData != null) {
             result.put("model.bow_standby", bowTextureData.getModel());
@@ -237,6 +246,7 @@ public class ParsedTextureProperties {
 
     public boolean hasAnyData() {
         return mainTextureData != null || elytraTextureData != null || shieldBlockingData != null
-                || armorData != null || bowTextureData != null || crossbowTextureData != null;
+                || armorData != null || bowTextureData != null || crossbowTextureData != null
+                || fishingRodTextureData != null;
     }
 }

@@ -218,6 +218,17 @@ public class ResourcePackConverter {
                     namespace,
                     fishingRodData.getCast().getModel()
             );
+        } else if (data.getElytraTextureData() != null) {
+            ElytraTextureData elytraData = data.getElytraTextureData();
+            normalizeData(file, elytraData, namespace, outputDirectory);
+
+            jsonData = String.format(
+                    readResource("/models/elytra.json"),
+                    namespace,
+                    elytraData.getModel(),
+                    namespace,
+                    elytraData.getBroken().getModel()
+            );
         } else if (data.getShieldBlockingData() != null) {
             final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", outputDirectory);
             jsonData = String.format(readResource("/models/shield.json"), namespace, modelName, namespace, blockingModel);
@@ -294,6 +305,11 @@ public class ResourcePackConverter {
         if (data instanceof FishingRodTextureData fishingRod) {
             if (fishingRod.getCast() == null) {
                 fishingRod.setCast(first);
+            }
+        }
+        if (data instanceof ElytraTextureData elytra) {
+            if (elytra.getBroken() == null) {
+                elytra.setBroken(first);
             }
         }
     }
