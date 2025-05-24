@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.PropertiesUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
@@ -206,6 +207,17 @@ public class ResourcePackConverter {
                     namespace,
                     tridentData.getThrowing().getModel()
             );
+        } else if (data.getFishingRodTextureData() != null) {
+            FishingRodTextureData fishingRodData = data.getFishingRodTextureData();
+            normalizeData(file, fishingRodData, namespace, outputDirectory);
+
+            jsonData = String.format(
+                    readResource("/models/fishing_rod.json"),
+                    namespace,
+                    fishingRodData.getModel(),
+                    namespace,
+                    fishingRodData.getCast().getModel()
+            );
         } else if (data.getShieldBlockingData() != null) {
             final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", outputDirectory);
             jsonData = String.format(readResource("/models/shield.json"), namespace, modelName, namespace, blockingModel);
@@ -233,16 +245,14 @@ public class ResourcePackConverter {
         return "generated";
     }
 
-    private void normalizeData(Path file, TextureData data, String namespace, Path outputDirectory) throws IOException {
+    private void normalizeData(Path file, @NotNull TextureData data, String namespace, Path outputDirectory) throws IOException {
         TextureData first = null;
-        final String parent;
-        if (data instanceof CrossbowTextureData) {
-            parent = "crossbow";
-        } else if (data instanceof BowTextureData) {
-            parent = "bow";
-        } else {
-            parent = "generated";
-        }
+        final String parent = switch (data) {
+            case CrossbowTextureData ignored -> "crossbow";
+            case BowTextureData ignored -> "bow";
+            case FishingRodTextureData ignored -> "handheld_rod";
+            default -> "generated";
+        };
         for (TextureData data1 : data.getAll()) {
             if (data1 == null) continue;
             if (first == null) {
@@ -279,6 +289,11 @@ public class ResourcePackConverter {
             }
             if (trident.getThrowing() == null) {
                 trident.setThrowing(first);
+            }
+        }
+        if (data instanceof FishingRodTextureData fishingRod) {
+            if (fishingRod.getCast() == null) {
+                fishingRod.setCast(first);
             }
         }
     }

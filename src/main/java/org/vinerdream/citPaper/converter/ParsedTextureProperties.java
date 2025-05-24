@@ -35,6 +35,8 @@ public class ParsedTextureProperties {
     @Getter
     private final TridentTextureData tridentTextureData;
     @Getter
+    private final FishingRodTextureData fishingRodTextureData;
+    @Getter
     private final Pattern namePattern;
     @Getter
     private final DamageData damage;
@@ -124,6 +126,10 @@ public class ParsedTextureProperties {
         if (mainTextureData == null) {
             mainTextureData = tridentTextureData;
         }
+        this.fishingRodTextureData = FishingRodTextureData.fromMap(properties, mainTextureData);
+        if (mainTextureData == null) {
+            mainTextureData = fishingRodTextureData;
+        }
         this.mainTextureData = mainTextureData;
     }
 
@@ -200,6 +206,12 @@ public class ParsedTextureProperties {
                 result.put("model.trident_throwing", tridentTextureData.getThrowing().getModel());
                 result.put("texture.trident_throwing", tridentTextureData.getThrowing().getTexture());
             }
+        }
+        if (fishingRodTextureData != null) {
+            result.put("model.fishing_rod", fishingRodTextureData.getModel());
+            result.put("texture.fishing_rod", fishingRodTextureData.getTexture());
+            result.put("model.fishing_rod_cast", fishingRodTextureData.getCast().getModel());
+            result.put("texture.fishing_rod_cast", fishingRodTextureData.getCast().getTexture());
         }
         if (customModelData != -1) {
             result.put("customModelData", String.valueOf(customModelData));
