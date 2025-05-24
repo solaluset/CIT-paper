@@ -145,16 +145,14 @@ public class ResourcePackConverter {
         }
 
         if (data.getArmorData() != null) {
-            final String armorModel = convertArmorTextureData(file, data.getArmorData(), namespace, data.getArmorDataType(), outputDirectory);
+            final String armorModel = convertArmorTextureData(file, data.getArmorData(), namespace, data.getArmorDataType(), data.getMainTextureData() != null ? data.getMainTextureData().getTexture() : null, outputDirectory);
 
             data.getArmorData().setModel(namespace + ":" + armorModel);
         }
 
         final String modelName;
         if (data.getMainTextureData() != null) {
-            modelName = convertTextureData(file, data.getMainTextureData(), namespace, guessParent(data), outputDirectory);
-        } else if (data.getElytraTextureData() != null) {
-            modelName = convertTextureData(file, data.getElytraTextureData(), namespace, "generated", outputDirectory);
+            modelName = convertTextureData(file, data.getMainTextureData(), namespace, guessParent(data), null, outputDirectory);
         } else return;
 
         final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items", path.toLowerCase() + ".json"));
@@ -162,7 +160,7 @@ public class ResourcePackConverter {
 
         if (data.getBowTextureData() != null) {
             BowTextureData bowTextureData = data.getBowTextureData();
-            normalizeData(file, bowTextureData, namespace, outputDirectory);
+            normalizeData(file, bowTextureData, namespace, data.getMainTextureData().getTexture(), outputDirectory);
 
             jsonData = String.format(
                     readResource("/models/bow.json"),
@@ -177,7 +175,7 @@ public class ResourcePackConverter {
             );
         } else if (data.getCrossbowTextureData() != null) {
             CrossbowTextureData crossbowTextureData = data.getCrossbowTextureData();
-            normalizeData(file, crossbowTextureData, namespace, outputDirectory);
+            normalizeData(file, crossbowTextureData, namespace, data.getMainTextureData().getTexture(), outputDirectory);
 
             jsonData = String.format(
                     readResource("/models/crossbow.json"),
@@ -196,7 +194,7 @@ public class ResourcePackConverter {
             );
         } else if (data.getTridentTextureData() != null) {
             TridentTextureData tridentData = data.getTridentTextureData();
-            normalizeData(file, tridentData, namespace, outputDirectory);
+            normalizeData(file, tridentData, namespace, data.getMainTextureData().getTexture(), outputDirectory);
 
             jsonData = String.format(
                     readResource("/models/trident.json"),
@@ -209,7 +207,7 @@ public class ResourcePackConverter {
             );
         } else if (data.getFishingRodTextureData() != null) {
             FishingRodTextureData fishingRodData = data.getFishingRodTextureData();
-            normalizeData(file, fishingRodData, namespace, outputDirectory);
+            normalizeData(file, fishingRodData, namespace, data.getMainTextureData().getTexture(), outputDirectory);
 
             jsonData = String.format(
                     readResource("/models/fishing_rod.json"),
@@ -220,7 +218,7 @@ public class ResourcePackConverter {
             );
         } else if (data.getElytraTextureData() != null) {
             ElytraTextureData elytraData = data.getElytraTextureData();
-            normalizeData(file, elytraData, namespace, outputDirectory);
+            normalizeData(file, elytraData, namespace, data.getMainTextureData().getTexture(), outputDirectory);
 
             jsonData = String.format(
                     readResource("/models/elytra.json"),
@@ -230,7 +228,7 @@ public class ResourcePackConverter {
                     elytraData.getBroken().getModel()
             );
         } else if (data.getShieldBlockingData() != null) {
-            final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", outputDirectory);
+            final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", data.getMainTextureData().getTexture(), outputDirectory);
             jsonData = String.format(readResource("/models/shield.json"), namespace, modelName, namespace, blockingModel);
         } else {
             jsonData = String.format(readResource("/models/default.json"), namespace, modelName);
@@ -256,7 +254,7 @@ public class ResourcePackConverter {
         return "generated";
     }
 
-    private void normalizeData(Path file, @NotNull TextureData data, String namespace, Path outputDirectory) throws IOException {
+    private void normalizeData(Path file, @NotNull TextureData data, String namespace, String fallbackTexture, Path outputDirectory) throws IOException {
         TextureData first = null;
         final String parent = switch (data) {
             case CrossbowTextureData ignored -> "crossbow";
@@ -269,7 +267,7 @@ public class ResourcePackConverter {
             if (first == null) {
                 first = data1;
             }
-            data1.setModel(convertTextureData(file, data1, namespace, parent, outputDirectory));
+            data1.setModel(convertTextureData(file, data1, namespace, parent, fallbackTexture, outputDirectory));
         }
         assert first != null;
         if (data.getModel() == null) {
@@ -314,9 +312,14 @@ public class ResourcePackConverter {
         }
     }
 
-    private String convertTextureData(Path file, TextureData data, String namespace, String parent, Path outputDirectory) throws IOException {
+    private String convertTextureData(Path file, TextureData data, String namespace, String parent, String fallbackTexture, Path outputDirectory) throws IOException {
         final String model = removeExtension(data.getModel());
-        final String texture = removeExtension(data.getTexture());
+        final String texture;
+        if (data.getTexture() != null) {
+            texture = removeExtension(data.getTexture());
+        } else {
+            texture = removeExtension(fallbackTexture);
+        }
 
         if (model == null) {
             if (texture == null) {
@@ -334,9 +337,14 @@ public class ResourcePackConverter {
         return resourceNameFromPath(modelPath);
     }
 
-    private String convertArmorTextureData(Path file, TextureData data, String namespace, int type, Path outputDirectory) throws IOException {
+    private String convertArmorTextureData(Path file, TextureData data, String namespace, int type, String fallbackTexture, Path outputDirectory) throws IOException {
         final String model = removeExtension(data.getModel());
-        final String texture = removeExtension(data.getTexture());
+        final String texture;
+        if (data.getTexture() != null) {
+            texture = removeExtension(data.getTexture());
+        } else {
+            texture = fallbackTexture;
+        }
         final String overlay = removeExtension(data.getOverlay());
 
         if (model == null) {
