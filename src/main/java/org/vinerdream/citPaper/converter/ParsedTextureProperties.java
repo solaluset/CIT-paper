@@ -43,6 +43,8 @@ public class ParsedTextureProperties {
     @Getter
     private final EnchantmentsData enchantments;
     @Getter
+    private final String potion;
+    @Getter
     private final int weight;
     @Getter
     private final int customModelData;
@@ -70,6 +72,13 @@ public class ParsedTextureProperties {
         ), logger);
         this.damage = DamageData.fromMap(properties);
         this.enchantments = EnchantmentsData.fromMap(properties);
+        this.potion = popValue(
+                properties,
+                null,
+                "nbt.Potion",
+                "components.potion_contents.potion",
+                "components.minecraft:potion_contents.potion"
+        );
         this.customModelData = Integer.parseInt(popValue(
                 properties,
                 "-1",
@@ -176,6 +185,9 @@ public class ParsedTextureProperties {
         if (enchantments != null) {
             enchantments.toMap(result);
         }
+        if (potion != null) {
+            result.put("nbt.Potion", potion);
+        }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());
         }
@@ -254,7 +266,7 @@ public class ParsedTextureProperties {
 
     public boolean itemEquals(ParsedTextureProperties other, Consumer<String> logger) {
         boolean almostEquals = (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())))
-                && this.customModelData == other.customModelData && Objects.equals(this.damage, other.damage);
+                && this.customModelData == other.customModelData && Objects.equals(this.damage, other.damage) && Objects.equals(this.potion, other.potion);
         if (!almostEquals) return false;
         if (this.items.equals(other.items)) {
             return true;

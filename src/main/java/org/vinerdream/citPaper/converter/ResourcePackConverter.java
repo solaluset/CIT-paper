@@ -231,7 +231,11 @@ public class ResourcePackConverter {
             final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), namespace, "shield", data.getMainTextureData().getTexture(), outputDirectory);
             jsonData = String.format(readResource("/models/shield.json"), namespace, modelName, namespace, blockingModel);
         } else {
-            jsonData = String.format(readResource("/models/default.json"), namespace, modelName);
+            if (modelName != null) {
+                jsonData = String.format(readResource("/models/default.json"), namespace + ":item/" + modelName);
+            } else {
+                jsonData = String.format(readResource("/models/default.json"), data.getMainTextureData().getModel());
+            }
         }
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {

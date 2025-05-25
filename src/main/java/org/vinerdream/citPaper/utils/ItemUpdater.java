@@ -8,9 +8,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
@@ -98,6 +100,16 @@ public class ItemUpdater {
             }
             if (data.getEnchantments() != null && !data.getEnchantments().check(mergeMaps(meta.getEnchants(), enchantments))) {
                 matched = false;
+            }
+            if (data.getPotion() != null) {
+                if (!(meta instanceof PotionMeta potionMeta)) {
+                    matched = false;
+                } else {
+                    final PotionType potionType = potionMeta.getBasePotionType();
+                    if (potionType == null || !data.getPotion().equals(potionType.getKey().toString())) {
+                        matched = false;
+                    }
+                }
             }
             if (!matched) continue;
             if (!pdc.has(originalDataKey)) {
