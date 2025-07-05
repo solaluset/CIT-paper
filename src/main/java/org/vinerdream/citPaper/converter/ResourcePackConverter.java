@@ -107,25 +107,7 @@ public class ResourcePackConverter {
         }
 
         convertPropertiesFile(file, data, outputDirectory);
-
-        boolean found = false;
-        for (ParsedTextureProperties savedData : convertedEntries) {
-            if (savedData.itemEquals(data, logger)) {
-                if (savedData.getArmorData() == null) {
-                    savedData.setArmorData(data.getArmorData());
-                } else {
-                    savedData.setKey(data.getKey());
-                }
-                convertedEntries.remove(savedData);
-                convertedEntries.add(new ParsedTextureProperties(savedData.asMap(), logger));
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            convertedEntries.add(data);
-        }
-
+        convertedEntries.add(data);
     }
 
     private void convertPropertiesFile(Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {

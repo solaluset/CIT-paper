@@ -168,6 +168,7 @@ public class ParsedTextureProperties {
 
     public Map<String, String> asMap() {
         Map<String, String> result = new HashMap<>();
+        result.put("type", type.toString());
         result.put("items", String.join(" ", items));
         if (namePattern != null) {
             String pattern = "regex:" + namePattern.pattern();

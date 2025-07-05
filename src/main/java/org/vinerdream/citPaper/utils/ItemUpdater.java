@@ -16,9 +16,11 @@ import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
+import org.vinerdream.citPaper.converter.TextureType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
@@ -85,7 +87,9 @@ public class ItemUpdater {
 
     public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
         final PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        final HashSet<TextureType> applied = new HashSet<>();
         for (ParsedTextureProperties data : plugin.getRenames()) {
+            if (applied.contains(data.getType())) continue;
             if (data.getItems().stream().noneMatch(itemKey -> type.getKey().toString().equals(itemKey))) {
                 continue;
             }
@@ -122,12 +126,16 @@ public class ItemUpdater {
                 }
                 pdc.set(originalDataKey, PersistentDataType.TAG_CONTAINER, container);
             }
-            meta.setItemModel(data.getKey());
+            if (data.getType() == TextureType.ITEM) {
+                meta.setItemModel(data.getKey());
+            }
             if (data.getArmorData() != null) {
                 setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
             }
-            return;
+            applied.add(data.getType());
         }
+
+        if (!applied.isEmpty()) return;
 
         if (pdc.has(originalDataKey)) {
             PersistentDataContainer container = pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER);
