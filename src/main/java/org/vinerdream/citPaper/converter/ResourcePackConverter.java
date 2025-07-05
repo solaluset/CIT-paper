@@ -530,8 +530,7 @@ public class ResourcePackConverter {
                 List.of(inputDirectory),
                 model,
                 "json",
-                modelDirectory,
-                texturePath != null ? removeExtension(texturePath.getFileName().toString()) : null
+                modelDirectory
         );
         if (newPath == null || !processTextures) return newPath;
         JsonObject json;
@@ -541,6 +540,13 @@ public class ResourcePackConverter {
             } catch (JsonSyntaxException ignored) {
                 log("Invalid JSON: " + newPath);
                 return newPath;
+            }
+            final JsonElement parent = json.get("parent");
+            if (parent != null) {
+                final Path parentModel = copyModel(inputDirectory, namespace, parent.getAsString(), null, outputDirectory);
+                if (parentModel != null) {
+                    json.addProperty("parent", namespace + ":item/" + resourceNameFromPath(parentModel));
+                }
             }
             JsonElement texturesElement = json.get("textures");
             if (texturesElement != null) {
@@ -559,6 +565,16 @@ public class ResourcePackConverter {
                 }
             }
         }
+        if (texturePath != null) {
+            final JsonObject newJson = new JsonObject();
+            newJson.addProperty("parent", namespace + ":item/" + resourceNameFromPath(newPath));
+            newJson.add("textures", json.get("textures"));
+            json = newJson;
+            newPath = newPath.getParent().resolve(
+                    getFilenameWithoutAndWithExtension(newPath.getFileName().toString(), "json").getKey()
+                            + "_" + removeExtension(texturePath.getFileName().toString()) + ".json"
+            );
+        }
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
             writer.write(new Gson().toJson(json));
         }
@@ -566,10 +582,6 @@ public class ResourcePackConverter {
     }
 
     private Path copyResource(List<Path> inputDirectories, String resource, String extension, Path outputDirectory) throws IOException {
-        return copyResource(inputDirectories, resource, extension, outputDirectory, null);
-    }
-
-    private Path copyResource(List<Path> inputDirectories, String resource, String extension, Path outputDirectory, String outputSuffix) throws IOException {
         Path foundDirectory = null;
         Path oldPath = null;
         for (Path inputDirectory : inputDirectories) {
@@ -584,9 +596,6 @@ public class ResourcePackConverter {
             return null;
         }
         String outputName = getFilenameWithoutAndWithExtension(joinPath(foundDirectory.relativize(oldPath)), extension).getKey();
-        if (outputSuffix != null) {
-            outputName += "_" + outputSuffix;
-        }
         Path newPath = outputDirectory.resolve(getFilenameWithoutAndWithExtension(outputName.toLowerCase(), extension).getValue());
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
