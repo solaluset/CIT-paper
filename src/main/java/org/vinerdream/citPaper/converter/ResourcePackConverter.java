@@ -548,37 +548,47 @@ public class ResourcePackConverter {
                     json.addProperty("parent", namespace + ":item/" + resourceNameFromPath(parentModel));
                 }
             }
-            JsonElement texturesElement = json.get("textures");
-            if (texturesElement != null) {
-                JsonObject textures = texturesElement.getAsJsonObject();
-                for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
-                    Path outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, model, "json").getParent()), namespace, textureName == null ? entry.getValue().getAsString() : textureName, outputDirectory);
-                    if (outputTexture == null) continue;
-                    textures.addProperty(
-                            entry.getKey(),
-                            outputTexture.getParent().getParent().getParent().getFileName()
-                                    + ":item/" + getFilenameWithoutAndWithExtension(
-                                    outputTexture.getFileName().toString(),
-                                    "png"
-                            ).getKey()
-                    );
-                }
-            }
         }
         if (texturePath != null) {
+            fixTextures(inputDirectory, namespace, model, json, null, outputDirectory);
+            try (FileWriter writer = new FileWriter(newPath.toFile())) {
+                writer.write(new Gson().toJson(json));
+            }
             final JsonObject newJson = new JsonObject();
             newJson.addProperty("parent", namespace + ":item/" + resourceNameFromPath(newPath));
-            newJson.add("textures", json.get("textures"));
+            if (json.get("textures") != null) {
+                newJson.add("textures", json.get("textures"));
+            }
             json = newJson;
             newPath = newPath.getParent().resolve(
                     getFilenameWithoutAndWithExtension(newPath.getFileName().toString(), "json").getKey()
                             + "_" + removeExtension(texturePath.getFileName().toString()) + ".json"
             );
+            fixTextures(inputDirectory, namespace, model, json, textureName, outputDirectory);
         }
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
             writer.write(new Gson().toJson(json));
         }
         return newPath;
+    }
+
+    private void fixTextures(Path inputDirectory, String namespace, String modelName, JsonObject model, String textureName, Path outputDirectory) throws IOException {
+        JsonElement texturesElement = model.get("textures");
+        if (texturesElement != null) {
+            JsonObject textures = texturesElement.getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
+                Path outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, modelName, "json").getParent()), namespace, textureName == null ? entry.getValue().getAsString() : textureName, outputDirectory);
+                if (outputTexture == null) continue;
+                textures.addProperty(
+                        entry.getKey(),
+                        outputTexture.getParent().getParent().getParent().getFileName()
+                                + ":item/" + getFilenameWithoutAndWithExtension(
+                                outputTexture.getFileName().toString(),
+                                "png"
+                        ).getKey()
+                );
+            }
+        }
     }
 
     private Path copyResource(List<Path> inputDirectories, String resource, String extension, Path outputDirectory) throws IOException {
