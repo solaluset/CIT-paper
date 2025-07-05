@@ -546,8 +546,8 @@ public class ResourcePackConverter {
                     getFilenameWithoutAndWithExtension(newPath.getFileName().toString(), "json").getKey()
                             + "_" + removeExtension(texturePath.getFileName().toString()) + ".json"
             );
-            fixTextures(inputDirectory, namespace, model, json, textureName, outputDirectory);
         }
+        fixTextures(inputDirectory, namespace, model, json, textureName, outputDirectory);
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
             writer.write(new Gson().toJson(json));
         }
