@@ -354,7 +354,7 @@ public class ResourcePackConverter {
                 List.of(file.getParent()),
                 texture.replaceFirst(":", "/models/"),
                 "json",
-                outputDirectory.resolve(Paths.get("assets", namespace, "equipment", model + ".json"))
+                outputDirectory.resolve(Paths.get("assets", namespace, "equipment"))
         );
         if (modelPath == null) return null;
 
