@@ -1,8 +1,11 @@
 package org.vinerdream.citPaper.utils;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.stream.Stream;
 
 public class FileUtils {
@@ -23,8 +26,32 @@ public class FileUtils {
 
     public static void removeDirectory(Path directory) throws IOException {
         if (!directory.toFile().exists()) return;
-        try (Stream<Path> contents = Files.walk(directory)) {
-            contents.toList().reversed().forEach(file -> file.toFile().delete());
-        }
+        Files.walkFileTree(directory, new FileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes basicFileAttributes) {
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path path, BasicFileAttributes basicFileAttributes) throws IOException {
+                Files.delete(path);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path path, IOException e) throws IOException {
+                throw e;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path path, IOException e) throws IOException {
+                if (e == null) {
+                    Files.delete(path);
+                    return FileVisitResult.CONTINUE;
+                } else {
+                    throw e;
+                }
+            }
+        });
     }
 }
