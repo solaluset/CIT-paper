@@ -123,6 +123,9 @@ public final class CITPaper extends JavaPlugin {
             FileUtils.removeDirectory(outputPath);
         }
 
+        final List<Path> convertedResourcePacks = new ArrayList<>();
+        final Map<Path, Exception> failedResourcePacks = new HashMap<>();
+
         try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
             inputs.forEach(input -> {
                 if (input.equals(inputPath)) return;
@@ -134,16 +137,25 @@ public final class CITPaper extends JavaPlugin {
                             getConfig().getBoolean("converter.preserveCitDirectories")
                     );
                     converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    convertedResourcePacks.add(input);
+                } catch (Exception e) {
+                    failedResourcePacks.put(input, e);
                 }
             });
         }
 
+        failedResourcePacks.forEach((path, exception) -> {
+            getLogger().severe("Failed to convert " + path);
+            exception.printStackTrace();
+        });
+
         if (isEnabled()) {
             Bukkit.getScheduler().runTask(
                     this,
-                    () -> Bukkit.getPluginManager().callEvent(new ResourcePacksPostGenerateEvent())
+                    () -> Bukkit.getPluginManager().callEvent(new ResourcePacksPostGenerateEvent(
+                            convertedResourcePacks,
+                            failedResourcePacks
+                    ))
             );
         }
 
