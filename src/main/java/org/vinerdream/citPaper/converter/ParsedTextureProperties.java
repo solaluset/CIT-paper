@@ -53,7 +53,7 @@ public class ParsedTextureProperties {
     private NamespacedKey key;
 
     public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
-        this.type = TextureType.valueOf(popValue(properties, "item", "type").toUpperCase());
+        this.type = TextureType.valueOf(popValue(properties, "item", "type").toUpperCase(Locale.ROOT));
         this.items = Arrays.stream(popValue(
                 properties,
                 "",
