@@ -7,7 +7,8 @@
 -keepclassmembers class * {
     @org.bukkit.event.EventHandler *;
 }
--keepclassmembers class * {
-    static org.bukkit.event.HandlerList getHandlerList();
+-keepclassmembers class * extends org.bukkit.event.Event {
+    public ** *(...);
 }
+-keepattributes Signature
 -keepattributes RuntimeVisibleAnnotations
