@@ -129,13 +129,15 @@ public final class CITPaper extends JavaPlugin {
         try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
             inputs.forEach(input -> {
                 if (input.equals(inputPath)) return;
-                ResourcePackConverter converter = new ResourcePackConverter(getLogger()::warning, getCachePath());
+                ResourcePackConverter converter = new ResourcePackConverter(
+                        input,
+                        outputPath.resolve(input.getFileName()),
+                        getCachePath(),
+                        getConfig().getBoolean("converter.preserveCitDirectories"),
+                        getLogger()::warning
+                );
                 try {
-                    converter.convertResourcePack(
-                            input,
-                            outputPath.resolve(input.getFileName()),
-                            getConfig().getBoolean("converter.preserveCitDirectories")
-                    );
+                    converter.convertResourcePack();
                     converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
                     convertedResourcePacks.add(input);
                 } catch (Exception e) {

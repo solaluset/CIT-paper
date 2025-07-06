@@ -23,26 +23,29 @@ import java.util.stream.Stream;
 import static org.vinerdream.citPaper.utils.CollectionUtils.allHaveAnySuffix;
 
 public class ResourcePackConverter {
-    private final Consumer<String> logger;
-    private final List<ParsedTextureProperties> convertedEntries;
+    private final Path resourcePackPath;
+    private final Path resultPath;
+    private final boolean preserveCitDirectories;
     private final Path tempPath;
+    private final Consumer<String> logger;
+    private final List<ParsedTextureProperties> convertedEntries = new ArrayList<>();
 
-    public ResourcePackConverter(Consumer<String> logger, Path tempPath) {
-        this.logger = logger;
-        convertedEntries = new ArrayList<>();
+    public ResourcePackConverter(Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Consumer<String> logger) {
+        this.resourcePackPath = resourcePackPath;
+        this.resultPath = resultPath;
         this.tempPath = tempPath;
+        this.preserveCitDirectories = preserveCitDirectories;
+        this.logger = logger;
     }
 
-    public void convertResourcePack(Path rootPath, Path outputPath) throws IOException {
-        convertResourcePack(rootPath, outputPath, true);
-    }
-
-    public void convertResourcePack(Path rootPath, Path outputPath, boolean preserveCitDirectories) throws IOException {
+    public void convertResourcePack() throws IOException {
+        Path rootPath = resourcePackPath;
         if (rootPath.toFile().isFile()) {
             Path newPath = getTmpDir().resolve(UUID.randomUUID().toString());
             ZipUtils.unzip(rootPath, newPath);
             rootPath = newPath;
         }
+        Path outputPath = resultPath;
         final Path zipPath;
         if (outputPath.toString().endsWith(".zip")) {
             zipPath = outputPath;
