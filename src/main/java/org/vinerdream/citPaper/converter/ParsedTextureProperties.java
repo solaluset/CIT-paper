@@ -166,7 +166,7 @@ public class ParsedTextureProperties {
         this.mainTextureData = mainTextureData;
     }
 
-    public Map<String, String> asMap() {
+    public Map<String, String> saveToMap() {
         Map<String, String> result = new HashMap<>();
         result.put("type", type.toString());
         result.put("items", String.join(" ", items));
@@ -191,70 +191,6 @@ public class ParsedTextureProperties {
         }
         if (armorData != null) {
             result.put("armorModel", armorData.getModel());
-        }
-        if (elytraTextureData != null) {
-            result.put("model.elytra", elytraTextureData.getModel());
-            result.put("texture.elytra", elytraTextureData.getTexture());
-            result.put("model.broken_elytra", elytraTextureData.getBroken().getModel());
-            result.put("texture.broken_elytra", elytraTextureData.getBroken().getTexture());
-        }
-        if (bowTextureData != null) {
-            result.put("model.bow_standby", bowTextureData.getModel());
-            result.put("texture.bow_standby", bowTextureData.getTexture());
-            if (bowTextureData.getPulling_0() != null) {
-                result.put("model.bow_pulling_0", bowTextureData.getPulling_0().getModel());
-                result.put("texture.bow_pulling_0", bowTextureData.getPulling_0().getTexture());
-            }
-            if (bowTextureData.getPulling_1() != null) {
-                result.put("model.bow_pulling_1", bowTextureData.getPulling_1().getModel());
-                result.put("texture.bow_pulling_1", bowTextureData.getPulling_1().getTexture());
-            }
-            if (bowTextureData.getPulling_2() != null) {
-                result.put("model.bow_pulling_2", bowTextureData.getPulling_2().getModel());
-                result.put("texture.bow_pulling_2", bowTextureData.getPulling_2().getTexture());
-            }
-        }
-        if (crossbowTextureData != null) {
-            result.put("model.crossbow_standby", crossbowTextureData.getModel());
-            result.put("texture.crossbow_standby", crossbowTextureData.getTexture());
-            if (crossbowTextureData.getPulling_0() != null) {
-                result.put("model.crossbow_pulling_0", crossbowTextureData.getPulling_0().getModel());
-                result.put("texture.crossbow_pulling_0", crossbowTextureData.getPulling_0().getTexture());
-            }
-            if (crossbowTextureData.getPulling_1() != null) {
-                result.put("model.crossbow_pulling_1", crossbowTextureData.getPulling_1().getModel());
-                result.put("texture.crossbow_pulling_1", crossbowTextureData.getPulling_1().getTexture());
-            }
-            if (crossbowTextureData.getPulling_2() != null) {
-                result.put("model.crossbow_pulling_2", crossbowTextureData.getPulling_2().getModel());
-                result.put("texture.crossbow_pulling_2", crossbowTextureData.getPulling_2().getTexture());
-            }
-            if (crossbowTextureData.getWithArrow() != null) {
-                result.put("model.crossbow_arrow", crossbowTextureData.getWithArrow().getModel());
-                result.put("texture.crossbow_arrow", crossbowTextureData.getWithArrow().getTexture());
-            }
-            if (crossbowTextureData.getWithFirework() != null) {
-                result.put("model.crossbow_firework", crossbowTextureData.getWithFirework().getModel());
-                result.put("texture.crossbow_firework", crossbowTextureData.getWithFirework().getTexture());
-            }
-        }
-        if (tridentTextureData != null) {
-            result.put("model.trident", tridentTextureData.getModel());
-            result.put("texture.trident", tridentTextureData.getTexture());
-            if (tridentTextureData.getInHand() != null) {
-                result.put("model.trident_in_hand", tridentTextureData.getInHand().getModel());
-                result.put("texture.trident_in_hand", tridentTextureData.getInHand().getTexture());
-            }
-            if (tridentTextureData.getThrowing() != null) {
-                result.put("model.trident_throwing", tridentTextureData.getThrowing().getModel());
-                result.put("texture.trident_throwing", tridentTextureData.getThrowing().getTexture());
-            }
-        }
-        if (fishingRodTextureData != null) {
-            result.put("model.fishing_rod", fishingRodTextureData.getModel());
-            result.put("texture.fishing_rod", fishingRodTextureData.getTexture());
-            result.put("model.fishing_rod_cast", fishingRodTextureData.getCast().getModel());
-            result.put("texture.fishing_rod_cast", fishingRodTextureData.getCast().getTexture());
         }
         if (customModelData != -1) {
             result.put("customModelData", String.valueOf(customModelData));

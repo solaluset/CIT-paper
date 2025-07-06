@@ -676,7 +676,7 @@ public class ResourcePackConverter {
 
     public void saveConfiguration(Path outputPath) throws IOException {
         YamlConfiguration config = new YamlConfiguration();
-        config.set("renames", convertedEntries.stream().map(ParsedTextureProperties::asMap).toList());
+        config.set("renames", convertedEntries.stream().map(ParsedTextureProperties::saveToMap).toList());
         config.save(outputPath.toFile());
     }
 
