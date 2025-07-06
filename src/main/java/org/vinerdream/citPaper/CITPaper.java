@@ -159,6 +159,6 @@ public final class CITPaper extends JavaPlugin {
             );
         }
 
-        return true;
+        return failedResourcePacks.isEmpty();
     }
 }
