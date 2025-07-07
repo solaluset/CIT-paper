@@ -107,7 +107,9 @@ public class ResourcePackConverter {
 
     public void convertFile(Path citRoot, Path file, Path outputDirectory) throws IOException {
         Properties properties = new Properties();
-        properties.load(new FileReader(file.toFile()));
+        try (FileReader reader = new FileReader(file.toFile())) {
+            properties.load(reader);
+        }
         Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
 
         ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, logger);
@@ -694,13 +696,15 @@ public class ResourcePackConverter {
     private String readResource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assert input != null;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
-                StringBuilder builder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line.strip());
+            try (InputStreamReader inputStreamReader = new InputStreamReader(input)) {
+                try (BufferedReader reader = new BufferedReader(inputStreamReader)) {
+                    StringBuilder builder = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        builder.append(line.strip());
+                    }
+                    return builder.toString();
                 }
-                return builder.toString();
             }
         }
     }
