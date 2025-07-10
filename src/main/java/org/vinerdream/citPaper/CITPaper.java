@@ -33,7 +33,9 @@ public final class CITPaper extends JavaPlugin {
     public CITPaper() throws IOException {
         saveDefaultConfig();
 
-        generateResourcePacks();
+        if (getConfig().getBoolean("converter.enabled")) {
+            generateResourcePacks();
+        }
     }
 
     @Override
@@ -102,9 +104,6 @@ public final class CITPaper extends JavaPlugin {
     }
 
     public boolean generateResourcePacks() throws IOException {
-        if (!getConfig().getBoolean("converter.enabled")) {
-            return false;
-        }
         final String inputDirectory = getConfig().getString("converter.inputDirectory");
         final String outputDirectory = getConfig().getString("converter.outputDirectory");
         if (inputDirectory == null || outputDirectory == null) return false;
