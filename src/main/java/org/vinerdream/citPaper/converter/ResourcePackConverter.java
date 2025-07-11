@@ -111,6 +111,7 @@ public class ResourcePackConverter {
             properties.load(reader);
         }
         Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
+        propertiesMap.replaceAll((k, v) -> v.trim());
 
         ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> logger.accept(file + ": " + string));
         for (String key : propertiesMap.keySet()) {
