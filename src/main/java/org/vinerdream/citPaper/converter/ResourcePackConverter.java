@@ -112,7 +112,7 @@ public class ResourcePackConverter {
         }
         Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
 
-        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, logger);
+        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> logger.accept(file + ": " + string));
         for (String key : propertiesMap.keySet()) {
             log("Unknown property in " + file + ": " + key);
         }
