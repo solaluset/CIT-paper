@@ -117,7 +117,12 @@ public class ResourcePackConverter {
             log("Unknown property in " + file + ": " + key);
         }
 
-        convertPropertiesFile(citRoot, file, data, outputDirectory);
+        try {
+            convertPropertiesFile(citRoot, file, data, outputDirectory);
+        } catch (Exception e) {
+            log("Error when converting " + file);
+            throw e;
+        }
         convertedEntries.add(data);
     }
 
@@ -408,6 +413,7 @@ public class ResourcePackConverter {
                 outputDirectory,
                 prefix
         );
+        if (armorTexturePath == null) return null;
         final String armorTextureName = getFilenameWithoutAndWithExtension(
                 armorTexturePath.getFileName().toString(), "png"
         ).getKey();
@@ -420,9 +426,13 @@ public class ResourcePackConverter {
                     outputDirectory,
                     prefix
             );
-            armorOverlayName = getFilenameWithoutAndWithExtension(
-                    armorOverlayPath.getFileName().toString(), "png"
-            ).getKey();
+            if (armorOverlayPath != null) {
+                armorOverlayName = getFilenameWithoutAndWithExtension(
+                        armorOverlayPath.getFileName().toString(), "png"
+                ).getKey();
+            } else {
+                armorOverlayName = null;
+            }
         } else {
             armorOverlayName = null;
         }
