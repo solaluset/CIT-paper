@@ -83,7 +83,8 @@ public class ParsedTextureProperties {
                 properties,
                 "-1",
                 "customModelData",
-                "nbt.CustomModelData"
+                "nbt.CustomModelData",
+                "components.custom_model_data"
         ));
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popValue(properties, null, "key"));
