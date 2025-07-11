@@ -1,9 +1,6 @@
 package org.vinerdream.citPaper.converter;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.*;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -60,17 +57,29 @@ public class ResourcePackConverter {
             zipPath = null;
         }
 
+        final JsonObject meta;
+        try (FileReader reader = new FileReader(rootPath.resolve("pack.mcmeta").toFile())) {
+            meta = new Gson().fromJson(reader, JsonObject.class);
+        }
+
         FileUtils.removeDirectory(outputPath);
         FileUtils.copyDirectory(rootPath, outputPath);
 
-        Path directory = rootPath.resolve("assets").resolve("minecraft");
-        convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
-        convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
-
-        if (!preserveCitDirectories) {
-            directory = outputPath.resolve("assets").resolve("minecraft");
-            FileUtils.removeDirectory(directory.resolve("optifine").resolve("cit"));
-            FileUtils.removeDirectory(directory.resolve("mcpatcher").resolve("cit"));
+        convertCitDirectories(rootPath, outputPath);
+        if (meta.get("overlays") != null && meta.get("overlays").isJsonObject()) {
+            final JsonObject overlays = meta.getAsJsonObject("overlays");
+            if (overlays.get("entries") != null && overlays.get("entries").isJsonArray()) {
+                final JsonArray entries = overlays.getAsJsonArray("entries");
+                for (var entry : entries) {
+                    if (entry.isJsonObject()) {
+                        final var directory = entry.getAsJsonObject().get("directory");
+                        if (directory != null) {
+                            final String directoryName = directory.getAsString();
+                            convertCitDirectories(rootPath.resolve(directoryName), outputPath.resolve(directoryName));
+                        }
+                    }
+                }
+            }
         }
 
         if (zipPath != null) {
@@ -78,6 +87,17 @@ public class ResourcePackConverter {
         }
 
         FileUtils.removeDirectory(getTmpDir());
+    }
+
+    public void convertCitDirectories(Path rootPath, Path outputPath) throws IOException {
+        Path directory = rootPath.resolve("assets").resolve("minecraft");
+        convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
+        convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
+        if (!preserveCitDirectories) {
+            directory = outputPath.resolve("assets").resolve("minecraft");
+            FileUtils.removeDirectory(directory.resolve("optifine").resolve("cit"));
+            FileUtils.removeDirectory(directory.resolve("mcpatcher").resolve("cit"));
+        }
     }
 
     public void convertDirectory(Path directory, Path outputDirectory) {
