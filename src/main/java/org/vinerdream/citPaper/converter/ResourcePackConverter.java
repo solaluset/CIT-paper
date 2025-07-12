@@ -680,27 +680,28 @@ public class ResourcePackConverter {
     }
 
     private Path resolveResource(Path currentDirectory, String resource, ResourceType type) throws IOException {
+        final Path resourcePath = stringToPath(resource);
         Path result;
         do {
-            result = currentDirectory.resolve(resource);
+            result = currentDirectory.resolve(resourcePath);
             currentDirectory = currentDirectory.getParent();
         } while (!result.toFile().isFile() && currentDirectory != null && !currentDirectory.endsWith("minecraft"));
         if (result.toFile().isFile()) return result;
 
         if (currentDirectory == null) return null;
 
-        result = currentDirectory.resolve(resource);
+        result = currentDirectory.resolve(resourcePath);
         if (result.toFile().isFile()) return result;
 
         currentDirectory = currentDirectory.getParent();
 
-        result = currentDirectory.resolve(resource);
+        result = currentDirectory.resolve(resourcePath);
         if (result.toFile().isFile()) return result;
 
         try (Stream<Path> directories = Files.walk(currentDirectory, 1)) {
-            result = directories.filter(dir -> dir.resolve(type == ResourceType.MODEL ? "models" : "textures").resolve(resource).toFile().isFile()).findFirst().orElse(null);
+            result = directories.filter(dir -> dir.resolve(type == ResourceType.MODEL ? "models" : "textures").resolve(resourcePath).toFile().isFile()).findFirst().orElse(null);
             if (result == null) return null;
-            return result.resolve(type == ResourceType.MODEL ? "models" : "textures").resolve(resource);
+            return result.resolve(type == ResourceType.MODEL ? "models" : "textures").resolve(resourcePath);
         }
     }
 
