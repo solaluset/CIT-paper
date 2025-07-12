@@ -28,30 +28,30 @@ public class ZipUtils {
         if (outputFile.getParent() != null) {
             outputFile.getParent().toFile().mkdirs();
         }
-        OutputStream stream = new FileOutputStream(outputFile.toFile());
-        try (ZipOutputStream zip = new ZipOutputStream(stream)) {
-            try (Stream<Path> files = Files.walk(directory)) {
-                files.forEach(filePath -> {
-                    File file = filePath.toFile();
-                    if (file.isDirectory()) return;
-                    try {
-                        zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString().replace(File.separator, "/")));
-                        byte[] data = new byte[1024];
-                        try (FileInputStream reader = new FileInputStream(file)) {
-                            int read;
-                            while ((read = reader.read(data, 0, 1024)) != -1) {
-                                zip.write(data, 0, read);
+        try (OutputStream stream = new FileOutputStream(outputFile.toFile())) {
+            try (ZipOutputStream zip = new ZipOutputStream(stream)) {
+                try (Stream<Path> files = Files.walk(directory)) {
+                    files.forEach(filePath -> {
+                        File file = filePath.toFile();
+                        if (file.isDirectory()) return;
+                        try {
+                            zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString().replace(File.separator, "/")));
+                            byte[] data = new byte[1024];
+                            try (FileInputStream reader = new FileInputStream(file)) {
+                                int read;
+                                while ((read = reader.read(data, 0, 1024)) != -1) {
+                                    zip.write(data, 0, read);
+                                }
                             }
+                            zip.closeEntry();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
-                        zip.closeEntry();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                    });
+                }
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         }
-        stream.close();
     }
 }
