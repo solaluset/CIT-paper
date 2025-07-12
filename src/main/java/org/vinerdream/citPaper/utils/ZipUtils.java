@@ -3,17 +3,15 @@ package org.vinerdream.citPaper.utils;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
-import java.util.Set;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
+import static org.vinerdream.citPaper.utils.FileUtils.isBlacklisted;
 
 public class ZipUtils {
-    private static final Set<String> FILENAME_BLACKLIST = Set.of("desktop.ini");
 
     public static void unzip(Path file, Path outputDirectory) throws IOException {
         try (ZipFile zip = new ZipFile(file.toFile())) {
@@ -56,9 +54,5 @@ public class ZipUtils {
                 }
             }
         }
-    }
-
-    private static boolean isBlacklisted(Path path) {
-        return FILENAME_BLACKLIST.contains(path.getFileName().toString().toLowerCase(Locale.ROOT));
     }
 }
