@@ -18,7 +18,6 @@ import org.vinerdream.citPaper.utils.ItemUpdater;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -108,8 +107,8 @@ public final class CITPaper extends JavaPlugin {
         final String outputDirectory = getConfig().getString("converter.outputDirectory");
         if (inputDirectory == null || outputDirectory == null) return false;
 
-        final Path inputPath = Paths.get(inputDirectory);
-        final Path outputPath = Paths.get(outputDirectory);
+        final Path inputPath = Path.of(inputDirectory);
+        final Path outputPath = Path.of(outputDirectory);
         final Path renamesPath = getRenamesPath();
 
         if (!inputPath.toFile().isDirectory()) {

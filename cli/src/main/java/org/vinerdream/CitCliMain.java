@@ -3,7 +3,7 @@ package org.vinerdream;
 import org.vinerdream.citPaper.converter.ResourcePackConverter;
 
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.logging.Logger;
 
 public class CitCliMain {
@@ -13,13 +13,13 @@ public class CitCliMain {
             return;
         }
         ResourcePackConverter converter = new ResourcePackConverter(
-                Paths.get(args[0]),
-                Paths.get(args[1]),
-                Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper"),
+                Path.of(args[0]),
+                Path.of(args[1]),
+                Path.of(System.getProperty("java.io.tmpdir"), "cit-paper"),
                 true,
                 Logger.getLogger("CIT-paper")
         );
         converter.convertResourcePack();
-        converter.saveConfiguration(Paths.get(args[2]));
+        converter.saveConfiguration(Path.of(args[2]));
     }
 }

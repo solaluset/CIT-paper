@@ -8,7 +8,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
+import static org.vinerdream.citPaper.utils.CollectionUtils.*;
 import static org.vinerdream.citPaper.utils.FileUtils.isBlacklisted;
 
 public class ZipUtils {
@@ -17,7 +17,7 @@ public class ZipUtils {
         try (ZipFile zip = new ZipFile(file.toFile())) {
             for (ZipEntry entry : iterateStream(zip.stream())) {
                 if (entry.isDirectory()) continue;
-                Path extractedPath = outputDirectory.resolve(entry.getName());
+                Path extractedPath = outputDirectory.resolve(stringToPath(entry.getName()));
                 if (isBlacklisted(extractedPath)) {
                     continue;
                 }
@@ -41,7 +41,7 @@ public class ZipUtils {
                         if (file.isDirectory() || isBlacklisted(filePath)) {
                             continue;
                         }
-                        zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString().replace(File.separator, "/")));
+                        zip.putNextEntry(new ZipEntry(pathToString(directory.relativize(filePath))));
                         byte[] data = new byte[1024];
                         try (FileInputStream reader = new FileInputStream(file)) {
                             int read;

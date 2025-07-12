@@ -12,7 +12,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.logging.Level;
@@ -176,7 +175,7 @@ public class ResourcePackConverter {
             modelName = convertTextureData(file, data.getMainTextureData(), guessParent(data), null, outputDirectory, prefix);
         } else return;
 
-        final Path jsonPath = outputDirectory.resolve(Paths.get("assets", namespace, "items")).resolve(prefix).resolve(path.toLowerCase(Locale.ROOT) + ".json");
+        final Path jsonPath = outputDirectory.resolve(Path.of("assets", namespace, "items")).resolve(prefix).resolve(path.toLowerCase(Locale.ROOT) + ".json");
         final String jsonData;
 
         if (data.getBowTextureData() != null) {
@@ -392,7 +391,7 @@ public class ResourcePackConverter {
                 List.of(file.getParent()),
                 texture.replaceFirst(":", "/models/"),
                 "json",
-                outputDirectory.resolve(Paths.get("assets", namespace, "equipment")),
+                outputDirectory.resolve(Path.of("assets", namespace, "equipment")),
                 prefix
         );
         if (modelPath == null) return null;
@@ -460,7 +459,7 @@ public class ResourcePackConverter {
         }
         final String prefixString = prefixToString(prefix);
         final Path modelPath = outputDirectory.resolve(
-                Paths.get("assets", namespace, "equipment")
+                Path.of("assets", namespace, "equipment")
         ).resolve(prefix).resolve(armorTextureName + ".json");
         modelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(modelPath.toFile())) {
@@ -508,7 +507,7 @@ public class ResourcePackConverter {
                 inputDirectories,
                 texture.replaceFirst(":", "/textures/"),
                 "png",
-                outputDirectory.resolve(Paths.get(
+                outputDirectory.resolve(Path.of(
                         "assets",
                         namespace,
                         "textures",
@@ -533,7 +532,7 @@ public class ResourcePackConverter {
                 List.of(inputDirectory),
                 texture.replaceFirst(":", "/textures/"),
                 "png",
-                outputDirectory.resolve(Paths.get(
+                outputDirectory.resolve(Path.of(
                     "assets",
                         namespace,
                         "textures",
@@ -550,7 +549,7 @@ public class ResourcePackConverter {
     }
 
     private Path copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix) throws IOException {
-        final Path modelDirectory = outputDirectory.resolve(Paths.get(
+        final Path modelDirectory = outputDirectory.resolve(Path.of(
                 "assets",
                 namespace,
                 "models",
@@ -668,13 +667,7 @@ public class ResourcePackConverter {
     }
 
     private Path lowerPath(Path path) {
-        final List<String> parts = new ArrayList<>();
-        do {
-            parts.addFirst(path.getFileName().toString().toLowerCase(Locale.ROOT));
-            path = path.getParent();
-        } while (path != null);
-        final String first = parts.removeFirst();
-        return Path.of(first, parts.toArray(String[]::new));
+        return stringToPath(pathToString(path).toLowerCase(Locale.ROOT));
     }
 
     private String prefixToString(Path prefix) {
