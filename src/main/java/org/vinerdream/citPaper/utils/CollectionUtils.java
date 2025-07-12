@@ -1,5 +1,6 @@
 package org.vinerdream.citPaper.utils;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,5 +43,9 @@ public class CollectionUtils {
 
     public static <T> Iterable<T> iterateStream(Stream<T> stream) {
         return stream::iterator;
+    }
+
+    public static Path stringToPath(String string) {
+        return Path.of(".", string.split("/")).normalize();
     }
 }

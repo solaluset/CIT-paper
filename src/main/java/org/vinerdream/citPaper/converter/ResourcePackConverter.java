@@ -19,8 +19,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
-import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
-import static org.vinerdream.citPaper.utils.CollectionUtils.allHaveAnySuffix;
+import static org.vinerdream.citPaper.utils.CollectionUtils.*;
 
 public class ResourcePackConverter {
     private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item");
@@ -630,7 +629,7 @@ public class ResourcePackConverter {
             }
         }
         if (oldPath == null) {
-            if (!DEFAULT_MODEL_DIRECTORIES.contains(resource.split("/", 2)[0])) {
+            if (!DEFAULT_MODEL_DIRECTORIES.contains(stringToPath(resource).getName(0).toString())) {
                 log("Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
             }
             return null;
