@@ -14,7 +14,7 @@ public class FileUtils {
     public static void copyDirectory(Path source, Path destination) throws IOException {
         try (Stream<Path> contents = Files.walk(source)) {
             for (Path file : iterateStream(contents)) {
-                if (!file.toFile().isFile()) return;
+                if (!file.toFile().isFile()) continue;
                 final Path destinationFilePath = destination.resolve(source.relativize(file));
                 destinationFilePath.getParent().toFile().mkdirs();
                 Files.copy(file, destinationFilePath);

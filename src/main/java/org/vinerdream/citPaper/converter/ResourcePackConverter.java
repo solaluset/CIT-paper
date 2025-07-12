@@ -111,7 +111,7 @@ public class ResourcePackConverter {
         try (Stream<Path> contents = Files.walk(directory)) {
             for (Path path : iterateStream(contents)) {
                 if (!path.toFile().isFile()) {
-                    return;
+                    continue;
                 }
                 if (path.toString().endsWith(".properties")) {
                     convertFile(directory, path, outputDirectory);

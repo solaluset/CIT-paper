@@ -18,7 +18,7 @@ public class ZipUtils {
     public static void unzip(Path file, Path outputDirectory) throws IOException {
         try (ZipFile zip = new ZipFile(file.toFile())) {
             for (ZipEntry entry : iterateStream(zip.stream())) {
-                if (entry.isDirectory()) return;
+                if (entry.isDirectory()) continue;
                 Path extractedPath = outputDirectory.resolve(entry.getName());
                 if (isBlacklisted(extractedPath)) {
                     continue;
@@ -40,8 +40,7 @@ public class ZipUtils {
                 try (Stream<Path> files = Files.walk(directory)) {
                     for (Path filePath : iterateStream(files)) {
                         File file = filePath.toFile();
-                        if (file.isDirectory()) return;
-                        if (isBlacklisted(filePath)) {
+                        if (file.isDirectory() || isBlacklisted(filePath)) {
                             continue;
                         }
                         zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString().replace(File.separator, "/")));
