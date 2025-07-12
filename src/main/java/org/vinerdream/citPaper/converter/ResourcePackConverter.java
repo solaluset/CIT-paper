@@ -671,7 +671,7 @@ public class ResourcePackConverter {
     }
 
     private String prefixToString(Path prefix) {
-        return prefix.toString().replace(File.separator, "/") + "/";
+        return pathToString(prefix) + "/";
     }
 
     private Path resolveOldPath(Path inputDirectory, String resource, String extension) throws IOException {
