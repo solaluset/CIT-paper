@@ -4,6 +4,7 @@ import org.vinerdream.citPaper.converter.ResourcePackConverter;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 public class CitCliMain {
     public static void main(String[] args) throws IOException {
@@ -12,10 +13,13 @@ public class CitCliMain {
             return;
         }
         ResourcePackConverter converter = new ResourcePackConverter(
-                System.out::println,
-                Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper")
+                Paths.get(args[0]),
+                Paths.get(args[1]),
+                Paths.get(System.getProperty("java.io.tmpdir"), "cit-paper"),
+                true,
+                Logger.getLogger("CIT-paper")
         );
-        converter.convertResourcePack(Paths.get(args[0]), Paths.get(args[1]));
+        converter.convertResourcePack();
         converter.saveConfiguration(Paths.get(args[2]));
     }
 }

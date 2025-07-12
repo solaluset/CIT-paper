@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
@@ -31,6 +32,7 @@ public class ResourcePackConverter {
     private final Logger logger;
     private final String namespace;
     private final List<ParsedTextureProperties> convertedEntries = new ArrayList<>();
+    private final List<Map.Entry<Level, String>> logMessages = new ArrayList<>();
 
     public ResourcePackConverter(Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger) {
         this.resourcePackPath = resourcePackPath;
@@ -115,7 +117,10 @@ public class ResourcePackConverter {
                     continue;
                 }
                 if (path.toString().endsWith(".properties")) {
+                    logMessages.clear();
                     convertFile(directory, path, outputDirectory);
+                    logMessages.forEach(entry -> logger.log(entry.getKey(), path + ": " + entry.getValue()));
+                    logMessages.clear();
                 }
             }
         }
@@ -129,15 +134,15 @@ public class ResourcePackConverter {
         Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
         propertiesMap.replaceAll((k, v) -> v.trim());
 
-        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> logger.warning(file + ": " + string));
+        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> log(Level.WARNING, string));
         for (String key : propertiesMap.keySet()) {
-            logger.warning("Unknown property in " + file + ": " + key);
+            log(Level.WARNING, "Unknown property: " + key);
         }
 
         try {
             convertPropertiesFile(citRoot, file, data, outputDirectory);
         } catch (Exception e) {
-            logger.severe("Error when converting " + file);
+            log(Level.SEVERE, "Error when converting");
             throw e;
         }
         convertedEntries.add(data);
@@ -568,7 +573,7 @@ public class ResourcePackConverter {
             try {
                 json = new Gson().fromJson(reader, JsonObject.class);
             } catch (JsonSyntaxException ignored) {
-                logger.warning("Invalid JSON: " + newPath);
+                log(Level.WARNING, "Invalid JSON: " + newPath);
                 return newPath;
             }
             final JsonElement parent = json.get("parent");
@@ -630,7 +635,7 @@ public class ResourcePackConverter {
         }
         if (oldPath == null) {
             if (!DEFAULT_MODEL_DIRECTORIES.contains(stringToPath(resource).getName(0).toString())) {
-                logger.warning("Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
+                log(Level.WARNING, "Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
             }
             return null;
         }
@@ -736,5 +741,9 @@ public class ResourcePackConverter {
                 }
             }
         }
+    }
+
+    private void log(Level level, String message) {
+        logMessages.add(Map.entry(level, message));
     }
 }
