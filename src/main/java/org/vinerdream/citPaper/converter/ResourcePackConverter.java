@@ -408,6 +408,14 @@ public class ResourcePackConverter {
         return filename.replaceFirst("\\.[^/]+$", "");
     }
 
+    private String ensureExtension(String filename, String extension) {
+        if (filename == null) return null;
+        if (filename.endsWith("." + extension)) {
+            return filename;
+        }
+        return filename + "." + extension;
+    }
+
     private String textureToModel(String textureName, String overlayName, String parent, Path outputDirectory, Path prefix) throws IOException {
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(textureName + ".json");
         final String prefixString = prefixToString(prefix);
@@ -435,9 +443,9 @@ public class ResourcePackConverter {
                 prefix
         );
         if (armorTexturePath == null) return null;
-        final String armorTextureName = getFilenameWithoutAndWithExtension(
-                armorTexturePath.getFileName().toString(), "png"
-        ).getKey();
+        final String armorTextureName = removeExtension(
+                armorTexturePath.getFileName().toString()
+        );
         final String armorOverlayName;
         if (overlay != null) {
             final Path armorOverlayPath = copyArmorTexture(
@@ -448,9 +456,9 @@ public class ResourcePackConverter {
                     prefix
             );
             if (armorOverlayPath != null) {
-                armorOverlayName = getFilenameWithoutAndWithExtension(
-                        armorOverlayPath.getFileName().toString(), "png"
-                ).getKey();
+                armorOverlayName = removeExtension(
+                        armorOverlayPath.getFileName().toString()
+                );
             } else {
                 armorOverlayName = null;
             }
@@ -557,7 +565,7 @@ public class ResourcePackConverter {
         ));
         final String prefixString = prefixToString(prefix);
 
-        final Path texturePath = textureName != null ? resolveResource(inputDirectory, getFilenameWithoutAndWithExtension(textureName, "png").getValue(), ResourceType.TEXTURE) : null;
+        final Path texturePath = textureName != null ? resolveResource(inputDirectory, ensureExtension(textureName, "png"), ResourceType.TEXTURE) : null;
         model = model.replaceFirst(":", "/models/");
         Path newPath = copyResource(
                 List.of(inputDirectory),
@@ -596,7 +604,7 @@ public class ResourcePackConverter {
             }
             json = newJson;
             newPath = newPath.getParent().resolve(
-                    getFilenameWithoutAndWithExtension(newPath.getFileName().toString(), "json").getKey()
+                    removeExtension(newPath.getFileName().toString())
                             + "_" + removeExtension(texturePath.getFileName().toString()) + ".json"
             );
         }
@@ -639,8 +647,8 @@ public class ResourcePackConverter {
             }
             return null;
         }
-        String outputName = getFilenameWithoutAndWithExtension(joinPath(foundDirectory.relativize(oldPath)), extension).getKey();
-        Path newPath = outputDirectory.resolve(prefix).resolve(getFilenameWithoutAndWithExtension(outputName.toLowerCase(Locale.ROOT), extension).getValue());
+        String outputName = removeExtension(joinPath(foundDirectory.relativize(oldPath)));
+        Path newPath = outputDirectory.resolve(prefix).resolve(ensureExtension(outputName.toLowerCase(Locale.ROOT), extension));
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
         if (addMcmeta(oldPath).toFile().isFile()) {
@@ -667,8 +675,11 @@ public class ResourcePackConverter {
     }
 
     private Path resolveOldPath(Path inputDirectory, String resource, String extension) throws IOException {
-        Map.Entry<String, String> pair = getFilenameWithoutAndWithExtension(resource, extension);
-        return resolveResource(inputDirectory, pair.getValue(), extension.equals("json") ? ResourceType.MODEL : ResourceType.TEXTURE);
+        return resolveResource(
+                inputDirectory,
+                ensureExtension(resource, extension),
+                extension.equals("json") ? ResourceType.MODEL : ResourceType.TEXTURE
+        );
     }
 
     private Path resolveResource(Path currentDirectory, String resource, ResourceType type) throws IOException {
@@ -701,13 +712,6 @@ public class ResourcePackConverter {
         YamlConfiguration config = new YamlConfiguration();
         config.set("renames", convertedEntries.stream().map(ParsedTextureProperties::saveToMap).toList());
         config.save(outputPath.toFile());
-    }
-
-    private Map.Entry<String, String> getFilenameWithoutAndWithExtension(String name, String extension) {
-        if (name.endsWith(extension)) {
-            return Map.entry(name.replaceFirst("\\." + extension + "$", ""), name);
-        }
-        return Map.entry(name, name + "." + extension);
     }
 
     private Path getTmpDir() {
