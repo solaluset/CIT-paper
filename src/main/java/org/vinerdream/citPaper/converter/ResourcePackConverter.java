@@ -573,7 +573,8 @@ public class ResourcePackConverter {
             try {
                 json = new Gson().fromJson(reader, JsonObject.class);
             } catch (JsonSyntaxException ignored) {
-                log(Level.WARNING, "Invalid JSON: " + newPath);
+                final Path originalPath = resolveOldPath(inputDirectory, model, "json");
+                log(Level.WARNING, "Invalid JSON: " + originalPath);
                 return newPath;
             }
             final JsonElement parent = json.get("parent");
