@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.utils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class CollectionUtils {
     public static String popValue(Map<String, String> map, String defaultValue, String ...keys) {
@@ -37,5 +38,9 @@ public class CollectionUtils {
 
     public static boolean allHaveAnySuffix(List<String> values, List<String> suffixes) {
         return values.stream().allMatch(item -> suffixes.stream().anyMatch(item::endsWith));
+    }
+
+    public static <T> Iterable<T> iterateStream(Stream<T> stream) {
+        return stream::iterator;
     }
 }

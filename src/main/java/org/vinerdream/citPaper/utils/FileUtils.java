@@ -8,19 +8,17 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.stream.Stream;
 
+import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
+
 public class FileUtils {
     public static void copyDirectory(Path source, Path destination) throws IOException {
         try (Stream<Path> contents = Files.walk(source)) {
-            contents.forEach(file -> {
+            for (Path file : iterateStream(contents)) {
                 if (!file.toFile().isFile()) return;
                 final Path destinationFilePath = destination.resolve(source.relativize(file));
                 destinationFilePath.getParent().toFile().mkdirs();
-                try {
-                    Files.copy(file, destinationFilePath);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+                Files.copy(file, destinationFilePath);
+            }
         }
     }
 

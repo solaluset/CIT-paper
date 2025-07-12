@@ -8,19 +8,19 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
+
 public class ZipUtils {
     public static void unzip(Path file, Path outputDirectory) throws IOException {
         try (ZipFile zip = new ZipFile(file.toFile())) {
-            zip.stream().forEach(entry -> {
+            for (ZipEntry entry : iterateStream(zip.stream())) {
                 if (entry.isDirectory()) return;
                 Path extractedPath = outputDirectory.resolve(entry.getName());
                 extractedPath.getParent().toFile().mkdirs();
                 try (FileOutputStream stream = new FileOutputStream(extractedPath.toFile())) {
                     zip.getInputStream(entry).transferTo(stream);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
-            });
+            }
         }
     }
 
@@ -31,26 +31,20 @@ public class ZipUtils {
         try (OutputStream stream = new FileOutputStream(outputFile.toFile())) {
             try (ZipOutputStream zip = new ZipOutputStream(stream)) {
                 try (Stream<Path> files = Files.walk(directory)) {
-                    files.forEach(filePath -> {
+                    for (Path filePath : iterateStream(files)) {
                         File file = filePath.toFile();
                         if (file.isDirectory()) return;
-                        try {
-                            zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString().replace(File.separator, "/")));
-                            byte[] data = new byte[1024];
-                            try (FileInputStream reader = new FileInputStream(file)) {
-                                int read;
-                                while ((read = reader.read(data, 0, 1024)) != -1) {
-                                    zip.write(data, 0, read);
-                                }
+                        zip.putNextEntry(new ZipEntry(directory.relativize(filePath).toString().replace(File.separator, "/")));
+                        byte[] data = new byte[1024];
+                        try (FileInputStream reader = new FileInputStream(file)) {
+                            int read;
+                            while ((read = reader.read(data, 0, 1024)) != -1) {
+                                zip.write(data, 0, read);
                             }
-                            zip.closeEntry();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
                         }
-                    });
+                        zip.closeEntry();
+                    }
                 }
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
             }
         }
     }

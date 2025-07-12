@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
+import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
 import static org.vinerdream.citPaper.utils.CollectionUtils.allHaveAnySuffix;
 
 public class ResourcePackConverter {
@@ -100,7 +101,7 @@ public class ResourcePackConverter {
         }
     }
 
-    public void convertDirectory(Path directory, Path outputDirectory) {
+    public void convertDirectory(Path directory, Path outputDirectory) throws IOException {
         log("Converting " + directory);
         File dir = directory.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
@@ -108,20 +109,14 @@ public class ResourcePackConverter {
             return;
         }
         try (Stream<Path> contents = Files.walk(directory)) {
-            contents.forEach(path -> {
+            for (Path path : iterateStream(contents)) {
                 if (!path.toFile().isFile()) {
                     return;
                 }
                 if (path.toString().endsWith(".properties")) {
-                    try {
-                        convertFile(directory, path, outputDirectory);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    convertFile(directory, path, outputDirectory);
                 }
-            });
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            }
         }
     }
 
