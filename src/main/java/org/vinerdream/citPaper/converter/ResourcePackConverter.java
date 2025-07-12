@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
@@ -28,11 +28,11 @@ public class ResourcePackConverter {
     private final Path resultPath;
     private final boolean preserveCitDirectories;
     private final Path tempPath;
-    private final Consumer<String> logger;
+    private final Logger logger;
     private final String namespace;
     private final List<ParsedTextureProperties> convertedEntries = new ArrayList<>();
 
-    public ResourcePackConverter(Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Consumer<String> logger) {
+    public ResourcePackConverter(Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger) {
         this.resourcePackPath = resourcePackPath;
         this.resultPath = resultPath;
         this.tempPath = tempPath;
@@ -103,10 +103,10 @@ public class ResourcePackConverter {
     }
 
     public void convertDirectory(Path directory, Path outputDirectory) throws IOException {
-        log("Converting " + directory);
+        logger.info("Converting " + directory);
         File dir = directory.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
-            log("Directory not found, skipping");
+            logger.info("Directory not found, skipping");
             return;
         }
         try (Stream<Path> contents = Files.walk(directory)) {
@@ -129,15 +129,15 @@ public class ResourcePackConverter {
         Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
         propertiesMap.replaceAll((k, v) -> v.trim());
 
-        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> logger.accept(file + ": " + string));
+        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> logger.warning(file + ": " + string));
         for (String key : propertiesMap.keySet()) {
-            log("Unknown property in " + file + ": " + key);
+            logger.warning("Unknown property in " + file + ": " + key);
         }
 
         try {
             convertPropertiesFile(citRoot, file, data, outputDirectory);
         } catch (Exception e) {
-            log("Error when converting " + file);
+            logger.severe("Error when converting " + file);
             throw e;
         }
         convertedEntries.add(data);
@@ -568,7 +568,7 @@ public class ResourcePackConverter {
             try {
                 json = new Gson().fromJson(reader, JsonObject.class);
             } catch (JsonSyntaxException ignored) {
-                log("Invalid JSON: " + newPath);
+                logger.warning("Invalid JSON: " + newPath);
                 return newPath;
             }
             final JsonElement parent = json.get("parent");
@@ -630,7 +630,7 @@ public class ResourcePackConverter {
         }
         if (oldPath == null) {
             if (!DEFAULT_MODEL_DIRECTORIES.contains(stringToPath(resource).getName(0).toString())) {
-                log("Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
+                logger.warning("Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
             }
             return null;
         }
@@ -736,9 +736,5 @@ public class ResourcePackConverter {
                 }
             }
         }
-    }
-
-    private void log(String text) {
-        logger.accept(text);
     }
 }

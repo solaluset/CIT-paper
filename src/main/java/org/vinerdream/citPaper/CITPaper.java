@@ -133,7 +133,7 @@ public final class CITPaper extends JavaPlugin {
                         outputPath.resolve(input.getFileName()),
                         getCachePath(),
                         getConfig().getBoolean("converter.preserveCitDirectories"),
-                        getLogger()::warning
+                        getLogger()
                 );
                 try {
                     converter.convertResourcePack();
