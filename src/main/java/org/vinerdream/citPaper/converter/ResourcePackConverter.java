@@ -23,6 +23,8 @@ import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
 import static org.vinerdream.citPaper.utils.CollectionUtils.allHaveAnySuffix;
 
 public class ResourcePackConverter {
+    private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item");
+
     private final Path resourcePackPath;
     private final Path resultPath;
     private final boolean preserveCitDirectories;
@@ -628,7 +630,9 @@ public class ResourcePackConverter {
             }
         }
         if (oldPath == null) {
-            log("Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
+            if (!DEFAULT_MODEL_DIRECTORIES.contains(resource.split("/", 2)[0])) {
+                log("Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
+            }
             return null;
         }
         String outputName = getFilenameWithoutAndWithExtension(joinPath(foundDirectory.relativize(oldPath)), extension).getKey();
