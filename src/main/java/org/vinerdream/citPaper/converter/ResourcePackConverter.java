@@ -650,16 +650,8 @@ public class ResourcePackConverter {
     }
 
     private String joinPath(Path path) {
-        final StringBuilder builder = new StringBuilder();
-        while (path != null) {
-            final String part = path.getFileName().toString();
-            if (!part.equals(".") && !part.equals("..")) {
-                builder.insert(0, part);
-                builder.insert(0, '_');
-            }
-            path = path.getParent();
-        }
-        return builder.substring(1);
+        return Arrays.stream(pathToString(path).split("/"))
+                .dropWhile(".."::equals).reduce("", (s1, s2) -> s1 + "_" + s2).substring(1);
     }
 
     private Path addMcmeta(Path path) {

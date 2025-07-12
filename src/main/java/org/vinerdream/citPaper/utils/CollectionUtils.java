@@ -47,7 +47,7 @@ public class CollectionUtils {
     }
 
     public static String pathToString(Path path) {
-        return path.toString().replace(File.separator, "/");
+        return path.normalize().toString().replace(File.separator, "/");
     }
 
     public static Path stringToPath(String string) {
