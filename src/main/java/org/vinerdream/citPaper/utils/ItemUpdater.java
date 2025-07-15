@@ -101,9 +101,9 @@ public class ItemUpdater {
     public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
         final PersistentDataContainer pdc = meta.getPersistentDataContainer();
         final HashSet<TextureType> applied = new HashSet<>();
-        renames:
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (applied.contains(data.getType())) continue;
+
             if (data.getItems().stream().noneMatch(itemKey -> type.getKey().toString().equals(itemKey))) {
                 continue;
             }
@@ -111,15 +111,13 @@ public class ItemUpdater {
                 continue;
             }
             final List<String> lore = getItemLore(meta);
-            for (Map.Entry<Integer, Pattern> entry : data.getLoreData().entrySet()) {
+            if (!data.getLoreData().entrySet().stream().allMatch(entry -> {
                 if (entry.getKey() == null) {
-                    if (lore.stream().noneMatch(line -> entry.getValue().matcher(line).find())) {
-                        continue renames;
-                    }
-                } else {
-                    if (lore.size() <= entry.getKey()) continue renames;
-                    if (!entry.getValue().matcher(lore.get(entry.getKey())).find()) continue renames;
+                    return lore.stream().anyMatch(line -> entry.getValue().matcher(line).find());
                 }
+                return lore.size() > entry.getKey() && entry.getValue().matcher(lore.get(entry.getKey())).find();
+            })) {
+                continue;
             }
             if (data.getCustomModelData() != -1 && (!meta.hasCustomModelData() || meta.getCustomModelData() != data.getCustomModelData())) {
                 continue;
