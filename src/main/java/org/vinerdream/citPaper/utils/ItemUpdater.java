@@ -249,6 +249,8 @@ public class ItemUpdater {
             throw new RuntimeException(e);
         }
 
+        if (result == null) return List.of();
+
         final List<Object> loreList = (List<Object>) result;
 
         if (ReflectionUtils.isComponentClassPresent()) {
