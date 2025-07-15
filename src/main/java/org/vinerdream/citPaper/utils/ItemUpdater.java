@@ -100,6 +100,7 @@ public class ItemUpdater {
 
     public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
         final PersistentDataContainer pdc = meta.getPersistentDataContainer();
+
         final HashSet<TextureType> applied = new HashSet<>();
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (applied.contains(data.getType())) continue;
@@ -142,45 +143,55 @@ public class ItemUpdater {
             }
 
             if (!pdc.has(originalDataKey)) {
-                PersistentDataContainer container = pdc.getAdapterContext().newPersistentDataContainer();
-                if (meta.getItemModel() != null) {
-                    container.set(originalModelKey, PersistentDataType.STRING, meta.getItemModel().toString());
-                }
-                if (meta.getEquippable().getModel() != null) {
-                    container.set(originalArmorModelKey, PersistentDataType.STRING, meta.getEquippable().getModel().toString());
-                }
-                pdc.set(originalDataKey, PersistentDataType.TAG_CONTAINER, container);
+                saveOriginalData(meta, pdc);
             }
+
             if (data.getType() == TextureType.ITEM) {
                 meta.setItemModel(data.getKey());
             }
             if (data.getArmorData() != null) {
                 setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
             }
+
             applied.add(data.getType());
         }
 
         if (!applied.isEmpty()) return;
 
         if (pdc.has(originalDataKey)) {
-            PersistentDataContainer container = pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER);
-            assert container != null;
-            if (container.has(originalModelKey)) {
-                meta.setItemModel(NamespacedKey.fromString(Objects.requireNonNull(container.get(originalModelKey, PersistentDataType.STRING))));
-            } else {
-                meta.setItemModel(null);
-            }
-            if (container.has(originalArmorModelKey)) {
-                setArmorTexture(
-                        meta,
-                        type.getKey().getKey(),
-                        NamespacedKey.fromString(Objects.requireNonNull(container.get(originalArmorModelKey, PersistentDataType.STRING)))
-                );
-            } else {
-                setArmorTexture(meta, null, null);
-            }
-            pdc.remove(originalDataKey);
+            restoreOriginalData(meta, pdc, type);
         }
+    }
+
+    private void saveOriginalData(ItemMeta meta, PersistentDataContainer pdc) {
+        final PersistentDataContainer container = pdc.getAdapterContext().newPersistentDataContainer();
+        if (meta.getItemModel() != null) {
+            container.set(originalModelKey, PersistentDataType.STRING, meta.getItemModel().toString());
+        }
+        if (meta.getEquippable().getModel() != null) {
+            container.set(originalArmorModelKey, PersistentDataType.STRING, meta.getEquippable().getModel().toString());
+        }
+        pdc.set(originalDataKey, PersistentDataType.TAG_CONTAINER, container);
+    }
+
+    private void restoreOriginalData(ItemMeta meta, PersistentDataContainer pdc, Material type) {
+        final PersistentDataContainer container = pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER);
+        assert container != null;
+        if (container.has(originalModelKey)) {
+            meta.setItemModel(NamespacedKey.fromString(Objects.requireNonNull(container.get(originalModelKey, PersistentDataType.STRING))));
+        } else {
+            meta.setItemModel(null);
+        }
+        if (container.has(originalArmorModelKey)) {
+            setArmorTexture(
+                    meta,
+                    type.getKey().getKey(),
+                    NamespacedKey.fromString(Objects.requireNonNull(container.get(originalArmorModelKey, PersistentDataType.STRING)))
+            );
+        } else {
+            setArmorTexture(meta, null, null);
+        }
+        pdc.remove(originalDataKey);
     }
 
     private void setArmorTexture(ItemMeta meta, String itemName, NamespacedKey texture) {
