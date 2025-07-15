@@ -21,8 +21,10 @@ import org.vinerdream.citPaper.converter.TextureType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.mergeMaps;
 
@@ -33,17 +35,28 @@ public class ItemUpdater {
     private final NamespacedKey originalArmorModelKey;
 
     private final static Method getCustomName;
+    private final static Method getLore;
 
     static {
-        Method customName = null;
+        Method method = null;
+
         try {
-            customName = ItemMeta.class.getMethod("customName");
+            method = ItemMeta.class.getMethod("customName");
         } catch (NoSuchMethodException e) {
             try {
-                customName = ItemMeta.class.getMethod("getDisplayName");
+                method = ItemMeta.class.getMethod("getDisplayName");
             } catch (NoSuchMethodException ignored) {}
         }
-        getCustomName = customName;
+        getCustomName = method;
+
+        try {
+            method = ItemMeta.class.getMethod("lore");
+        } catch (NoSuchMethodException e) {
+            try {
+                method = ItemMeta.class.getMethod("getLore");
+            } catch (NoSuchMethodException ignored) {}
+        }
+        getLore = method;
     }
 
     public ItemUpdater(CITPaper plugin) {
@@ -88,34 +101,48 @@ public class ItemUpdater {
     public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
         final PersistentDataContainer pdc = meta.getPersistentDataContainer();
         final HashSet<TextureType> applied = new HashSet<>();
+        renames:
         for (ParsedTextureProperties data : plugin.getRenames()) {
             if (applied.contains(data.getType())) continue;
             if (data.getItems().stream().noneMatch(itemKey -> type.getKey().toString().equals(itemKey))) {
                 continue;
             }
-            boolean matched = data.getNamePattern() == null || data.getNamePattern().matcher(name).find();
+            if (data.getNamePattern() != null && !data.getNamePattern().matcher(name).find()) {
+                continue;
+            }
+            final List<String> lore = getItemLore(meta);
+            for (Map.Entry<Integer, Pattern> entry : data.getLoreData().entrySet()) {
+                if (entry.getKey() == null) {
+                    if (lore.stream().noneMatch(line -> entry.getValue().matcher(line).find())) {
+                        continue renames;
+                    }
+                } else {
+                    if (lore.size() <= entry.getKey()) continue renames;
+                    if (!entry.getValue().matcher(lore.get(entry.getKey())).find()) continue renames;
+                }
+            }
             if (data.getCustomModelData() != -1 && (!meta.hasCustomModelData() || meta.getCustomModelData() != data.getCustomModelData())) {
-                matched = false;
+                continue;
             }
             if (data.getDamage() != null && meta instanceof Damageable damageable) {
                 if (!data.getDamage().check(damageable.getDamage() + damage, type.getMaxDurability())) {
-                    matched = false;
+                    continue;
                 }
             }
             if (data.getEnchantments() != null && !data.getEnchantments().check(mergeMaps(meta.getEnchants(), enchantments))) {
-                matched = false;
+                continue;
             }
             if (data.getPotion() != null) {
                 if (!(meta instanceof PotionMeta potionMeta)) {
-                    matched = false;
+                    continue;
                 } else {
                     final PotionType potionType = potionMeta.getBasePotionType();
                     if (potionType == null || !data.getPotion().equals(potionType.getKey().toString())) {
-                        matched = false;
+                        continue;
                     }
                 }
             }
-            if (!matched) continue;
+
             if (!pdc.has(originalDataKey)) {
                 PersistentDataContainer container = pdc.getAdapterContext().newPersistentDataContainer();
                 if (meta.getItemModel() != null) {
@@ -193,17 +220,43 @@ public class ItemUpdater {
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new RuntimeException(e);
         }
-        if (ReflectionUtils.isClassPresent("net.kyori.adventure.text.Component")) {
-            String name = ComponentUtils.componentToString(result);
-            if (name != null) return name;
-        }
-        if (result instanceof String str) {
-            return str;
-        } else if (meta instanceof BookMeta bookMeta) {
-            final String title = bookMeta.getTitle();
-            return title != null ? title : "";
-        } else {
+
+        if (result == null) {
+            if (meta instanceof BookMeta bookMeta) {
+                final String title = bookMeta.getTitle();
+                if (title != null) {
+                    return title;
+                }
+            }
             return "";
         }
+
+        if (ReflectionUtils.isComponentClassPresent()) {
+            return ComponentUtils.componentToString(result);
+        }
+
+        return result.toString();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static @NotNull List<String> getItemLore(ItemMeta meta) {
+        if (meta == null) {
+            return List.of();
+        }
+
+        final Object result;
+        try {
+            result = getLore.invoke(meta);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException(e);
+        }
+
+        final List<Object> loreList = (List<Object>) result;
+
+        if (ReflectionUtils.isComponentClassPresent()) {
+            return loreList.stream().map(ComponentUtils::componentToString).map(s -> s == null ? "" : s).toList();
+        }
+
+        return loreList.stream().map(o -> o == null ? "" : o).map(Object::toString).toList();
     }
 }

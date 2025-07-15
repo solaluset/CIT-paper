@@ -12,6 +12,8 @@ import java.util.regex.Pattern;
 import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
 public class ParsedTextureProperties {
+    private final static String LORE_PREFIX = "nbt.display.Lore.";
+
     @Getter
     private final TextureType type;
     @Getter
@@ -48,6 +50,8 @@ public class ParsedTextureProperties {
     private final int weight;
     @Getter
     private final int customModelData;
+    @Getter
+    private final Map<Integer, Pattern> loreData = new HashMap<>();
     @Getter
     @Setter
     private NamespacedKey key;
@@ -118,6 +122,12 @@ public class ParsedTextureProperties {
                 } else {
                     itemTexture = popValue(properties, null, entry.getKey());
                 }
+            } else if (entry.getKey().startsWith(LORE_PREFIX)) {
+                final String lineNumber = entry.getKey().replace(LORE_PREFIX, "");
+                this.loreData.put(
+                        lineNumber.equals("*") ? null : Integer.parseInt(lineNumber),
+                        NameMatcher.filterToPattern(entry.getValue(), logger)
+                );
             }
         }
         if (armorTexture == null && type == TextureType.ELYTRA) {
@@ -172,11 +182,7 @@ public class ParsedTextureProperties {
         result.put("type", type.toString());
         result.put("items", String.join(" ", items));
         if (namePattern != null) {
-            String pattern = "regex:" + namePattern.pattern();
-            if ((namePattern.flags() & Pattern.CASE_INSENSITIVE) != 0) {
-                pattern = "i" + pattern;
-            }
-            result.put("name", pattern);
+            result.put("name", NameMatcher.patternToFilter(namePattern));
         }
         if (key != null) {
             result.put("key", key.toString());
@@ -195,6 +201,12 @@ public class ParsedTextureProperties {
         }
         if (customModelData != -1) {
             result.put("customModelData", String.valueOf(customModelData));
+        }
+        for (var entry : loreData.entrySet()) {
+            result.put(
+                    LORE_PREFIX + (entry.getKey() == null ? "*" : entry.getKey()),
+                    NameMatcher.patternToFilter(entry.getValue())
+            );
         }
         if (weight != 0) {
             result.put("weight", String.valueOf(weight));

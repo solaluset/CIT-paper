@@ -34,4 +34,12 @@ public class NameMatcher {
     private static String removePrefix(String string, String prefix) {
         return string.substring(prefix.length());
     }
+
+    public static String patternToFilter(Pattern pattern) {
+        String filter = "regex:" + pattern.pattern();
+        if ((pattern.flags() & Pattern.CASE_INSENSITIVE) != 0) {
+            filter = "i" + filter;
+        }
+        return filter;
+    }
 }

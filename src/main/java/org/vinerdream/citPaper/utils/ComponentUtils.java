@@ -9,6 +9,6 @@ public class ComponentUtils {
         if (object instanceof Component component) {
             return PlainTextComponentSerializer.plainText().serialize(component);
         }
-        return null;
+        return object.toString();
     }
 }
