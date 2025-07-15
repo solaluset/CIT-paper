@@ -103,30 +103,33 @@ public class ParsedTextureProperties {
         int armorTextureType = 0;
         String itemTexture = null;
         String itemOverlay = null;
-        for (Map.Entry<String, String> entry : properties.entrySet().stream().toList()) {
-            if (entry.getKey().startsWith("texture.") && entry.getKey().contains("_layer_")) {
-                String value = popValue(properties, null, entry.getKey());
-                if (entry.getKey().endsWith("_overlay")) {
+        // iterate over a COPY of key set
+        // because we modify the map in the loop
+        for (String key : properties.keySet().stream().toList()) {
+            if (key.startsWith("texture.") && key.contains("_layer_")) {
+                String value = popValue(properties, null, key);
+                if (key.endsWith("_overlay")) {
                     armorOverlay = value;
                     continue;
                 }
                 if (armorTexture == null) {
                     armorTexture = value;
-                    armorTextureType = Integer.parseInt(entry.getKey().split("_layer_")[1]);
+                    armorTextureType = Integer.parseInt(key.split("_layer_")[1]);
                 } else if (!armorTexture.equals(value)) {
                     logger.accept("Different armor textures not supported: " + armorTexture + " != " + value);
                 }
-            } else if (entry.getKey().startsWith("texture.leather_")) {
-                if (entry.getKey().endsWith("_overlay")) {
-                    itemOverlay = popValue(properties, null, entry.getKey());
+            } else if (key.startsWith("texture.leather_")) {
+                if (key.endsWith("_overlay")) {
+                    itemOverlay = popValue(properties, null, key);
                 } else {
-                    itemTexture = popValue(properties, null, entry.getKey());
+                    itemTexture = popValue(properties, null, key);
                 }
-            } else if (entry.getKey().startsWith(LORE_PREFIX)) {
-                final String lineNumber = entry.getKey().replace(LORE_PREFIX, "");
+            } else if (key.startsWith(LORE_PREFIX)) {
+                final String lineNumber = key.replace(LORE_PREFIX, "");
+                final String value = popValue(properties, null, key);
                 this.loreData.put(
                         lineNumber.equals("*") ? null : Integer.parseInt(lineNumber),
-                        NameMatcher.filterToPattern(entry.getValue(), logger)
+                        NameMatcher.filterToPattern(value, logger)
                 );
             }
         }
