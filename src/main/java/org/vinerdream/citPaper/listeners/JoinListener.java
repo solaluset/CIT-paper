@@ -18,8 +18,10 @@ public class JoinListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> event.getPlayer().getInventory().setContents(Arrays.stream(
-                event.getPlayer().getInventory().getContents()
-        ).peek(item -> plugin.getItemUpdater().updateItem(item)).toArray(ItemStack[]::new)), 20);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            for (ItemStack item : event.getPlayer().getInventory().getContents()) {
+                plugin.getItemUpdater().updateItem(item);
+            }
+        }, 20);
     }
 }
