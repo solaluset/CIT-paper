@@ -178,6 +178,10 @@ public class ParsedTextureProperties {
             mainTextureData = fishingRodTextureData;
         }
         this.mainTextureData = mainTextureData;
+
+        for (String key : properties.keySet()) {
+            logger.accept("Unknown property: " + key);
+        }
     }
 
     public Map<String, String> saveToMap() {

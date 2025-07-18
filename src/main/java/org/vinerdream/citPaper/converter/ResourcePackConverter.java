@@ -134,9 +134,6 @@ public class ResourcePackConverter {
         propertiesMap.replaceAll((k, v) -> v.trim());
 
         ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> log(Level.WARNING, string));
-        for (String key : propertiesMap.keySet()) {
-            log(Level.WARNING, "Unknown property: " + key);
-        }
 
         try {
             convertPropertiesFile(citRoot, file, data, outputDirectory);
