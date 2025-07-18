@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.converter;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
+import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.NameMatcher;
 
 import java.util.*;
@@ -57,7 +58,12 @@ public class ParsedTextureProperties {
     private NamespacedKey key;
 
     public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
-        this.type = TextureType.valueOf(popValue(properties, "item", "type").toUpperCase(Locale.ROOT));
+        final String typeString = popValue(properties, "item", "type");
+        try {
+            this.type = TextureType.valueOf(typeString.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new UnsupportedCitTypeException("Unsupported CIT type: " + typeString);
+        }
         this.items = Arrays.stream(popValue(
                 properties,
                 "",

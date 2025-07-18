@@ -4,6 +4,7 @@ import com.google.gson.*;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.PropertiesUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
@@ -133,7 +134,13 @@ public class ResourcePackConverter {
         Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
         propertiesMap.replaceAll((k, v) -> v.trim());
 
-        ParsedTextureProperties data = new ParsedTextureProperties(propertiesMap, string -> log(Level.WARNING, string));
+        final ParsedTextureProperties data;
+        try {
+            data = new ParsedTextureProperties(propertiesMap, string -> log(Level.WARNING, string));
+        } catch (UnsupportedCitTypeException e) {
+            log(Level.WARNING, e.getMessage());
+            return;
+        }
 
         try {
             convertPropertiesFile(citRoot, file, data, outputDirectory);

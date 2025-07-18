@@ -11,6 +11,7 @@ import org.vinerdream.citPaper.api.events.ResourcePacksPostGenerateEvent;
 import org.vinerdream.citPaper.commands.CITPaperCommand;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.converter.ResourcePackConverter;
+import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.listeners.*;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ItemUpdater;
@@ -90,7 +91,16 @@ public final class CITPaper extends JavaPlugin {
         try (Stream<Path> contents = Files.walk(renamesPath)) {
             contents.forEach(path -> {
                 Configuration config = YamlConfiguration.loadConfiguration(path.toFile());
-                config.getMapList("renames").forEach(map -> renames.add(new ParsedTextureProperties(mapToStringMap(map), getLogger()::warning)));
+                config.getMapList("renames").forEach(map -> {
+                    final ParsedTextureProperties data;
+                    try {
+                        data = new ParsedTextureProperties(mapToStringMap(map), getLogger()::warning);
+                    } catch (UnsupportedCitTypeException e) {
+                        getLogger().warning(path + ": " + e.getMessage());
+                        return;
+                    }
+                    renames.add(data);
+                });
             });
         } catch (IOException e) {
             throw new RuntimeException(e);
