@@ -14,7 +14,6 @@ public class TextureData {
     private String texture;
     private String overlay;
 
-
     public TextureData(String model, String texture) {
         this(model, texture, null);
     }

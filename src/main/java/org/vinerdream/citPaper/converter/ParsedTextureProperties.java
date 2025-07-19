@@ -12,48 +12,30 @@ import java.util.regex.Pattern;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
+@Getter
 public class ParsedTextureProperties {
     private final static String LORE_PREFIX = "nbt.display.Lore.";
 
-    @Getter
     private final TextureType type;
-    @Getter
     private final List<String> items;
-    @Getter
     @Setter
     private TextureData mainTextureData;
-    @Getter
     private final ElytraTextureData elytraTextureData;
-    @Getter
     private final TextureData shieldBlockingData;
-    @Getter
     @Setter
     private TextureData armorData;
-    @Getter
     private final int armorDataType;
-    @Getter
     private final BowTextureData bowTextureData;
-    @Getter
     private final CrossbowTextureData crossbowTextureData;
-    @Getter
     private final TridentTextureData tridentTextureData;
-    @Getter
     private final FishingRodTextureData fishingRodTextureData;
-    @Getter
     private final Pattern namePattern;
-    @Getter
     private final DamageData damage;
-    @Getter
     private final EnchantmentsData enchantments;
-    @Getter
     private final String potion;
-    @Getter
     private final int weight;
-    @Getter
     private final int customModelData;
-    @Getter
     private final Map<Integer, Pattern> loreData = new HashMap<>();
-    @Getter
     @Setter
     private NamespacedKey key;
 

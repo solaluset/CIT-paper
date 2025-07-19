@@ -6,8 +6,6 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.inventory.ItemStack;
 import org.vinerdream.citPaper.CITPaper;
 
-import java.util.Arrays;
-
 public class InventoryListener implements Listener {
     private final CITPaper plugin;
 

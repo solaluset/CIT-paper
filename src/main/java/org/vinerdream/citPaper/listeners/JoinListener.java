@@ -7,8 +7,6 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.vinerdream.citPaper.CITPaper;
 
-import java.util.Arrays;
-
 public class JoinListener implements Listener {
     private final CITPaper plugin;
 

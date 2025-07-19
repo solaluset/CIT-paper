@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.CITPaper;
 
-import java.io.IOException;
 import java.util.List;
 
 public class CITPaperCommand implements CommandExecutor, TabCompleter {
@@ -32,16 +31,10 @@ public class CITPaperCommand implements CommandExecutor, TabCompleter {
             final String message;
 
             if (args[0].equals("regenerate")) {
-                try {
-                    if (plugin.generateResourcePacks()) {
-                        message = "Regenerated resource packs and reloaded successfully!";
-                    } else {
-                        message = "Failed to regenerate resource packs!";
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    sender.sendMessage("Failed to regenerate resource packs!");
-                    return;
+                if (plugin.generateResourcePacks()) {
+                    message = "Regenerated resource packs and reloaded successfully!";
+                } else {
+                    message = "Failed to regenerate resource packs!";
                 }
             } else {
                 message = "Reloaded successfully!";

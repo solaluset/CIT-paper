@@ -30,7 +30,7 @@ public final class CITPaper extends JavaPlugin {
     @Getter
     private ItemUpdater itemUpdater;
 
-    public CITPaper() throws IOException {
+    public CITPaper() {
         saveDefaultConfig();
 
         if (getConfig().getBoolean("converter.enabled")) {
@@ -112,7 +112,7 @@ public final class CITPaper extends JavaPlugin {
         );
     }
 
-    public boolean generateResourcePacks() throws IOException {
+    public boolean generateResourcePacks() {
         final String inputDirectory = getConfig().getString("converter.inputDirectory");
         final String outputDirectory = getConfig().getString("converter.outputDirectory");
         if (inputDirectory == null || outputDirectory == null) return false;
@@ -124,11 +124,16 @@ public final class CITPaper extends JavaPlugin {
         if (!inputPath.toFile().isDirectory()) {
             inputPath.toFile().mkdirs();
         }
-        if (getConfig().getBoolean("converter.clearConfigs")) {
-            FileUtils.removeDirectory(renamesPath);
-        }
-        if (getConfig().getBoolean("converter.clearOutputDirectory")) {
-            FileUtils.removeDirectory(outputPath);
+        try {
+            if (getConfig().getBoolean("converter.clearConfigs")) {
+                FileUtils.removeDirectory(renamesPath);
+            }
+            if (getConfig().getBoolean("converter.clearOutputDirectory")) {
+                FileUtils.removeDirectory(outputPath);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
 
         final List<Path> convertedResourcePacks = new ArrayList<>();
@@ -152,6 +157,9 @@ public final class CITPaper extends JavaPlugin {
                     failedResourcePacks.put(input, e);
                 }
             });
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
         }
 
         failedResourcePacks.forEach((path, exception) -> {
