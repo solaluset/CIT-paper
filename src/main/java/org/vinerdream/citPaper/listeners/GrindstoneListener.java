@@ -15,8 +15,6 @@ public class GrindstoneListener implements Listener {
 
     @EventHandler
     public void onGrindstonePrepare(PrepareGrindstoneEvent event) {
-        ItemStack item = event.getResult();
-        plugin.getItemUpdater().updateItem(item);
-        event.setResult(item);
+        plugin.getItemUpdater().updateItem(event.getResult());
     }
 }

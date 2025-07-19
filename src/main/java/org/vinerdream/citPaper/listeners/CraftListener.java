@@ -22,9 +22,7 @@ public class CraftListener implements Listener {
 
     @EventHandler
     public void onCraft(CraftItemEvent event) {
-        ItemStack result = event.getInventory().getResult();
-        plugin.getItemUpdater().updateItem(result);
-        event.getInventory().setResult(result);
+        plugin.getItemUpdater().updateItem(event.getInventory().getResult());
     }
 
     @EventHandler
