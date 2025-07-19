@@ -28,7 +28,7 @@ public final class CITPaper extends JavaPlugin {
     @Getter
     private final List<ParsedTextureProperties> renames = new ArrayList<>();
     @Getter
-    private ItemUpdater itemUpdater;
+    private final ItemUpdater itemUpdater;
 
     public CITPaper() {
         saveDefaultConfig();
@@ -36,6 +36,8 @@ public final class CITPaper extends JavaPlugin {
         if (getConfig().getBoolean("converter.enabled")) {
             generateResourcePacks();
         }
+
+        itemUpdater = new ItemUpdater(this);
     }
 
     @Override
@@ -59,8 +61,6 @@ public final class CITPaper extends JavaPlugin {
         command.setTabCompleter(executor);
 
         loadRenames();
-
-        itemUpdater = new ItemUpdater(this);
     }
 
     @Override
