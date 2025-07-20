@@ -6,7 +6,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.FileUtils;
-import org.vinerdream.citPaper.utils.PropertiesUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
 
 import java.io.*;
@@ -131,7 +130,7 @@ public class ResourcePackConverter {
         try (FileReader reader = new FileReader(file.toFile())) {
             properties.load(reader);
         }
-        Map<String, String> propertiesMap = PropertiesUtils.propertiesToMap(properties);
+        Map<String, String> propertiesMap = mapToStringMap(properties);
         propertiesMap.replaceAll((k, v) -> v.trim());
 
         final ParsedTextureProperties data;
