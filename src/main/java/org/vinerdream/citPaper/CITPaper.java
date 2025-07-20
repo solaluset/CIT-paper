@@ -52,7 +52,7 @@ public final class CITPaper extends JavaPlugin {
                 new MendingListener(this),
                 new SmithingListener(this),
                 new CraftListener(this),
-                new JoinListener(this)
+                new PlayerListener(this)
         );
 
         PluginCommand command = Objects.requireNonNull(getCommand("cit-paper"));
