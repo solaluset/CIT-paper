@@ -20,12 +20,10 @@ import org.vinerdream.citPaper.converter.TextureType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.mergeMaps;
+import static org.vinerdream.citPaper.utils.PdcUtils.*;
 
 public class ItemUpdater {
     private final CITPaper plugin;
@@ -35,6 +33,7 @@ public class ItemUpdater {
 
     private final static Method getCustomName;
     private final static Method getLore;
+    private final static String EMPTY_MODEL = "EMPTY";
 
     static {
         Method method = null;
@@ -99,6 +98,9 @@ public class ItemUpdater {
 
     public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
         final PersistentDataContainer pdc = meta.getPersistentDataContainer();
+        final boolean legacy = pdc.has(originalDataKey) && Objects.requireNonNull(
+                pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER)
+        ).getKeys().isEmpty();
 
         final HashSet<TextureType> applied = new HashSet<>();
         for (ParsedTextureProperties data : plugin.getRenames()) {
@@ -141,56 +143,67 @@ public class ItemUpdater {
                 }
             }
 
-            if (!pdc.has(originalDataKey)) {
-                saveOriginalData(meta, pdc);
-            }
-
             if (data.getType() == TextureType.ITEM) {
+                if (getNestedKey(
+                        pdc,
+                        PersistentDataType.STRING,
+                        originalDataKey,
+                        originalModelKey
+                ) == null) {
+                    setNestedKey(
+                            pdc,
+                            PersistentDataType.STRING,
+                            meta.getItemModel() != null && !legacy ? meta.getItemModel().toString() : EMPTY_MODEL,
+                            originalDataKey,
+                            originalModelKey
+                    );
+                }
                 meta.setItemModel(data.getKey());
             }
             if (data.getArmorData() != null) {
+                if (getNestedKey(
+                        pdc,
+                        PersistentDataType.STRING,
+                        originalDataKey,
+                        originalArmorModelKey
+                ) == null) {
+                    setNestedKey(
+                            pdc,
+                            PersistentDataType.STRING,
+                            meta.getEquippable().getModel() != null && !legacy ? meta.getEquippable().getModel().toString() : EMPTY_MODEL,
+                            originalDataKey,
+                            originalArmorModelKey
+                    );
+                }
                 setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
             }
 
             applied.add(data.getType());
         }
 
-        if (!applied.isEmpty()) return;
+        if (!applied.remove(TextureType.ITEM)) {
+            final String saved = getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalModelKey);
+            if (saved != null) {
+                if (saved.equals(EMPTY_MODEL)) {
+                    meta.setItemModel(null);
+                } else {
+                    meta.setItemModel(NamespacedKey.fromString(saved));
+                }
+                removeNestedKey(pdc, originalDataKey, originalModelKey);
+            }
+        }
 
-        if (pdc.has(originalDataKey)) {
-            restoreOriginalData(meta, pdc, type);
+        if (applied.isEmpty()) {
+            final String saved = getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalArmorModelKey);
+            if (saved != null) {
+                if (saved.equals(EMPTY_MODEL)) {
+                    setArmorTexture(meta, null, null);
+                } else {
+                    setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(saved));
+                }
+                removeNestedKey(pdc, originalDataKey, originalArmorModelKey);
+            }
         }
-    }
-
-    private void saveOriginalData(ItemMeta meta, PersistentDataContainer pdc) {
-        final PersistentDataContainer container = pdc.getAdapterContext().newPersistentDataContainer();
-        if (meta.getItemModel() != null) {
-            container.set(originalModelKey, PersistentDataType.STRING, meta.getItemModel().toString());
-        }
-        if (meta.getEquippable().getModel() != null) {
-            container.set(originalArmorModelKey, PersistentDataType.STRING, meta.getEquippable().getModel().toString());
-        }
-        pdc.set(originalDataKey, PersistentDataType.TAG_CONTAINER, container);
-    }
-
-    private void restoreOriginalData(ItemMeta meta, PersistentDataContainer pdc, Material type) {
-        final PersistentDataContainer container = pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER);
-        assert container != null;
-        if (container.has(originalModelKey)) {
-            meta.setItemModel(NamespacedKey.fromString(Objects.requireNonNull(container.get(originalModelKey, PersistentDataType.STRING))));
-        } else {
-            meta.setItemModel(null);
-        }
-        if (container.has(originalArmorModelKey)) {
-            setArmorTexture(
-                    meta,
-                    type.getKey().getKey(),
-                    NamespacedKey.fromString(Objects.requireNonNull(container.get(originalArmorModelKey, PersistentDataType.STRING)))
-            );
-        } else {
-            setArmorTexture(meta, null, null);
-        }
-        pdc.remove(originalDataKey);
     }
 
     private void setArmorTexture(ItemMeta meta, String itemName, NamespacedKey texture) {
