@@ -102,9 +102,12 @@ public class ItemUpdater {
                 pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER)
         ).getKeys().isEmpty();
 
-        final HashSet<TextureType> applied = new HashSet<>();
+        boolean appliedItem = false;
+        boolean appliedArmor = false;
         for (ParsedTextureProperties data : plugin.getRenames()) {
-            if (applied.contains(data.getType())) continue;
+            if (data.getType() == TextureType.ITEM) {
+                if (appliedItem) continue;
+            } else if (appliedArmor) continue;
 
             if (data.getItems().stream().noneMatch(itemKey -> type.getKey().toString().equals(itemKey))) {
                 continue;
@@ -159,8 +162,9 @@ public class ItemUpdater {
                     );
                 }
                 meta.setItemModel(data.getKey());
+                appliedItem = true;
             }
-            if (data.getArmorData() != null) {
+            if (data.getArmorData() != null && !appliedArmor) {
                 if (getNestedKey(
                         pdc,
                         PersistentDataType.STRING,
@@ -176,12 +180,11 @@ public class ItemUpdater {
                     );
                 }
                 setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
+                appliedArmor = true;
             }
-
-            applied.add(data.getType());
         }
 
-        if (!applied.remove(TextureType.ITEM)) {
+        if (!appliedItem) {
             final String saved = getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalModelKey);
             if (saved != null) {
                 if (saved.equals(EMPTY_MODEL)) {
@@ -193,7 +196,7 @@ public class ItemUpdater {
             }
         }
 
-        if (applied.isEmpty()) {
+        if (!appliedArmor) {
             final String saved = getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalArmorModelKey);
             if (saved != null) {
                 if (saved.equals(EMPTY_MODEL)) {
