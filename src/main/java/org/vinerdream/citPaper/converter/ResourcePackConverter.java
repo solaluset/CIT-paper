@@ -117,9 +117,12 @@ public class ResourcePackConverter {
                 }
                 if (path.toString().endsWith(".properties")) {
                     logMessages.clear();
-                    convertFile(directory, path, outputDirectory);
-                    logMessages.forEach(entry -> logger.log(entry.getKey(), path + ": " + entry.getValue()));
-                    logMessages.clear();
+                    try {
+                        convertFile(directory, path, outputDirectory);
+                    } finally {
+                        logMessages.forEach(entry -> logger.log(entry.getKey(), path + ": " + entry.getValue()));
+                        logMessages.clear();
+                    }
                 }
             }
         }
