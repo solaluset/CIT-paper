@@ -22,7 +22,7 @@ import java.util.zip.CRC32;
 import static org.vinerdream.citPaper.utils.CollectionUtils.*;
 
 public class ResourcePackConverter {
-    private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item");
+    private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item", "items");
 
     private final Path resourcePackPath;
     private final Path resultPath;
@@ -643,18 +643,22 @@ public class ResourcePackConverter {
         return newPath;
     }
 
-    private void fixTextures(Path inputDirectory, String modelName, JsonObject model, String textureName, Path outputDirectory, Path prefix) throws IOException {
+    private void fixTextures(Path inputDirectory, String modelName, JsonObject model, String textureOverride, Path outputDirectory, Path prefix) throws IOException {
         JsonElement texturesElement = model.get("textures");
         if (texturesElement != null) {
             JsonObject textures = texturesElement.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
-                Path outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, modelName, "json").getParent()), textureName == null ? entry.getValue().getAsString() : textureName, outputDirectory, prefix);
-                if (outputTexture == null) continue;
-                textures.addProperty(
-                        entry.getKey(),
-                        namespace
-                                + ":item/" + prefixToString(prefix) + removeExtension(outputTexture.getFileName().toString())
-                );
+                final String textureName = textureOverride == null ? entry.getValue().getAsString() : textureOverride;
+                final Path outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, modelName, "json").getParent()), textureName, outputDirectory, prefix);
+                if (outputTexture != null) {
+                    textures.addProperty(
+                            entry.getKey(),
+                            namespace
+                                    + ":item/" + prefixToString(prefix) + removeExtension(outputTexture.getFileName().toString())
+                    );
+                } else {
+                    textures.addProperty(entry.getKey(), textureName);
+                }
             }
         }
     }
@@ -670,7 +674,12 @@ public class ResourcePackConverter {
             }
         }
         if (oldPath == null) {
-            if (!DEFAULT_MODEL_DIRECTORIES.contains(stringToPath(resource).getName(0).toString())) {
+            final Path resourcePath = stringToPath(resource);
+            if (!DEFAULT_MODEL_DIRECTORIES.contains(resourcePath.getName(0).toString())
+                    && (resourcePath.getNameCount() != 1 || inputDirectories.size() != 1
+                        || !DEFAULT_MODEL_DIRECTORIES.contains(inputDirectories.getFirst().getFileName()
+                                .toString().replaceFirst("^minecraft:", "")))
+            ) {
                 log(Level.WARNING, "Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
             }
             return null;
