@@ -560,6 +560,10 @@ public class ResourcePackConverter {
     }
 
     private Path copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix) throws IOException {
+        return copyModel(inputDirectory, model, processTextures, textureName, outputDirectory, prefix, new ArrayList<>());
+    }
+
+    private Path copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
         final Path modelDirectory = outputDirectory.resolve(Path.of(
                 "assets",
                 namespace,
@@ -578,6 +582,9 @@ public class ResourcePackConverter {
                 prefix
         );
         if (newPath == null || !processTextures) return newPath;
+
+        seenParents.add(prefix.resolve(resourceNameFromPath(newPath)));
+
         JsonObject json;
         try (FileReader reader = new FileReader(newPath.toFile())) {
             try {
@@ -589,9 +596,24 @@ public class ResourcePackConverter {
             }
             final JsonElement parent = json.get("parent");
             if (parent != null) {
-                final Path parentModel = copyModel(inputDirectory, parent.getAsString(), null, outputDirectory, prefix);
-                if (parentModel != null) {
-                    json.addProperty("parent", namespace + ":item/" + prefixString + resourceNameFromPath(parentModel));
+                final Path parentPath = stringToPath(parent.getAsString());
+
+                final Path fullParentPath = prefix.resolve(parentPath);
+                if (!seenParents.contains(fullParentPath)) {
+
+                    Path parentInputDirectory = inputDirectory;
+                    Path parentPrefix = prefix;
+                    if (parentPath.getParent() != null) {
+                        parentInputDirectory = parentInputDirectory.resolve(parentPath.getParent());
+                        parentPrefix = parentPrefix.resolve(parentPath.getParent());
+                    }
+                    final Path parentModel = copyModel(parentInputDirectory, parentPath.getFileName().toString(), true, null, outputDirectory, parentPrefix, seenParents);
+                    if (parentModel != null) {
+                        json.addProperty("parent", namespace + ":item/" + prefixToString(parentPrefix) + resourceNameFromPath(parentModel));
+                    }
+                } else {
+                    log(Level.WARNING, "Recursive model detected (the model is parent of itself)");
+                    json.remove("parent");
                 }
             }
         }
