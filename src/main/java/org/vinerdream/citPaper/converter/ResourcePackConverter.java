@@ -629,6 +629,10 @@ public class ResourcePackConverter {
             newJson.addProperty("parent", namespace + ":item/" + prefixString + resourceNameFromPath(newPath));
             if (json.get("textures") != null) {
                 newJson.add("textures", json.get("textures"));
+            } else {
+                final JsonObject textures = new JsonObject();
+                textures.addProperty("layer0", textureName);
+                newJson.add("textures", textures);
             }
             json = newJson;
             newPath = newPath.getParent().resolve(
