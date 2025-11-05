@@ -155,7 +155,8 @@ public class ResourcePackConverter {
 
     private void convertPropertiesFile(Path citRoot, Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
-        final Path prefix = lowerPath(citRoot.relativize(file).getParent());
+        final Path originalPrefix = citRoot.relativize(file).getParent();
+        final Path prefix = lowerPath(originalPrefix != null ? originalPrefix : Path.of(""));
         final String prefixString = prefixToString(prefix);
 
         if (data.getKey() == null) {
@@ -698,7 +699,7 @@ public class ResourcePackConverter {
         return newPath;
     }
 
-    private String joinPath(Path path) {
+    private @NotNull String joinPath(@NotNull Path path) {
         return Arrays.stream(pathToString(path).split("/"))
                 .dropWhile(".."::equals).reduce("", (s1, s2) -> s1 + "_" + s2).substring(1);
     }
@@ -707,12 +708,16 @@ public class ResourcePackConverter {
         return path.getParent().resolve(path.getFileName() + ".mcmeta");
     }
 
-    private Path lowerPath(Path path) {
+    private @NotNull Path lowerPath(@NotNull Path path) {
         return stringToPath(pathToString(path).toLowerCase(Locale.ROOT));
     }
 
-    private String prefixToString(Path prefix) {
-        return pathToString(prefix) + "/";
+    private @NotNull String prefixToString(@NotNull Path prefix) {
+        final String string = pathToString(prefix);
+        if (string.isEmpty()) {
+            return string;
+        }
+        return string + "/";
     }
 
     private Path resolveOldPath(Path inputDirectory, String resource, String extension) throws IOException {
