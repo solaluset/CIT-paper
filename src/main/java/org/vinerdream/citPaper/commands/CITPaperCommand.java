@@ -1,6 +1,5 @@
 package org.vinerdream.citPaper.commands;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -8,6 +7,7 @@ import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.CITPaper;
+import org.vinerdream.citPaper.utils.SchedulerUtils;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class CITPaperCommand implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        SchedulerUtils.runTaskAsynchronously(plugin, () -> {
             plugin.reloadConfig();
 
             final String message;

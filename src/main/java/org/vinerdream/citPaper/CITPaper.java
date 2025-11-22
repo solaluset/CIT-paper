@@ -15,6 +15,7 @@ import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.listeners.*;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ItemUpdater;
+import org.vinerdream.citPaper.utils.SchedulerUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -168,7 +169,7 @@ public final class CITPaper extends JavaPlugin {
         });
 
         if (isEnabled()) {
-            Bukkit.getScheduler().runTask(
+            SchedulerUtils.runTask(
                     this,
                     () -> Bukkit.getPluginManager().callEvent(new ResourcePacksPostGenerateEvent(
                             convertedResourcePacks,

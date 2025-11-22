@@ -15,4 +15,13 @@ public class ReflectionUtils {
         }
         return true;
     }
+
+    public static boolean hasMethod(Class<?> klass, String method) {
+        try {
+            klass.getMethod(method);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
 }
