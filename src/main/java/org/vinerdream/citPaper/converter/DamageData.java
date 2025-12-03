@@ -25,7 +25,7 @@ public class DamageData {
     }
 
     public static DamageData fromMap(Map<String, String> map) {
-        final String data = popValue(map, null, "damage");
+        final String data = popValue(map, null, "damage", "components.damage");
         if (data == null) return null;
         return new DamageData(new Range(data), Integer.parseInt(popValue(map, "0", "damageMask")));
     }
