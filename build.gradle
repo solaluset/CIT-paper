@@ -88,6 +88,8 @@ tasks.register('proguard', ProGuardTask) {
     injars(tasks.named('jar', Jar).flatMap { it.archiveFile })
 
     // As of Java 9, the runtime classes are packaged in modular jmod files.
+    // In case jmods folder is missing, extract it with this command:
+    // (cd $JAVA_HOME && ./bin/jimage extract --dir jmods lib/modules)
     for (var module : List.of("java.base", "java.logging")) {
         libraryjars "${System.getProperty('java.home')}/jmods/${module}", jarfilter: '!**.jar', filter: '!module-info.class'
     }
