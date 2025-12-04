@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id 'java'
     id 'maven-publish'
+    id 'com.gradleup.shadow' version '9.2.2'
 }
 
 group = 'org.vinerdream'
@@ -27,6 +28,7 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven { url = "https://repo.nexomc.com/releases" }
 }
 
 configurations {
@@ -37,7 +39,18 @@ def paperAPI = "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT"
 def lombok = "org.projectlombok:lombok:1.18.36"
 
 dependencies {
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("com.nexomc:nexo:1.15.0") {
+        exclude(group: "org.bstats")
+        exclude(group: "com.tcoded")
+        exclude(group: "me.gabytm.util")
+        exclude(group: "dev.triumphteam")
+        exclude(group: "com.jeff-media")
+        exclude(group: "com.intellectualsites.bom")
+    }
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.2.21") {
+        exclude(group: "org.jetbrains", module: "annotations")
+    }
+    compileOnly("com.google.code.gson:gson:2.9.0")
     compileOnly(paperAPI)
     compileOnly(lombok)
     annotationProcessor(lombok)
@@ -82,10 +95,33 @@ publishing {
     }
 }
 
+tasks {
+    shadowJar {
+        exclude(
+                "converter.yml",
+                "languages.yml",
+                "mechanics.yml",
+                "sounds.yml",
+                "custom_armor/**",
+                "glyphs/**",
+                "items/**",
+                "messages/**",
+                "pack/**",
+                "shaders/**",
+        )
+
+        relocate("com.nexomc", "org.vinerdream.citPaper.libs.nexo")
+        relocate("kotlin", "org.vinerdream.citPaper.libs.kotlin")
+        relocate("team.unnamed", "org.vinerdream.citPaper.libs.unnamed")
+
+        minimize()
+    }
+}
+
 tasks.register('proguard', ProGuardTask) {
     configuration file('proguard.pro')
 
-    injars(tasks.named('jar', Jar).flatMap { it.archiveFile })
+    injars(tasks.named('shadowJar', Jar).flatMap { it.archiveFile })
 
     // As of Java 9, the runtime classes are packaged in modular jmod files.
     // In case jmods folder is missing, extract it with this command:
@@ -94,6 +130,9 @@ tasks.register('proguard', ProGuardTask) {
         libraryjars "${System.getProperty('java.home')}/jmods/${module}", jarfilter: '!**.jar', filter: '!module-info.class'
     }
     for (var dependency : configurations.proguard.resolvedConfiguration.resolvedArtifacts) {
+        libraryjars(dependency.file)
+    }
+    for (var dependency : configurations.runtimeClasspath.resolvedConfiguration.resolvedArtifacts) {
         libraryjars(dependency.file)
     }
 

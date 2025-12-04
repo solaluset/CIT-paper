@@ -12,3 +12,4 @@
 }
 -keepattributes Signature
 -keepattributes RuntimeVisibleAnnotations
+-dontwarn org.vinerdream.citPaper.libs.**
