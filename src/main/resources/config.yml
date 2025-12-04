@@ -1,7 +1,17 @@
 converter:
+  # whether to run converter on each start
   enabled: true
+  # directory where you should put your resource packs
   inputDirectory: "plugins/CIT-paper/packs"
+  # directory where converted resource packs will go
   outputDirectory: "plugins/CIT-paper/converted-packs"
+  # clear output folder before every conversion
   clearOutputDirectory: true
+  # clear rename lists before every conversion
   clearConfigs: true
+  # preserve assets/minecraft/optifine/cit folders in converted resource packs
   preserveCitDirectories: true
+  # merge all packs into one
+  mergePacks: false
+  # if this is not empty, output merged pack as one file
+  mergedOutputFile: ""

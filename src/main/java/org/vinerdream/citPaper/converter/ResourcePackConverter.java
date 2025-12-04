@@ -1,12 +1,16 @@
 package org.vinerdream.citPaper.converter;
 
 import com.google.gson.*;
+import com.nexomc.nexo.api.NexoPack;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
+import team.unnamed.creative.ResourcePack;
+import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -29,16 +33,18 @@ public class ResourcePackConverter {
     private final boolean preserveCitDirectories;
     private final Path tempPath;
     private final Logger logger;
+    private final ResourcePack resourcePackToMerge;
     private final String namespace;
     private final List<ParsedTextureProperties> convertedEntries = new ArrayList<>();
     private final List<Map.Entry<Level, String>> logMessages = new ArrayList<>();
 
-    public ResourcePackConverter(Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger) {
+    public ResourcePackConverter(Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger, @Nullable ResourcePack resourcePackToMerge) {
         this.resourcePackPath = resourcePackPath;
         this.resultPath = resultPath;
         this.tempPath = tempPath;
         this.preserveCitDirectories = preserveCitDirectories;
         this.logger = logger;
+        this.resourcePackToMerge = resourcePackToMerge;
         final CRC32 crc32 = new CRC32();
         crc32.update(resourcePackPath.getFileName().toString().getBytes(StandardCharsets.UTF_8));
         this.namespace = "cit-" + String.format("%08x", crc32.getValue());
@@ -46,18 +52,19 @@ public class ResourcePackConverter {
 
     public void convertResourcePack() throws IOException {
         Path rootPath = resourcePackPath;
-        if (rootPath.toFile().isFile()) {
-            Path newPath = getTmpDir().resolve(UUID.randomUUID().toString());
-            ZipUtils.unzip(rootPath, newPath);
-            rootPath = newPath;
-        }
         Path outputPath = resultPath;
         final Path zipPath;
-        if (outputPath.toString().endsWith(".zip")) {
+        if (rootPath.toFile().isFile()) {
+            Path newPath = getTmpPackDir();
+            ZipUtils.unzip(rootPath, newPath);
+            rootPath = newPath;
             zipPath = outputPath;
-            outputPath = getTmpDir().resolve(UUID.randomUUID().toString());
+            outputPath = getTmpPackDir();
         } else {
             zipPath = null;
+            if (resourcePackToMerge != null) {
+                outputPath = getTmpPackDir();
+            }
         }
 
         final JsonObject meta;
@@ -85,7 +92,9 @@ public class ResourcePackConverter {
             }
         }
 
-        if (zipPath != null) {
+        if (resourcePackToMerge != null) {
+            NexoPack.mergePack(resourcePackToMerge, MinecraftResourcePackReader.minecraft().readFromDirectory(outputPath.toFile()));
+        } else if (zipPath != null) {
             ZipUtils.zip(outputPath, zipPath);
         }
 
@@ -762,6 +771,10 @@ public class ResourcePackConverter {
 
     private Path getTmpDir() {
         return tempPath;
+    }
+
+    private Path getTmpPackDir() {
+        return getTmpDir().resolve(UUID.randomUUID().toString());
     }
 
     private String readResource(String path) throws IOException {

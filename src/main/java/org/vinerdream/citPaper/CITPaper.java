@@ -16,6 +16,8 @@ import org.vinerdream.citPaper.listeners.*;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ItemUpdater;
 import org.vinerdream.citPaper.utils.SchedulerUtils;
+import team.unnamed.creative.ResourcePack;
+import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -139,6 +141,7 @@ public final class CITPaper extends JavaPlugin {
 
         final List<Path> convertedResourcePacks = new ArrayList<>();
         final Map<Path, Exception> failedResourcePacks = new HashMap<>();
+        final ResourcePack mergedPack = getConfig().getBoolean("converter.mergePacks") ? ResourcePack.resourcePack() : null;
 
         try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
             inputs.forEach(input -> {
@@ -148,7 +151,8 @@ public final class CITPaper extends JavaPlugin {
                         outputPath.resolve(input.getFileName()),
                         getCachePath(),
                         getConfig().getBoolean("converter.preserveCitDirectories"),
-                        getLogger()
+                        getLogger(),
+                        mergedPack
                 );
                 try {
                     converter.convertResourcePack();
@@ -167,6 +171,16 @@ public final class CITPaper extends JavaPlugin {
             getLogger().severe("Failed to convert " + path);
             exception.printStackTrace();
         });
+
+        if (mergedPack != null) {
+            outputPath.toFile().mkdirs();
+            final String fileName = getConfig().getString("converter.mergedOutputFile");
+            if (fileName != null && !fileName.isEmpty()) {
+                MinecraftResourcePackWriter.minecraft().writeToZipFile(outputPath.resolve(fileName), mergedPack);
+            } else {
+                MinecraftResourcePackWriter.minecraft().writeToDirectory(outputPath.toFile(), mergedPack);
+            }
+        }
 
         if (isEnabled()) {
             SchedulerUtils.runTask(
