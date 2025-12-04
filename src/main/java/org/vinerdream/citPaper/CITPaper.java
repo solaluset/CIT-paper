@@ -144,7 +144,7 @@ public final class CITPaper extends JavaPlugin {
         final ResourcePack mergedPack = getConfig().getBoolean("converter.mergePacks") ? ResourcePack.resourcePack() : null;
 
         try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
-            inputs.forEach(input -> {
+            inputs.sorted().forEachOrdered(input -> {
                 if (input.equals(inputPath)) return;
                 ResourcePackConverter converter = new ResourcePackConverter(
                         input,
