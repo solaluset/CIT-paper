@@ -15,6 +15,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.CITPaper;
+import org.vinerdream.citPaper.config.Mode;
+import org.vinerdream.citPaper.converter.OraxenData;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.converter.TextureType;
 
@@ -23,6 +25,8 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.mergeMaps;
+import static org.vinerdream.citPaper.utils.ItemUtils.ITEM_MODEL_EXISTS;
+import static org.vinerdream.citPaper.utils.ItemUtils.getItemModel;
 import static org.vinerdream.citPaper.utils.PdcUtils.*;
 
 public class ItemUpdater {
@@ -30,6 +34,7 @@ public class ItemUpdater {
     private final NamespacedKey originalDataKey;
     private final NamespacedKey originalModelKey;
     private final NamespacedKey originalArmorModelKey;
+    private final NamespacedKey originalCustomModelDataKey;
 
     private final static Method getCustomName;
     private final static Method getLore;
@@ -62,6 +67,7 @@ public class ItemUpdater {
         this.originalDataKey = new NamespacedKey(plugin, "original-data");
         this.originalModelKey = new NamespacedKey(plugin, "model");
         this.originalArmorModelKey = new NamespacedKey(plugin, "armor-model");
+        this.originalCustomModelDataKey = new NamespacedKey(plugin, "custom-model-data");
     }
 
     public void updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
@@ -108,6 +114,9 @@ public class ItemUpdater {
             if (data.getType() == TextureType.ITEM) {
                 if (appliedItem) continue;
             } else if (appliedArmor) continue;
+            if (plugin.getMode() == Mode.ORAXEN && data.getOraxenData() == null) {
+                continue;
+            }
 
             if (data.getItems().stream().noneMatch(itemKey -> type.getKey().toString().equals(itemKey))) {
                 continue;
@@ -153,15 +162,29 @@ public class ItemUpdater {
                         originalDataKey,
                         originalModelKey
                 ) == null) {
+                    final NamespacedKey model = getItemModel(meta);
                     setNestedKey(
                             pdc,
                             PersistentDataType.STRING,
-                            meta.getItemModel() != null && !legacy ? meta.getItemModel().toString() : EMPTY_MODEL,
+                            model != null && !legacy ? model.toString() : EMPTY_MODEL,
                             originalDataKey,
                             originalModelKey
                     );
+                    if (plugin.getMode() == Mode.ORAXEN) {
+                        setNestedKey(
+                                pdc,
+                                PersistentDataType.INTEGER,
+                                meta.hasCustomModelData() ? meta.getCustomModelData() : -1,
+                                originalDataKey,
+                                originalCustomModelDataKey
+                        );
+                    }
                 }
-                meta.setItemModel(data.getKey());
+                if (plugin.getMode() == Mode.ORAXEN) {
+                    applyOraxenData(meta, data.getOraxenData());
+                } else {
+                    meta.setItemModel(data.getKey());
+                }
                 appliedItem = true;
             }
             if (data.getArmorData() != null && !appliedArmor) {
@@ -187,12 +210,24 @@ public class ItemUpdater {
         if (!appliedItem) {
             final String saved = getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalModelKey);
             if (saved != null) {
-                if (saved.equals(EMPTY_MODEL)) {
-                    meta.setItemModel(null);
-                } else {
-                    meta.setItemModel(NamespacedKey.fromString(saved));
+                if (ITEM_MODEL_EXISTS) {
+                    if (saved.equals(EMPTY_MODEL)) {
+                        meta.setItemModel(null);
+                    } else {
+                        meta.setItemModel(NamespacedKey.fromString(saved));
+                    }
                 }
                 removeNestedKey(pdc, originalDataKey, originalModelKey);
+            }
+            final Integer savedCustomModelData = getNestedKey(
+                    pdc,
+                    PersistentDataType.INTEGER,
+                    originalDataKey,
+                    originalCustomModelDataKey
+            );
+            if (savedCustomModelData != null) {
+                meta.setCustomModelData(savedCustomModelData != -1 ? savedCustomModelData : null);
+                removeNestedKey(pdc, originalDataKey, originalCustomModelDataKey);
             }
         }
 
@@ -226,6 +261,15 @@ public class ItemUpdater {
         } else return;
         equippable.setModel(texture);
         meta.setEquippable(equippable);
+    }
+
+    private void applyOraxenData(@NotNull ItemMeta meta, @NotNull OraxenData data) {
+        if (data.getItemModel() != null) {
+            meta.setItemModel(data.getItemModel());
+        }
+        if (data.getCustomModelData() != null) {
+            meta.setCustomModelData(data.getCustomModelData());
+        }
     }
 
     private static String getItemName(ItemStack item) {

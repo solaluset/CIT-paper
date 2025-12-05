@@ -39,7 +39,7 @@ public class ParsedTextureProperties {
     private final Map<Integer, Pattern> loreData = new HashMap<>();
     @Setter
     private NamespacedKey key;
-    private final @Nullable String oraxenId;
+    private final @Nullable OraxenData oraxenData;
 
     public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
         final String typeString = popValue(properties, "item", "type");
@@ -48,7 +48,7 @@ public class ParsedTextureProperties {
         } catch (IllegalArgumentException e) {
             throw new UnsupportedCitTypeException("Unsupported CIT type: " + typeString);
         }
-        this.oraxenId = popValue(properties, null, "oraxen_id");
+        this.oraxenData = OraxenData.fromMap(properties);
         this.items = Arrays.stream(popValue(
                 properties,
                 "",
@@ -208,6 +208,9 @@ public class ParsedTextureProperties {
         }
         if (weight != 0) {
             result.put("weight", String.valueOf(weight));
+        }
+        if (oraxenData != null) {
+            oraxenData.toMap(result);
         }
         return result;
     }
