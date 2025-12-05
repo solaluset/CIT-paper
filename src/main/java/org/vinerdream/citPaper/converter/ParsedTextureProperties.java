@@ -21,7 +21,7 @@ public class ParsedTextureProperties {
     @Setter
     private TextureData mainTextureData;
     private final ElytraTextureData elytraTextureData;
-    private final TextureData shieldBlockingData;
+    private final ShieldTextureData shieldTextureData;
     @Setter
     private TextureData armorData;
     private final int armorDataType;
@@ -84,7 +84,7 @@ public class ParsedTextureProperties {
 
         this.weight = Integer.parseInt(popValue(properties, "0", "weight"));
 
-        this.shieldBlockingData = TextureData.fromMap(properties, "shield_blocking");
+        this.shieldTextureData = ShieldTextureData.fromMap(properties, mainTextureData);
 
         String armorTexture = null;
         String armorOverlay = null;
@@ -223,7 +223,7 @@ public class ParsedTextureProperties {
     }
 
     public boolean hasAnyData() {
-        return mainTextureData != null || elytraTextureData != null || shieldBlockingData != null
+        return mainTextureData != null || elytraTextureData != null || shieldTextureData != null
                 || armorData != null || bowTextureData != null || crossbowTextureData != null
                 || fishingRodTextureData != null;
     }

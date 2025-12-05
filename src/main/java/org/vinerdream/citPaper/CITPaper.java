@@ -6,9 +6,11 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.vinerdream.citPaper.api.events.ResourcePacksPostGenerateEvent;
 import org.vinerdream.citPaper.commands.CITPaperCommand;
+import org.vinerdream.citPaper.config.Mode;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
 import org.vinerdream.citPaper.converter.ResourcePackConverter;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
@@ -28,13 +30,28 @@ import java.util.stream.Stream;
 import static org.vinerdream.citPaper.utils.CollectionUtils.mapToStringMap;
 
 public final class CITPaper extends JavaPlugin {
+    private static final Path oraxenItemsPath;
+    static {
+        final Plugin oraxen = Bukkit.getPluginManager().getPlugin("Oraxen");
+        oraxenItemsPath = oraxen != null
+                ? oraxen.getDataFolder().toPath()
+                .resolve("items").resolve("cit-paper")
+                : null;
+    }
+
     @Getter
     private final List<ParsedTextureProperties> renames = new ArrayList<>();
     @Getter
     private final ItemUpdater itemUpdater;
+    private final Mode mode;
 
     public CITPaper() {
         saveDefaultConfig();
+
+        mode = Mode.valueOf(getConfig().getString("mode"));
+        if (mode == Mode.ORAXEN && oraxenItemsPath == null) {
+            throw new IllegalStateException("mode is ORAXEN but Oraxen was not found!");
+        }
 
         if (getConfig().getBoolean("converter.enabled")) {
             generateResourcePacks();
@@ -130,6 +147,7 @@ public final class CITPaper extends JavaPlugin {
         try {
             if (getConfig().getBoolean("converter.clearConfigs")) {
                 FileUtils.removeDirectory(renamesPath);
+                FileUtils.removeDirectory(oraxenItemsPath);
             }
             if (getConfig().getBoolean("converter.clearOutputDirectory")) {
                 FileUtils.removeDirectory(outputPath);
@@ -137,6 +155,9 @@ public final class CITPaper extends JavaPlugin {
         } catch (IOException e) {
             e.printStackTrace();
             return false;
+        }
+        if (mode == Mode.ORAXEN) {
+            oraxenItemsPath.toFile().mkdirs();
         }
 
         final List<Path> convertedResourcePacks = new ArrayList<>();
@@ -147,6 +168,7 @@ public final class CITPaper extends JavaPlugin {
             inputs.sorted().forEachOrdered(input -> {
                 if (input.equals(inputPath)) return;
                 ResourcePackConverter converter = new ResourcePackConverter(
+                        mode,
                         input,
                         outputPath.resolve(input.getFileName()),
                         getCachePath(),
@@ -157,6 +179,9 @@ public final class CITPaper extends JavaPlugin {
                 try {
                     converter.convertResourcePack();
                     converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
+                    if (mode == Mode.ORAXEN) {
+                        converter.saveOraxenConfig(oraxenItemsPath.resolve(input.getFileName() + ".yml"));
+                    }
                     convertedResourcePacks.add(input);
                 } catch (Exception e) {
                     failedResourcePacks.put(input, e);

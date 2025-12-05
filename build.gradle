@@ -29,6 +29,9 @@ repositories {
         url = "https://oss.sonatype.org/content/groups/public/"
     }
     maven { url = "https://repo.nexomc.com/releases" }
+    maven {
+        url "https://repo.oraxen.com/releases"
+    }
 }
 
 configurations {
@@ -36,6 +39,7 @@ configurations {
 }
 
 def paperAPI = "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT"
+def oraxen = "io.th0rgal:oraxen:1.197.0"
 def lombok = "org.projectlombok:lombok:1.18.36"
 
 dependencies {
@@ -52,10 +56,12 @@ dependencies {
     }
     compileOnly("com.google.code.gson:gson:2.9.0")
     compileOnly(paperAPI)
+    compileOnly(oraxen)
     compileOnly(lombok)
     annotationProcessor(lombok)
 
     proguard(paperAPI)
+    proguard(oraxen)
     proguard(lombok)
     proguard("org.jetbrains:annotations:24.0.0")
 }

@@ -13,3 +13,4 @@
 -keepattributes Signature
 -keepattributes RuntimeVisibleAnnotations
 -dontwarn org.vinerdream.citPaper.libs.**
+-dontwarn me.gabytm.util.**

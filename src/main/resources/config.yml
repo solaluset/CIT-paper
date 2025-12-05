@@ -1,3 +1,7 @@
+# MODERN is recommended for 1.21.2+
+# ORAXEN only works with Oraxen and may work on older versions
+mode: MODERN
+
 converter:
   # whether to run converter on each start
   enabled: true

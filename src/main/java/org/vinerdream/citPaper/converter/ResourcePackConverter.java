@@ -2,12 +2,16 @@ package org.vinerdream.citPaper.converter;
 
 import com.google.gson.*;
 import com.nexomc.nexo.api.NexoPack;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.vinerdream.citPaper.config.Mode;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.FileUtils;
+import org.vinerdream.citPaper.utils.ItemUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
 import team.unnamed.creative.ResourcePack;
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader;
@@ -28,6 +32,7 @@ import static org.vinerdream.citPaper.utils.CollectionUtils.*;
 public class ResourcePackConverter {
     private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item", "items");
 
+    private final Mode mode;
     private final Path resourcePackPath;
     private final Path resultPath;
     private final boolean preserveCitDirectories;
@@ -37,8 +42,10 @@ public class ResourcePackConverter {
     private final String namespace;
     private final List<ParsedTextureProperties> convertedEntries = new ArrayList<>();
     private final List<Map.Entry<Level, String>> logMessages = new ArrayList<>();
+    private final @Nullable YamlConfiguration oraxenConfig;
 
-    public ResourcePackConverter(Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger, @Nullable ResourcePack resourcePackToMerge) {
+    public ResourcePackConverter(Mode mode, Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger, @Nullable ResourcePack resourcePackToMerge) {
+        this.mode = mode;
         this.resourcePackPath = resourcePackPath;
         this.resultPath = resultPath;
         this.tempPath = tempPath;
@@ -48,6 +55,7 @@ public class ResourcePackConverter {
         final CRC32 crc32 = new CRC32();
         crc32.update(resourcePackPath.getFileName().toString().getBytes(StandardCharsets.UTF_8));
         this.namespace = "cit-" + String.format("%08x", crc32.getValue());
+        this.oraxenConfig = this.mode == Mode.ORAXEN ? new YamlConfiguration() : null;
     }
 
     public void convertResourcePack() throws IOException {
@@ -191,6 +199,93 @@ public class ResourcePackConverter {
             modelName = convertTextureData(file, data.getMainTextureData(), guessParent(data), null, outputDirectory, prefix);
         } else return;
 
+        if (mode == Mode.ORAXEN) {
+            assert oraxenConfig != null;
+            final ConfigurationSection itemConfig = oraxenConfig.createSection("temporary");
+            final ConfigurationSection config = itemConfig.createSection("Pack");
+            config.set("generate_model", false);
+
+            if (data.getBowTextureData() != null) {
+                BowTextureData bowTextureData = data.getBowTextureData();
+                normalizeData(file, bowTextureData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
+
+                config.set("model", addNamespace(bowTextureData.getModel()));
+                config.set("pulling_models", List.of(
+                        addNamespace(bowTextureData.getPulling_0().getModel()),
+                        addNamespace(bowTextureData.getPulling_1().getModel()),
+                        addNamespace(bowTextureData.getPulling_2().getModel())
+                ));
+
+            } else if (data.getCrossbowTextureData() != null) {
+                CrossbowTextureData crossbowTextureData = data.getCrossbowTextureData();
+                normalizeData(file, crossbowTextureData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
+
+                config.set("model", addNamespace(crossbowTextureData.getModel()));
+                config.set("pulling_models", List.of(
+                        addNamespace(crossbowTextureData.getPulling_0().getModel()),
+                        addNamespace(crossbowTextureData.getPulling_1().getModel()),
+                        addNamespace(crossbowTextureData.getPulling_2().getModel())
+                ));
+                config.set("charged_model", addNamespace(crossbowTextureData.getWithArrow().getModel()));
+                config.set("firework_model", addNamespace(crossbowTextureData.getWithFirework().getModel()));
+
+            } else if (data.getTridentTextureData() != null) {
+                TridentTextureData tridentData = data.getTridentTextureData();
+                normalizeData(file, tridentData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
+
+                // not supported by Oraxen
+                config.set("model", addNamespace(tridentData.getModel()));
+
+            } else if (data.getFishingRodTextureData() != null) {
+                FishingRodTextureData fishingRodData = data.getFishingRodTextureData();
+                normalizeData(file, fishingRodData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
+
+                config.set("model", addNamespace(fishingRodData.getModel()));
+                config.set("cast_model", addNamespace(fishingRodData.getCast().getModel()));
+
+            } else if (data.getElytraTextureData() != null) {
+                ElytraTextureData elytraData = data.getElytraTextureData();
+                normalizeData(file, elytraData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
+
+                config.set("model", addNamespace(elytraData.getModel()));
+                // ???
+                config.set("damaged_models", List.of(addNamespace(elytraData.getBroken().getModel())));
+
+            } else if (data.getShieldTextureData() != null) {
+                final ShieldTextureData shieldData = data.getShieldTextureData();
+                normalizeData(file, shieldData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
+
+                config.set("model", addNamespace(shieldData.getModel()));
+                config.set("blocking_model", addNamespace(shieldData.getBlocking().getModel()));
+
+            } else {
+                if (modelName != null) {
+                    config.set("model", addNamespace(modelName));
+                } else {
+                    config.set("model", addNamespace(data.getMainTextureData().getModel()));
+                }
+
+            }
+
+            oraxenConfig.set("temporary", null);
+            for (String item : data.getItems()) {
+                final String materialString;
+                {
+                    final Material material = ItemUtils.getMaterial(item);
+                    if (material == null) {
+                        log(Level.WARNING, "Unknown item: " + item);
+                        continue;
+                    }
+                    materialString = material.toString();
+                }
+                final ConfigurationSection itemSection = oraxenConfig.createSection(namespace + "_" + materialString + "_" + prefixString.replace("/", "_") + path.toLowerCase(Locale.ROOT));
+                itemSection.set("material", materialString);
+                itemSection.set("Pack", config);
+            }
+
+            return;
+        }
+
         final Path jsonPath = outputDirectory.resolve(Path.of("assets", namespace, "items")).resolve(prefix).resolve(path.toLowerCase(Locale.ROOT) + ".json");
         final String jsonData;
 
@@ -263,9 +358,18 @@ public class ResourcePackConverter {
                     namespace,
                     elytraData.getBroken().getModel()
             );
-        } else if (data.getShieldBlockingData() != null) {
-            final String blockingModel = convertTextureData(file, data.getShieldBlockingData(), "shield", data.getMainTextureData().getTexture(), outputDirectory, prefix);
-            jsonData = String.format(readResource("/models/shield.json"), namespace, modelName, namespace, blockingModel);
+        } else if (data.getShieldTextureData() != null) {
+            final ShieldTextureData shieldData = data.getShieldTextureData();
+            normalizeData(file, shieldData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
+
+            jsonData = String.format(
+                    readResource("/models/shield.json"),
+                    namespace,
+                    shieldData.getModel(),
+                    namespace,
+                    shieldData.getBlocking().getModel()
+            );
+
         } else {
             if (modelName != null) {
                 jsonData = String.format(readResource("/models/default.json"), namespace + ":item/" + modelName);
@@ -300,6 +404,7 @@ public class ResourcePackConverter {
             case CrossbowTextureData ignored -> "crossbow";
             case BowTextureData ignored -> "bow";
             case FishingRodTextureData ignored -> "handheld_rod";
+            case ShieldTextureData ignored -> "shield";
             default -> "generated";
         };
         for (TextureData data1 : data.getAll()) {
@@ -348,6 +453,11 @@ public class ResourcePackConverter {
         if (data instanceof ElytraTextureData elytra) {
             if (elytra.getBroken() == null) {
                 elytra.setBroken(first);
+            }
+        }
+        if (data instanceof ShieldTextureData shield) {
+            if (shield.getBlocking() == null) {
+                shield.setBlocking(first);
             }
         }
     }
@@ -729,6 +839,10 @@ public class ResourcePackConverter {
         return string + "/";
     }
 
+    private @NotNull String addNamespace(@NotNull String path) {
+        return namespace + ":item/" + path;
+    }
+
     private Path resolveOldPath(Path inputDirectory, String resource, String extension) throws IOException {
         return resolveResource(
                 inputDirectory,
@@ -767,6 +881,11 @@ public class ResourcePackConverter {
         YamlConfiguration config = new YamlConfiguration();
         config.set("renames", convertedEntries.stream().map(ParsedTextureProperties::saveToMap).toList());
         config.save(outputPath.toFile());
+    }
+
+    public void saveOraxenConfig(Path outputPath) throws IOException {
+        assert oraxenConfig != null;
+        oraxenConfig.save(outputPath.toFile());
     }
 
     private Path getTmpDir() {

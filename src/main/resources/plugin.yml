@@ -3,6 +3,8 @@ version: '1.4.4-SNAPSHOT'
 main: org.vinerdream.citPaper.CITPaper
 api-version: '1.21'
 folia-supported: true
+softdepend:
+  - Oraxen
 commands:
   cit-paper:
     description: Reload config/regenerate resource packs
