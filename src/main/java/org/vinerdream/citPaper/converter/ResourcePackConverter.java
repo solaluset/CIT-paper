@@ -40,7 +40,7 @@ public class ResourcePackConverter {
     private final Logger logger;
     private final ResourcePack resourcePackToMerge;
     private final String namespace;
-    private final List<ParsedTextureProperties> convertedEntries = new ArrayList<>();
+    private final List<Map<String, String>> renames = new ArrayList<>();
     private final List<Map.Entry<Level, String>> logMessages = new ArrayList<>();
     private final @Nullable YamlConfiguration oraxenConfig;
 
@@ -162,15 +162,14 @@ public class ResourcePackConverter {
         }
 
         try {
-            convertPropertiesFile(citRoot, file, data, outputDirectory);
+            renames.addAll(convertPropertiesFile(citRoot, file, data, outputDirectory));
         } catch (Exception e) {
             log(Level.SEVERE, "Error when converting");
             throw e;
         }
-        convertedEntries.add(data);
     }
 
-    private void convertPropertiesFile(Path citRoot, Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
+    private List<Map<String, String>> convertPropertiesFile(Path citRoot, Path file, ParsedTextureProperties data, Path outputDirectory) throws IOException {
         final String path = file.getFileName().toString().replaceFirst("\\.properties$", "");
         final Path originalPrefix = citRoot.relativize(file).getParent();
         final Path prefix = lowerPath(originalPrefix != null ? originalPrefix : Path.of(""));
@@ -178,7 +177,7 @@ public class ResourcePackConverter {
 
         if (data.getKey() == null) {
             data.setKey(new NamespacedKey(namespace, prefixString + path.toLowerCase(Locale.ROOT)));
-        } else return;
+        } else return List.of(data.saveToMap());
 
         if (!data.hasAnyData()) {
             if (file.getParent().resolve(path + ".json").toFile().isFile()) {
@@ -197,7 +196,7 @@ public class ResourcePackConverter {
         final String modelName;
         if (data.getMainTextureData() != null) {
             modelName = convertTextureData(file, data.getMainTextureData(), guessParent(data), null, outputDirectory, prefix);
-        } else return;
+        } else return List.of(data.saveToMap());
 
         if (mode == Mode.ORAXEN) {
             assert oraxenConfig != null;
@@ -267,7 +266,9 @@ public class ResourcePackConverter {
 
             }
 
-            oraxenConfig.set("temporary", null);
+            final List<Map<String, String>> renames = new ArrayList<>();
+            final Map<String, String> baseMap = data.saveToMap();
+
             for (String item : data.getItems()) {
                 final String materialString;
                 {
@@ -281,9 +282,15 @@ public class ResourcePackConverter {
                 final ConfigurationSection itemSection = oraxenConfig.createSection(namespace + "_" + materialString + "_" + prefixString.replace("/", "_") + path.toLowerCase(Locale.ROOT));
                 itemSection.set("material", materialString);
                 itemSection.set("Pack", config);
-            }
 
-            return;
+                final Map<String, String> renameMap = new HashMap<>(baseMap);
+                renameMap.put("items", item);
+                renameMap.put("oraxen_id", itemSection.getName());
+                renames.add(renameMap);
+            }
+            oraxenConfig.set("temporary", null);
+
+            return renames;
         }
 
         final Path jsonPath = outputDirectory.resolve(Path.of("assets", namespace, "items")).resolve(prefix).resolve(path.toLowerCase(Locale.ROOT) + ".json");
@@ -381,6 +388,8 @@ public class ResourcePackConverter {
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
         }
+
+        return List.of(data.saveToMap());
     }
 
     private String guessParent(ParsedTextureProperties data) {
@@ -879,7 +888,7 @@ public class ResourcePackConverter {
 
     public void saveConfiguration(Path outputPath) throws IOException {
         YamlConfiguration config = new YamlConfiguration();
-        config.set("renames", convertedEntries.stream().map(ParsedTextureProperties::saveToMap).toList());
+        config.set("renames", renames);
         config.save(outputPath.toFile());
     }
 

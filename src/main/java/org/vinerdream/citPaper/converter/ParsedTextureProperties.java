@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.converter;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.NameMatcher;
 
@@ -38,6 +39,7 @@ public class ParsedTextureProperties {
     private final Map<Integer, Pattern> loreData = new HashMap<>();
     @Setter
     private NamespacedKey key;
+    private final @Nullable String oraxenId;
 
     public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
         final String typeString = popValue(properties, "item", "type");
@@ -46,6 +48,7 @@ public class ParsedTextureProperties {
         } catch (IllegalArgumentException e) {
             throw new UnsupportedCitTypeException("Unsupported CIT type: " + typeString);
         }
+        this.oraxenId = popValue(properties, null, "oraxen_id");
         this.items = Arrays.stream(popValue(
                 properties,
                 "",
