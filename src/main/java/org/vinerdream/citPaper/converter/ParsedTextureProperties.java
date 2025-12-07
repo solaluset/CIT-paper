@@ -96,7 +96,7 @@ public class ParsedTextureProperties {
         String itemOverlay = null;
         // iterate over a COPY of key set
         // because we modify the map in the loop
-        for (String key : properties.keySet().stream().toList()) {
+        for (String key : new ArrayList<>(properties.keySet())) {
             if (key.startsWith("texture.") && key.contains("_layer_")) {
                 String value = popValue(properties, null, key);
                 if (key.endsWith("_overlay")) {
