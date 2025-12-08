@@ -207,7 +207,7 @@ public class ItemUpdater {
                     }
                 }
                 if (plugin.getMode() == Mode.ORAXEN) {
-                    oraxenResult = oraxenItemCopy(plugin, type);
+                    oraxenResult = oraxenItemCopy(plugin, meta, type);
                     assert data.getOraxenData() != null;
                     applyOraxenData(meta, data.getOraxenData());
                 } else {
@@ -222,15 +222,13 @@ public class ItemUpdater {
                         originalDataKey,
                         originalArmorModelKey
                 ) == null) {
-                    if (EQUIPPABLE_EXISTS) {
-                        setNestedKey(
-                                pdc,
-                                PersistentDataType.STRING,
-                                meta.getEquippable().getModel() != null && !legacy ? meta.getEquippable().getModel().toString() : EMPTY_MODEL,
-                                originalDataKey,
-                                originalArmorModelKey
-                        );
-                    }
+                    setNestedKey(
+                            pdc,
+                            PersistentDataType.STRING,
+                            EQUIPPABLE_EXISTS && meta.getEquippable().getModel() != null && !legacy ? meta.getEquippable().getModel().toString() : EMPTY_MODEL,
+                            originalDataKey,
+                            originalArmorModelKey
+                    );
                     if (plugin.getMode() == Mode.ORAXEN && meta instanceof ArmorMeta armorMeta) {
                         setNestedKey(
                                 pdc,
@@ -253,7 +251,7 @@ public class ItemUpdater {
                 if (!armorModel.getNamespace().equals("oraxen")) {
                     setArmorTexture(meta, type.getKey().getKey(), armorModel);
                 } else if (meta instanceof ArmorMeta armorMeta) {
-                    oraxenResult = oraxenItemCopy(plugin, type);
+                    oraxenResult = oraxenItemCopy(plugin, meta, type);
                     applyOraxenTrim(armorMeta, armorModel);
                 }
                 appliedArmor = true;
@@ -287,10 +285,12 @@ public class ItemUpdater {
         if (!appliedArmor) {
             final String saved = getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalArmorModelKey);
             if (saved != null) {
-                if (saved.equals(EMPTY_MODEL)) {
-                    setArmorTexture(meta, null, null);
-                } else {
-                    setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(saved));
+                if (EQUIPPABLE_EXISTS) {
+                    if (saved.equals(EMPTY_MODEL)) {
+                        setArmorTexture(meta, null, null);
+                    } else {
+                        setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(saved));
+                    }
                 }
                 removeNestedKey(pdc, originalDataKey, originalArmorModelKey);
             }
@@ -309,6 +309,7 @@ public class ItemUpdater {
         }
 
         if (oraxenResult != null) {
+            cleanModifiers(itemType, oraxenResult.getType(), meta);
             oraxenResult.setItemMeta(meta);
         }
         return oraxenResult;

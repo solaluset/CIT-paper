@@ -64,12 +64,33 @@ public class ItemUtils {
         return name.contains("elytra");
     }
 
-    public static ItemStack oraxenItemCopy(CITPaper plugin, Material material) {
-        final String oraxenMaterial = getOraxenMaterial(plugin.getOraxenArmorType(), material.getKey().getKey());
-        if (material.getKey().getKey().equals(oraxenMaterial)) {
+    public static ItemStack oraxenItemCopy(CITPaper plugin, ItemMeta meta, Material oldMaterial) {
+        final String oraxenMaterial = getOraxenMaterial(plugin.getOraxenArmorType(), oldMaterial.getKey().getKey());
+        if (oldMaterial.getKey().getKey().equals(oraxenMaterial)) {
             return null;
         }
-        return new ItemStack(Objects.requireNonNull(getMaterial(oraxenMaterial)));
+        final ItemStack newItem = new ItemStack(Objects.requireNonNull(getMaterial(oraxenMaterial)));
+        cleanModifiers(oldMaterial, newItem.getType(), meta);
+        return newItem;
+    }
+
+    public static void cleanModifiers(final Material fromMaterial, final Material toMaterial, final ItemMeta meta) {
+        var modifiers = meta.getAttributeModifiers();
+        if (modifiers == null) {
+            modifiers = fromMaterial.getDefaultAttributeModifiers();
+        }
+        modifiers.entries().forEach(entry -> {
+            final var key = entry.getKey();
+            final var value = entry.getValue();
+            if (key == null || value == null) {
+                return;
+            }
+            meta.removeAttributeModifier(key, value);
+            if (toMaterial.getDefaultAttributeModifiers().containsValue(value)) {
+                return;
+            }
+            meta.addAttributeModifier(key, value);
+        });
     }
 
     public static @NotNull String getOraxenMaterial(final String oraxenArmorType, final @NotNull String item) {
