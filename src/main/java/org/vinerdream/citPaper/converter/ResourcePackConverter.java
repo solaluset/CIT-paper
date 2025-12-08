@@ -279,7 +279,7 @@ public class ResourcePackConverter {
                     }
                     materialString = material.toString();
                 }
-                final ConfigurationSection itemSection = oraxenConfig.createSection(namespace + "_" + materialString + "_" + prefixString.replace("/", "_") + path.toLowerCase(Locale.ROOT));
+                final ConfigurationSection itemSection = oraxenConfig.createSection((namespace + "_" + materialString + "_" + prefixString.replace("/", "_") + path).toLowerCase(Locale.ROOT));
                 itemSection.set("material", materialString);
                 itemSection.set("Pack", config);
 
