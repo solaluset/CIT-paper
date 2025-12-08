@@ -31,6 +31,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static org.vinerdream.citPaper.utils.ItemUtils.getItemModel;
+
 public final class CITPaper extends JavaPlugin {
     private static final Path oraxenItemsPath;
     static {
@@ -162,7 +164,7 @@ public final class CITPaper extends JavaPlugin {
         if (meta == null) {
             return;
         }
-        if (meta.getItemModel() != null) {
+        if (getItemModel(meta) != null) {
             oraxenData.setItemModel(meta.getItemModel());
         }
         if (meta.hasCustomModelData()) {
