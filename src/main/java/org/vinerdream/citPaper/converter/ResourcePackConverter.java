@@ -662,14 +662,10 @@ public class ResourcePackConverter {
 
     private Path copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
         final String subfolder = switch (textureType) {
-            case 1:
-                yield "humanoid";
-            case 2:
-                yield "humanoid_leggings";
-            case 3:
-                yield "wings";
-            default:
-                throw new IllegalStateException("Unexpected value: " + textureType);
+            case 1 -> "humanoid";
+            case 2 -> "humanoid_leggings";
+            case 3 -> "wings";
+            default -> throw new IllegalStateException("Unexpected value: " + textureType);
         };
         return copyResource(
                 List.of(inputDirectory),
