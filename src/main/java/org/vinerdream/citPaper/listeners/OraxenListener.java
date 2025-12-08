@@ -13,7 +13,6 @@ import org.vinerdream.citPaper.utils.OraxenDatapackHelper;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 public class OraxenListener implements Listener {
@@ -30,7 +29,7 @@ public class OraxenListener implements Listener {
 
     @EventHandler
     public void onPackGenerated(OraxenPackGeneratedEvent event) {
-        final String armorType = plugin.getConfig().getString("oraxen.armorType", "CHAINMAIL").toLowerCase(Locale.ROOT);
+        final String armorType = plugin.getOraxenArmorType();
         for (String texture : List.of("1", "2")) {
             event.getOutput().add(new VirtualFile(
                     "assets/minecraft/textures/models/armor",

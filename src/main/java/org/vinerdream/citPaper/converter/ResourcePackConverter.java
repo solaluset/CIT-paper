@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import java.util.zip.CRC32;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.*;
+import static org.vinerdream.citPaper.utils.ItemUtils.*;
 
 public class ResourcePackConverter {
     private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item", "items");
@@ -43,8 +44,9 @@ public class ResourcePackConverter {
     private final List<Map<String, String>> renames = new ArrayList<>();
     private final List<Map.Entry<Level, String>> logMessages = new ArrayList<>();
     private final @Nullable YamlConfiguration oraxenConfig;
+    private final String oraxenArmorType;
 
-    public ResourcePackConverter(Mode mode, Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger, @Nullable ResourcePack resourcePackToMerge) {
+    public ResourcePackConverter(Mode mode, Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger, @Nullable ResourcePack resourcePackToMerge, String oraxenArmorType) {
         this.mode = mode;
         this.resourcePackPath = resourcePackPath;
         this.resultPath = resultPath;
@@ -56,6 +58,7 @@ public class ResourcePackConverter {
         crc32.update(resourcePackPath.getFileName().toString().getBytes(StandardCharsets.UTF_8));
         this.namespace = "cit-" + String.format("%08x", crc32.getValue());
         this.oraxenConfig = this.mode == Mode.ORAXEN ? new YamlConfiguration() : null;
+        this.oraxenArmorType = oraxenArmorType;
     }
 
     public void convertResourcePack() throws IOException {
@@ -190,7 +193,8 @@ public class ResourcePackConverter {
         if (data.getArmorData() != null) {
             final String armorModel = convertArmorTextureData(file, data.getArmorData(), data.getArmorDataType(), data.getMainTextureData() != null ? data.getMainTextureData().getTexture() : null, outputDirectory, prefix);
 
-            data.getArmorData().setModel(namespace + ":" + armorModel);
+            final var ns = mode != Mode.ORAXEN ? namespace : "oraxen";
+            data.getArmorData().setModel(ns + ":" + armorModel);
         }
 
         final String modelName;
@@ -269,22 +273,23 @@ public class ResourcePackConverter {
             final List<Map<String, String>> renames = new ArrayList<>();
             final Map<String, String> baseMap = data.saveToMap();
 
+            final Map<String, List<String>> materials = new HashMap<>();
             for (String item : data.getItems()) {
-                final String materialString;
-                {
-                    final Material material = ItemUtils.getMaterial(item);
-                    if (material == null) {
-                        log(Level.WARNING, "Unknown item: " + item);
-                        continue;
-                    }
-                    materialString = material.toString();
+                final String material = getOraxenMaterial(oraxenArmorType, item).toUpperCase(Locale.ROOT);
+                if (materials.containsKey(material)) {
+                    materials.get(material).add(item);
+                } else {
+                    materials.put(material, new ArrayList<>(List.of(item)));
                 }
-                final ConfigurationSection itemSection = oraxenConfig.createSection((namespace + "_" + materialString + "_" + prefixString.replace("/", "_") + path).toLowerCase(Locale.ROOT));
-                itemSection.set("material", materialString);
+            }
+
+            for (var entry : materials.entrySet()) {
+                final ConfigurationSection itemSection = oraxenConfig.createSection((namespace + "_" + entry.getKey() + "_" + prefixString.replace("/", "_") + path).toLowerCase(Locale.ROOT));
+                itemSection.set("material", entry.getKey());
                 itemSection.set("Pack", config);
 
                 final Map<String, String> renameMap = new HashMap<>(baseMap);
-                renameMap.put("items", item);
+                renameMap.put("items", String.join(" ", entry.getValue()));
                 renameMap.put("oraxen_id", itemSection.getName());
                 renames.add(renameMap);
             }
@@ -570,7 +575,34 @@ public class ResourcePackConverter {
     }
 
     private String armorTextureToModel(Path file, String texture, int type, String overlay, Path outputDirectory, Path prefix) throws IOException {
-        final Path armorTexturePath = copyArmorTexture(
+        final Path armorTexturePath;
+
+        if (mode == Mode.ORAXEN) {
+            armorTexturePath = copyResource(
+                    List.of(file.getParent()),
+                    texture.replaceFirst(":", "/textures/"),
+                    "png",
+                    outputDirectory.resolve(Path.of(
+                            "assets",
+                            namespace,
+                            "textures",
+                            "armor"
+                    )),
+                    Path.of("")
+            );
+            if (armorTexturePath == null) return null;
+            final String armorName = removeExtension(namespace + "_" + prefixToString(prefix).replace("/", "_") + armorTexturePath.getFileName());
+            Files.move(
+                    armorTexturePath,
+                    armorTexturePath.resolveSibling(
+                            String.format("%s_armor_layer_%s.png", armorName, type)
+                    ),
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+            return armorName;
+        }
+
+        armorTexturePath = copyArmorTexture(
                 file.getParent(),
                 texture,
                 type,

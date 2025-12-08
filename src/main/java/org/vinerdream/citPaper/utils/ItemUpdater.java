@@ -2,18 +2,20 @@ package org.vinerdream.citPaper.utils;
 
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BookMeta;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.*;
 import org.bukkit.inventory.meta.components.EquippableComponent;
+import org.bukkit.inventory.meta.trim.ArmorTrim;
+import org.bukkit.inventory.meta.trim.TrimMaterial;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.config.Mode;
 import org.vinerdream.citPaper.converter.OraxenData;
@@ -25,8 +27,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.mergeMaps;
-import static org.vinerdream.citPaper.utils.ItemUtils.ITEM_MODEL_EXISTS;
-import static org.vinerdream.citPaper.utils.ItemUtils.getItemModel;
+import static org.vinerdream.citPaper.utils.ItemUtils.*;
 import static org.vinerdream.citPaper.utils.PdcUtils.*;
 
 public class ItemUpdater {
@@ -35,6 +36,8 @@ public class ItemUpdater {
     private final NamespacedKey originalModelKey;
     private final NamespacedKey originalArmorModelKey;
     private final NamespacedKey originalCustomModelDataKey;
+    private final NamespacedKey originalTrimKey;
+    private final NamespacedKey originalTypeKey;
 
     private final static Method getCustomName;
     private final static Method getLore;
@@ -68,45 +71,68 @@ public class ItemUpdater {
         this.originalModelKey = new NamespacedKey(plugin, "model");
         this.originalArmorModelKey = new NamespacedKey(plugin, "armor-model");
         this.originalCustomModelDataKey = new NamespacedKey(plugin, "custom-model-data");
+        this.originalTrimKey = new NamespacedKey(plugin, "trim");
+        this.originalTypeKey = new NamespacedKey(plugin, "type");
     }
 
-    public void updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
-        updateItem(item, getItemName(item), damage, enchantments);
+    public @Nullable ItemStack updateItem(ItemStack item, int damage, Map<Enchantment, Integer> enchantments) {
+        return updateItem(item, getItemName(item), damage, enchantments);
     }
 
-    public void updateItem(ItemStack item) {
-        updateItem(item, 0, null);
+    public @Nullable ItemStack updateItem(ItemStack item) {
+        return updateItem(item, 0, null);
     }
 
-    public void updateItem(ItemStack item, Map<Enchantment, Integer> enchantments) {
-        updateItem(item, 0, enchantments);
+    public @Nullable ItemStack updateItem(ItemStack item, Map<Enchantment, Integer> enchantments) {
+        return updateItem(item, 0, enchantments);
     }
 
-    public void updateItem(ItemStack item, int damage) {
-        updateItem(item, damage, null);
+    public @Nullable ItemStack updateItem(ItemStack item, int damage) {
+        return updateItem(item, damage, null);
     }
 
-    public void updateItem(ItemStack item, String name) {
-        updateItem(item, name, 0, null);
+    public @Nullable ItemStack updateItem(ItemStack item, String name) {
+        return updateItem(item, name, 0, null);
     }
 
-    public void updateItem(ItemStack item, String name, int damage, Map<Enchantment, Integer> enchantments) {
-        if (item == null) return;
+    public @Nullable ItemStack updateItem(ItemStack item, String name, int damage, Map<Enchantment, Integer> enchantments) {
+        if (item == null) return null;
         ItemMeta meta = item.getItemMeta();
-        if (meta == null) return;
-        updateMeta(meta, item.getType(), name, damage, enchantments);
-        item.setItemMeta(meta);
+        if (meta == null) return null;
+        try {
+            return updateMeta(meta, item.getType(), name, damage, enchantments);
+        } finally {
+            item.setItemMeta(meta);
+        }
     }
 
-    public void updateMeta(BookMeta meta) {
-        updateMeta(meta, Material.WRITTEN_BOOK, getItemName(meta), 0, null);
+    public @Nullable ItemStack updateMeta(BookMeta meta) {
+        return updateMeta(meta, Material.WRITTEN_BOOK, getItemName(meta), 0, null);
     }
 
-    public void updateMeta(ItemMeta meta, Material type, String name, int damage, Map<Enchantment, Integer> enchantments) {
+    @SuppressWarnings("removal")
+    public @Nullable ItemStack updateMeta(ItemMeta meta, Material itemType, String name, int damage, Map<Enchantment, Integer> enchantments) {
         final PersistentDataContainer pdc = meta.getPersistentDataContainer();
         final boolean legacy = pdc.has(originalDataKey) && Objects.requireNonNull(
                 pdc.get(originalDataKey, PersistentDataType.TAG_CONTAINER)
         ).getKeys().isEmpty();
+
+        final Material type;
+        ItemStack oraxenResult = null;
+        {
+            final String originalType = getNestedKey(
+                    pdc,
+                    PersistentDataType.STRING,
+                    originalDataKey,
+                    originalTypeKey
+            );
+            if (originalType != null) {
+                type = getMaterial(originalType);
+            } else {
+                type = itemType;
+            }
+            assert type != null;
+        }
 
         boolean appliedItem = false;
         boolean appliedArmor = false;
@@ -114,7 +140,7 @@ public class ItemUpdater {
             if (data.getType() == TextureType.ITEM) {
                 if (appliedItem) continue;
             } else if (appliedArmor) continue;
-            if (plugin.getMode() == Mode.ORAXEN && data.getOraxenData() == null) {
+            if (plugin.getMode() == Mode.ORAXEN && data.getType() == TextureType.ITEM && data.getOraxenData() == null) {
                 continue;
             }
 
@@ -181,6 +207,8 @@ public class ItemUpdater {
                     }
                 }
                 if (plugin.getMode() == Mode.ORAXEN) {
+                    oraxenResult = oraxenItemCopy(plugin, type);
+                    assert data.getOraxenData() != null;
                     applyOraxenData(meta, data.getOraxenData());
                 } else {
                     meta.setItemModel(data.getKey());
@@ -194,15 +222,40 @@ public class ItemUpdater {
                         originalDataKey,
                         originalArmorModelKey
                 ) == null) {
-                    setNestedKey(
-                            pdc,
-                            PersistentDataType.STRING,
-                            meta.getEquippable().getModel() != null && !legacy ? meta.getEquippable().getModel().toString() : EMPTY_MODEL,
-                            originalDataKey,
-                            originalArmorModelKey
-                    );
+                    if (EQUIPPABLE_EXISTS) {
+                        setNestedKey(
+                                pdc,
+                                PersistentDataType.STRING,
+                                meta.getEquippable().getModel() != null && !legacy ? meta.getEquippable().getModel().toString() : EMPTY_MODEL,
+                                originalDataKey,
+                                originalArmorModelKey
+                        );
+                    }
+                    if (plugin.getMode() == Mode.ORAXEN && meta instanceof ArmorMeta armorMeta) {
+                        setNestedKey(
+                                pdc,
+                                PersistentDataType.STRING,
+                                armorMeta.getTrim() != null ? armorMeta.getTrim().getPattern().getKey().toString() : EMPTY_MODEL,
+                                originalDataKey,
+                                originalTrimKey
+                        );
+                        setNestedKey(
+                                pdc,
+                                PersistentDataType.STRING,
+                                type.getKey().toString(),
+                                originalDataKey,
+                                originalTypeKey
+                        );
+                    }
                 }
-                setArmorTexture(meta, type.getKey().getKey(), NamespacedKey.fromString(data.getArmorData().getModel()));
+                final NamespacedKey armorModel = NamespacedKey.fromString(data.getArmorData().getModel());
+                assert armorModel != null;
+                if (!armorModel.getNamespace().equals("oraxen")) {
+                    setArmorTexture(meta, type.getKey().getKey(), armorModel);
+                } else if (meta instanceof ArmorMeta armorMeta) {
+                    oraxenResult = oraxenItemCopy(plugin, type);
+                    applyOraxenTrim(armorMeta, armorModel);
+                }
                 appliedArmor = true;
             }
         }
@@ -241,7 +294,23 @@ public class ItemUpdater {
                 }
                 removeNestedKey(pdc, originalDataKey, originalArmorModelKey);
             }
+
+            final String originalType = getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalTypeKey);
+            if (originalType != null) {
+                oraxenResult = new ItemStack(Objects.requireNonNull(getMaterial(originalType)));
+                removeNestedKey(pdc, originalDataKey, originalTypeKey);
+            }
+            final String originalTrim =  getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalTrimKey);
+            if (originalTrim != null && meta instanceof ArmorMeta armorMeta) {
+                applyOraxenTrim(armorMeta, originalTrim.equals(EMPTY_MODEL) ? null : NamespacedKey.fromString(originalTrim));
+                removeNestedKey(pdc, originalDataKey, originalTrimKey);
+            }
         }
+
+        if (oraxenResult != null) {
+            oraxenResult.setItemMeta(meta);
+        }
+        return oraxenResult;
     }
 
     private void setArmorTexture(ItemMeta meta, String itemName, NamespacedKey texture) {
@@ -250,13 +319,13 @@ public class ItemUpdater {
             return;
         }
         EquippableComponent equippable = meta.getEquippable();
-        if (itemName.contains("helmet")) {
+        if (isHelmet(itemName)) {
             equippable.setSlot(EquipmentSlot.HEAD);
-        } else if (itemName.contains("chestplate") || itemName.contains("elytra")) {
+        } else if (isChestplate(itemName) || isElytra(itemName)) {
             equippable.setSlot(EquipmentSlot.CHEST);
-        } else if (itemName.contains("leggings")) {
+        } else if (isLeggings(itemName)) {
             equippable.setSlot(EquipmentSlot.LEGS);
-        } else if (itemName.contains("boots")) {
+        } else if (isBoots(itemName)) {
             equippable.setSlot(EquipmentSlot.FEET);
         } else return;
         equippable.setModel(texture);
@@ -270,6 +339,25 @@ public class ItemUpdater {
         if (data.getCustomModelData() != null) {
             meta.setCustomModelData(data.getCustomModelData());
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private void applyOraxenTrim(@NotNull ArmorMeta meta, NamespacedKey trim) {
+        if (trim == null) {
+            meta.setTrim(null);
+            meta.removeItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
+            return;
+        }
+        final TrimMaterial trimMaterial;
+        if (meta.getTrim() != null) {
+            trimMaterial = meta.getTrim().getMaterial();
+        } else {
+            trimMaterial = Registry.TRIM_MATERIAL.get(Objects.requireNonNull(
+                    NamespacedKey.fromString(plugin.getConfig().getString("oraxen.defaultTrimMaterial", "minecraft:amethyst"))
+            ));
+        }
+        meta.setTrim(new ArmorTrim(trimMaterial, Registry.TRIM_PATTERN.get(trim)));
+        meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
     }
 
     private static String getItemName(ItemStack item) {

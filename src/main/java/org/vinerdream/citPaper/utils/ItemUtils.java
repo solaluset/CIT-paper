@@ -4,14 +4,21 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.vinerdream.citPaper.CITPaper;
+
+import java.util.Locale;
+import java.util.Objects;
 
 @SuppressWarnings("deprecation")
 public class ItemUtils {
     private static final Registry<ItemType> registry = Bukkit.getRegistry(ItemType.class);
     public static final boolean ITEM_MODEL_EXISTS = ReflectionUtils.hasMethod(ItemMeta.class, "getItemModel");
+    public static final boolean EQUIPPABLE_EXISTS = ReflectionUtils.hasMethod(ItemMeta.class, "getEquippable");
 
     public static @Nullable Material getMaterial(final String id) {
         final NamespacedKey key = NamespacedKey.fromString(id);
@@ -31,5 +38,56 @@ public class ItemUtils {
             return null;
         }
         return itemMeta.getItemModel();
+    }
+
+    public static boolean isHelmet(final String name) {
+        return name.contains("helmet");
+    }
+
+    public static boolean isChestplate(final String name) {
+        return name.contains("chestplate");
+    }
+
+    public static boolean isLeggings(final String name) {
+        return name.contains("leggings");
+    }
+
+    public static boolean isBoots(final String name) {
+        return name.contains("boots");
+    }
+
+    public static boolean isArmor(final String name) {
+        return isHelmet(name) || isChestplate(name) || isLeggings(name) || isBoots(name);
+    }
+
+    public static boolean isElytra(final String name) {
+        return name.contains("elytra");
+    }
+
+    public static ItemStack oraxenItemCopy(CITPaper plugin, Material material) {
+        final String oraxenMaterial = getOraxenMaterial(plugin.getOraxenArmorType(), material.getKey().getKey());
+        if (material.getKey().getKey().equals(oraxenMaterial)) {
+            return null;
+        }
+        return new ItemStack(Objects.requireNonNull(getMaterial(oraxenMaterial)));
+    }
+
+    public static @NotNull String getOraxenMaterial(final String oraxenArmorType, final @NotNull String item) {
+        final String name;
+        if (item.contains(":")) {
+            name = item.split(":")[1];
+        } else {
+            name = item.toLowerCase(Locale.ROOT);
+        }
+        if (isHelmet(name)) {
+            return oraxenArmorType + "_helmet";
+        } else if (isChestplate(name)) {
+            return oraxenArmorType + "_chestplate";
+        } else if (isLeggings(name)) {
+            return oraxenArmorType + "_leggings";
+        } else if (isBoots(name)) {
+            return oraxenArmorType + "_boots";
+        }
+        return name;
     }
 }

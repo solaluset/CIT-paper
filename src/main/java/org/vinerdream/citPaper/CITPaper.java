@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static org.vinerdream.citPaper.utils.ItemUtils.getItemModel;
+import static org.vinerdream.citPaper.utils.ItemUtils.*;
 
 public final class CITPaper extends JavaPlugin {
     private static final Path oraxenItemsPath;
@@ -46,6 +46,8 @@ public final class CITPaper extends JavaPlugin {
     private final ItemUpdater itemUpdater;
     @Getter
     private final Mode mode;
+    @Getter
+    private final String oraxenArmorType = getConfig().getString("oraxen.armorType", "CHAINMAIL").toLowerCase(Locale.ROOT);
 
     public CITPaper() {
         saveDefaultConfig();
@@ -212,7 +214,8 @@ public final class CITPaper extends JavaPlugin {
                         getCachePath(),
                         getConfig().getBoolean("converter.preserveCitDirectories"),
                         getLogger(),
-                        mergedPack
+                        mergedPack,
+                        oraxenArmorType
                 );
                 try {
                     converter.convertResourcePack();
