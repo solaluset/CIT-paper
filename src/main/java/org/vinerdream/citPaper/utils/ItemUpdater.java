@@ -303,6 +303,7 @@ public class ItemUpdater {
             final String originalTrim =  getNestedKey(pdc, PersistentDataType.STRING, originalDataKey, originalTrimKey);
             if (originalTrim != null && meta instanceof ArmorMeta armorMeta) {
                 applyOraxenTrim(armorMeta, originalTrim.equals(EMPTY_MODEL) ? null : NamespacedKey.fromString(originalTrim));
+                meta.removeItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
                 removeNestedKey(pdc, originalDataKey, originalTrimKey);
             }
         }
@@ -345,7 +346,6 @@ public class ItemUpdater {
     private void applyOraxenTrim(@NotNull ArmorMeta meta, NamespacedKey trim) {
         if (trim == null) {
             meta.setTrim(null);
-            meta.removeItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
             return;
         }
         final TrimMaterial trimMaterial;
