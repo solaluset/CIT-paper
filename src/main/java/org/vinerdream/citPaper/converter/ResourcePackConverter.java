@@ -249,8 +249,6 @@ public class ResourcePackConverter {
                 normalizeData(file, elytraData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
                 config.set("model", addNamespace(elytraData.getModel()));
-                // ???
-                config.set("damaged_models", List.of(addNamespace(elytraData.getBroken().getModel())));
 
             } else if (data.getShieldTextureData() != null) {
                 final ShieldTextureData shieldData = data.getShieldTextureData();
