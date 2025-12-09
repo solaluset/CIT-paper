@@ -4,6 +4,7 @@ import io.th0rgal.oraxen.api.OraxenItems;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
@@ -13,6 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.api.events.ResourcePacksPostGenerateEvent;
 import org.vinerdream.citPaper.commands.CITPaperCommand;
+import org.vinerdream.citPaper.config.MainConfig;
 import org.vinerdream.citPaper.config.Mode;
 import org.vinerdream.citPaper.converter.OraxenData;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
@@ -46,29 +48,28 @@ public final class CITPaper extends JavaPlugin {
     @Getter
     private final ItemUpdater itemUpdater;
     @Getter
+    private final MainConfig mainConfig;
+    @Getter
     private final Mode mode;
     @Getter
-    private final String oraxenArmorType = getConfig().getString("oraxen.armorType", "CHAINMAIL").toLowerCase(Locale.ROOT);
+    private final String oraxenArmorType;
     @Getter
     private final @NotNull Path cachePath;
 
     public CITPaper() {
         saveDefaultConfig();
 
-        final String tempFolder = getConfig().getString("tempFolder");
-        cachePath = Path.of(
-                tempFolder != null && !tempFolder.isEmpty()
-                        ? tempFolder
-                        : System.getProperty("java.io.tmpdir"),
-                "cit-paper"
-        );
+        mainConfig = new MainConfig(super.getConfig());
 
-        mode = Mode.valueOf(getConfig().getString("mode"));
+        cachePath = mainConfig.getTempFolder();
+
+        mode = mainConfig.getMode();
         if (mode == Mode.ORAXEN && oraxenItemsPath == null) {
             throw new IllegalStateException("mode is ORAXEN but Oraxen was not found!");
         }
+        oraxenArmorType = mainConfig.getOraxenArmorType();
 
-        if (getConfig().getBoolean("converter.enabled")) {
+        if (mainConfig.isConverterEnabled()) {
             generateResourcePacks();
         }
 
@@ -111,6 +112,12 @@ public final class CITPaper extends JavaPlugin {
         for (Listener listener : listeners) {
             Bukkit.getPluginManager().registerEvents(listener, this);
         }
+    }
+
+    @Override
+    @Deprecated
+    public @NotNull FileConfiguration getConfig() {
+        return super.getConfig();
     }
 
     private Path getRenamesPath() {
@@ -180,23 +187,19 @@ public final class CITPaper extends JavaPlugin {
     }
 
     public boolean generateResourcePacks() {
-        final String inputDirectory = getConfig().getString("converter.inputDirectory");
-        final String outputDirectory = getConfig().getString("converter.outputDirectory");
-        if (inputDirectory == null || outputDirectory == null) return false;
-
-        final Path inputPath = Path.of(inputDirectory);
-        final Path outputPath = Path.of(outputDirectory);
+        final Path inputPath = mainConfig.getConverterInputDirectory();
+        final Path outputPath = mainConfig.getConverterOutputDirectory();
         final Path renamesPath = getRenamesPath();
 
         if (!inputPath.toFile().isDirectory()) {
             inputPath.toFile().mkdirs();
         }
         try {
-            if (getConfig().getBoolean("converter.clearConfigs")) {
+            if (mainConfig.isConverterClearConfigs()) {
                 FileUtils.removeDirectory(renamesPath);
                 FileUtils.removeDirectory(oraxenItemsPath);
             }
-            if (getConfig().getBoolean("converter.clearOutputDirectory")) {
+            if (mainConfig.isConverterClearOutputDirectory()) {
                 FileUtils.removeDirectory(outputPath);
             }
         } catch (IOException e) {
@@ -209,7 +212,7 @@ public final class CITPaper extends JavaPlugin {
 
         final List<Path> convertedResourcePacks = new ArrayList<>();
         final Map<Path, Exception> failedResourcePacks = new HashMap<>();
-        final ResourcePack mergedPack = getConfig().getBoolean("converter.mergePacks") ? ResourcePack.resourcePack() : null;
+        final ResourcePack mergedPack = mainConfig.isConverterMergePacks() ? ResourcePack.resourcePack() : null;
 
         try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
             inputs.sorted().forEachOrdered(input -> {
@@ -219,7 +222,7 @@ public final class CITPaper extends JavaPlugin {
                         input,
                         outputPath.resolve(input.getFileName()),
                         getCachePath(),
-                        getConfig().getBoolean("converter.preserveCitDirectories"),
+                        mainConfig.isConverterPreserveCitDirectories(),
                         getLogger(),
                         mergedPack,
                         oraxenArmorType
@@ -247,7 +250,7 @@ public final class CITPaper extends JavaPlugin {
 
         if (mergedPack != null) {
             outputPath.toFile().mkdirs();
-            final String fileName = getConfig().getString("converter.mergedOutputFile");
+            final String fileName = mainConfig.getConverterMergedOutputFile();
             if (fileName != null && !fileName.isEmpty()) {
                 MinecraftResourcePackWriter.minecraft().writeToZipFile(outputPath.resolve(fileName), mergedPack);
             } else {

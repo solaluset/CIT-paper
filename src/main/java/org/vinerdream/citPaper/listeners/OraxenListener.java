@@ -53,7 +53,7 @@ public class OraxenListener implements Listener {
             if (!currentTrims.equals(cachedTrims)) {
                 plugin.getLogger().info("Trims files changed, restarting...");
                 OraxenDatapackHelper.cacheTrimsFiles(trimsCacheFile, currentTrims);
-                plugin.getServer().dispatchCommand(Bukkit.getConsoleSender(), plugin.getConfig().getString("oraxen.restartCommand", "restart"));
+                plugin.getServer().dispatchCommand(Bukkit.getConsoleSender(), plugin.getMainConfig().getOraxenRestartCommand());
             }
         } catch (IOException e) {
             plugin.getLogger().warning("Failed to update Oraxen trim cache: " + e);

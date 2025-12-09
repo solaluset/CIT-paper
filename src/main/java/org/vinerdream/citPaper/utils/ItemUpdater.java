@@ -380,9 +380,7 @@ public class ItemUpdater {
         if (meta.getTrim() != null) {
             trimMaterial = meta.getTrim().getMaterial();
         } else {
-            trimMaterial = Registry.TRIM_MATERIAL.get(Objects.requireNonNull(
-                    NamespacedKey.fromString(plugin.getConfig().getString("oraxen.defaultTrimMaterial", "minecraft:amethyst"))
-            ));
+            trimMaterial = Registry.TRIM_MATERIAL.get(plugin.getMainConfig().getOraxenDefaultTrimMaterialKey());
         }
         final TrimPattern trimPattern = Registry.TRIM_PATTERN.get(trim);
         if (trimMaterial == null || trimPattern == null) {
