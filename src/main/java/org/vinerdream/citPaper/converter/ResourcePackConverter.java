@@ -2,7 +2,6 @@ package org.vinerdream.citPaper.converter;
 
 import com.google.gson.*;
 import com.nexomc.nexo.api.NexoPack;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -11,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.config.Mode;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.FileUtils;
-import org.vinerdream.citPaper.utils.ItemUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
 import team.unnamed.creative.ResourcePack;
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader;
