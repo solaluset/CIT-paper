@@ -161,8 +161,23 @@ public class ItemUpdater {
             })) {
                 continue;
             }
-            if (data.getCustomModelData() != -1 && (!meta.hasCustomModelData() || meta.getCustomModelData() != data.getCustomModelData())) {
-                continue;
+            if (data.getCustomModelData() != -1) {
+                Integer customModelData = getNestedKey(
+                        pdc,
+                        PersistentDataType.INTEGER,
+                        originalDataKey,
+                        originalCustomModelDataKey
+                );
+                if (customModelData == null) {
+                    if (meta.hasCustomModelData()) {
+                        customModelData = meta.getCustomModelData();
+                    } else {
+                        continue;
+                    }
+                }
+                if (data.getCustomModelData() != customModelData) {
+                    continue;
+                }
             }
             if (data.getDamage() != null && meta instanceof Damageable damageable) {
                 if (!data.getDamage().check(damageable.getDamage() + damage, type.getMaxDurability())) {
