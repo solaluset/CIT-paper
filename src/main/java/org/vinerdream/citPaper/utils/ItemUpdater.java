@@ -12,6 +12,7 @@ import org.bukkit.inventory.meta.*;
 import org.bukkit.inventory.meta.components.EquippableComponent;
 import org.bukkit.inventory.meta.trim.ArmorTrim;
 import org.bukkit.inventory.meta.trim.TrimMaterial;
+import org.bukkit.inventory.meta.trim.TrimPattern;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionType;
@@ -368,7 +369,11 @@ public class ItemUpdater {
                     NamespacedKey.fromString(plugin.getConfig().getString("oraxen.defaultTrimMaterial", "minecraft:amethyst"))
             ));
         }
-        meta.setTrim(new ArmorTrim(trimMaterial, Registry.TRIM_PATTERN.get(trim)));
+        final TrimPattern trimPattern = Registry.TRIM_PATTERN.get(trim);
+        if (trimMaterial == null || trimPattern == null) {
+            return;
+        }
+        meta.setTrim(new ArmorTrim(trimMaterial, trimPattern));
         meta.addItemFlags(ItemFlag.HIDE_ARMOR_TRIM);
     }
 
