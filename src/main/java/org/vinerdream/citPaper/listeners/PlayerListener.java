@@ -5,7 +5,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.ItemStack;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.utils.SchedulerUtils;
 
@@ -18,9 +17,7 @@ public class PlayerListener implements Listener {
 
     private void scheduleInventoryUpdate(Player player) {
         SchedulerUtils.entityRunTaskLater(player, plugin, () -> {
-            for (ItemStack item : player.getInventory().getContents()) {
-                plugin.getItemUpdater().updateItem(item);
-            }
+            plugin.getItemUpdater().updateInventory(player.getInventory());
         }, 20);
     }
 

@@ -5,6 +5,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
@@ -332,6 +333,16 @@ public class ItemUpdater {
         } else return;
         equippable.setModel(texture);
         meta.setEquippable(equippable);
+    }
+
+    public void updateInventory(Inventory inventory) {
+        final ItemStack[] items = inventory.getContents();
+        for (int i = 0; i < items.length; i++) {
+            final ItemStack oraxenResult = updateItem(items[i]);
+            if (plugin.getMode() == Mode.ORAXEN && oraxenResult != null) {
+                inventory.setItem(i, oraxenResult);
+            }
+        }
     }
 
     private void applyOraxenData(@NotNull ItemMeta meta, @NotNull OraxenData data) {

@@ -7,6 +7,7 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.ItemStack;
 import org.vinerdream.citPaper.CITPaper;
+import org.vinerdream.citPaper.config.Mode;
 
 public class CraftListener implements Listener {
     private final CITPaper plugin;
@@ -17,18 +18,27 @@ public class CraftListener implements Listener {
 
     @EventHandler
     public void onPrepareCraft(PrepareItemCraftEvent event) {
-        plugin.getItemUpdater().updateItem(event.getInventory().getResult());
+        final ItemStack oraxenResult = plugin.getItemUpdater().updateItem(event.getInventory().getResult());
+        if (plugin.getMode() == Mode.ORAXEN && oraxenResult != null) {
+            event.getInventory().setResult(oraxenResult);
+        }
     }
 
     @EventHandler
     public void onCraft(CraftItemEvent event) {
-        plugin.getItemUpdater().updateItem(event.getInventory().getResult());
+        final ItemStack oraxenResult = plugin.getItemUpdater().updateItem(event.getInventory().getResult());
+        if (plugin.getMode() == Mode.ORAXEN && oraxenResult != null) {
+            event.getInventory().setResult(oraxenResult);
+        }
     }
 
     @EventHandler
     public void onCrafterCraft(CrafterCraftEvent event) {
         ItemStack result = event.getResult();
-        plugin.getItemUpdater().updateItem(result);
+        final ItemStack oraxenResult = plugin.getItemUpdater().updateItem(result);
         event.setResult(result);
+        if (plugin.getMode() == Mode.ORAXEN && oraxenResult != null) {
+            event.setResult(oraxenResult);
+        }
     }
 }

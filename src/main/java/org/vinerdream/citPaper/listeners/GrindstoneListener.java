@@ -5,6 +5,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.PrepareGrindstoneEvent;
 import org.bukkit.inventory.ItemStack;
 import org.vinerdream.citPaper.CITPaper;
+import org.vinerdream.citPaper.config.Mode;
 
 public class GrindstoneListener implements Listener {
     private final CITPaper plugin;
@@ -15,6 +16,9 @@ public class GrindstoneListener implements Listener {
 
     @EventHandler
     public void onGrindstonePrepare(PrepareGrindstoneEvent event) {
-        plugin.getItemUpdater().updateItem(event.getResult());
+        final ItemStack oraxenResult = plugin.getItemUpdater().updateItem(event.getResult());
+        if (plugin.getMode() == Mode.ORAXEN && oraxenResult != null) {
+            event.setResult(oraxenResult);
+        }
     }
 }
