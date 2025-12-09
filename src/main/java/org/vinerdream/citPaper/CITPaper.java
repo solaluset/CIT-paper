@@ -10,6 +10,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 import org.vinerdream.citPaper.api.events.ResourcePacksPostGenerateEvent;
 import org.vinerdream.citPaper.commands.CITPaperCommand;
 import org.vinerdream.citPaper.config.Mode;
@@ -48,9 +49,19 @@ public final class CITPaper extends JavaPlugin {
     private final Mode mode;
     @Getter
     private final String oraxenArmorType = getConfig().getString("oraxen.armorType", "CHAINMAIL").toLowerCase(Locale.ROOT);
+    @Getter
+    private final @NotNull Path cachePath;
 
     public CITPaper() {
         saveDefaultConfig();
+
+        final String tempFolder = getConfig().getString("tempFolder");
+        cachePath = Path.of(
+                tempFolder != null && !tempFolder.isEmpty()
+                        ? tempFolder
+                        : System.getProperty("java.io.tmpdir"),
+                "cit-paper"
+        );
 
         mode = Mode.valueOf(getConfig().getString("mode"));
         if (mode == Mode.ORAXEN && oraxenItemsPath == null) {
@@ -104,10 +115,6 @@ public final class CITPaper extends JavaPlugin {
 
     private Path getRenamesPath() {
         return getDataFolder().toPath().resolve("renames");
-    }
-
-    private Path getCachePath() {
-        return getDataFolder().toPath().resolve("cache");
     }
 
     public void loadRenames() {
