@@ -40,14 +40,10 @@ public class SmithingListener implements Listener {
         }
     }
 
-    @SuppressWarnings("removal")
     private boolean denySmithing(final ItemStack input) {
-        if (plugin.getMode() != Mode.ORAXEN) {
+        if (plugin.getMode() != Mode.ORAXEN || input == null) {
             return false;
         }
-        if (input != null && input.getItemMeta() instanceof ArmorMeta meta) {
-            return meta.getTrim() != null && meta.getTrim().getPattern().getKey().getNamespace().equals("oraxen");
-        }
-        return false;
+        return input.getType().getKey().getKey().startsWith(plugin.getOraxenArmorType());
     }
 }
