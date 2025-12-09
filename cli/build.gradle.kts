@@ -11,7 +11,7 @@ buildscript {
 
 plugins {
     id("java")
-    id("io.github.goooler.shadow").version("8.1.8")
+    id("com.gradleup.shadow").version("9.2.2")
 }
 
 group = "org.vinerdream"
@@ -20,6 +20,8 @@ version = "1.4.4-SNAPSHOT"
 repositories {
     mavenLocal()
     mavenCentral()
+    maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.nexomc.com/releases")
 }
 
 val proguard: Configuration by configurations.creating
@@ -49,7 +51,7 @@ tasks.jar {
     }
 }
 
-task<ProGuardTask>("proguard") {
+tasks.register<ProGuardTask>("proguard") {
     configuration(file("proguard.pro"))
 
     injars(tasks.named<Jar>("shadowJar").flatMap { it.archiveFile })
