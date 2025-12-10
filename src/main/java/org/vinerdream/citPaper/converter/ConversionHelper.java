@@ -83,6 +83,11 @@ public class ConversionHelper {
             }
         }
 
+        failedResourcePacks.forEach((path, exception) -> {
+            logger.severe("Failed to convert " + path);
+            exception.printStackTrace();
+        });
+
         return Map.entry(convertedResourcePacks, failedResourcePacks);
     }
 }

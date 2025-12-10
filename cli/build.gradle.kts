@@ -39,6 +39,7 @@ dependencies {
     proguard(citPaper)
     proguard(paperAPI)
     proguard("org.projectlombok:lombok:1.18.36")
+    proguard("org.jetbrains:annotations:24.0.0")
 }
 
 tasks.test {
@@ -51,8 +52,27 @@ tasks.jar {
     }
 }
 
+tasks {
+    shadowJar {
+        exclude(
+            "converter.yml",
+            "languages.yml",
+            "mechanics.yml",
+            "sounds.yml",
+            "custom_armor/**",
+            "glyphs/**",
+            "items/**",
+            "messages/**",
+            "pack/**",
+            "shaders/**",
+        )
+
+        minimize()
+    }
+}
+
 tasks.register<ProGuardTask>("proguard") {
-    configuration(file("proguard.pro"))
+    configuration(listOf(file("../proguard.pro"), file("proguard.pro")))
 
     injars(tasks.named<Jar>("shadowJar").flatMap { it.archiveFile })
 
@@ -69,5 +89,5 @@ tasks.register<ProGuardTask>("proguard") {
 
     verbose()
 
-    outjars(layout.buildDirectory.file("libs/${project.name}-${project.version}-all-minified.jar"))
+    outjars(layout.buildDirectory.file("libs/${project.name}-${project.version}-minified.jar"))
 }

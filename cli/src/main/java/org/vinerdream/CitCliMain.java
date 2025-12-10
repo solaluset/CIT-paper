@@ -1,25 +1,25 @@
 package org.vinerdream;
 
-import org.vinerdream.citPaper.converter.ResourcePackConverter;
+import org.vinerdream.citPaper.config.MainConfig;
+import org.vinerdream.citPaper.converter.ConversionHelper;
 
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
 public class CitCliMain {
-    public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
-            System.out.println("Usage: <resource pack path> <output path> <config output path>");
+    public static void main(String[] args) {
+        if (args.length != 1) {
+            System.out.println("Usage: <config path>");
+            System.exit(1);
             return;
         }
-        ResourcePackConverter converter = new ResourcePackConverter(
-                Path.of(args[0]),
-                Path.of(args[1]),
-                Path.of(System.getProperty("java.io.tmpdir"), "cit-paper"),
-                true,
-                Logger.getLogger("CIT-paper")
+        final var result = ConversionHelper.runConversion(
+                MainConfig.fromFile(new File(args[0])),
+                Logger.getLogger("CIT-paper"),
+                Path.of("renames"),
+                Path.of("oraxen")
         );
-        converter.convertResourcePack();
-        converter.saveConfiguration(Path.of(args[2]));
+        System.exit(result.getValue().isEmpty() ? 0 : 1);
     }
 }

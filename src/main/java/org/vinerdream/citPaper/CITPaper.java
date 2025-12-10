@@ -193,11 +193,6 @@ public final class CITPaper extends JavaPlugin {
             failedResourcePacks = result.getValue();
         }
 
-        failedResourcePacks.forEach((path, exception) -> {
-            getLogger().severe("Failed to convert " + path);
-            exception.printStackTrace();
-        });
-
         if (isEnabled()) {
             SchedulerUtils.runTask(
                     this,

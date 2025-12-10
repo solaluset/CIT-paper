@@ -16,17 +16,27 @@ import java.util.Objects;
 
 @SuppressWarnings("deprecation")
 public class ItemUtils {
-    private static final Registry<ItemType> registry = Bukkit.getRegistry(ItemType.class);
+    private static final Registry<ItemType> typeRegistry;
     public static final boolean ITEM_MODEL_EXISTS = ReflectionUtils.hasMethod(ItemMeta.class, "getItemModel");
     public static final boolean EQUIPPABLE_EXISTS = ReflectionUtils.hasMethod(ItemMeta.class, "getEquippable");
+
+    static {
+        Registry<ItemType> registry = null;
+        try {
+            registry = Bukkit.getRegistry(ItemType.class);
+        } catch (NullPointerException ignored) {
+            // there is no server when running CLI
+        }
+        typeRegistry = registry;
+    }
 
     public static @Nullable Material getMaterial(final String id) {
         final NamespacedKey key = NamespacedKey.fromString(id);
         if (key == null) {
             return null;
         }
-        assert registry != null;
-        final ItemType itemType = registry.get(key);
+        assert typeRegistry != null;
+        final ItemType itemType = typeRegistry.get(key);
         if (itemType == null) {
             return null;
         }

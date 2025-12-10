@@ -1,4 +1,7 @@
 -keep class org.vinerdream.**
+-keepclassmembers class org.vinerdream.CitCliMain {
+    public static void main(java.lang.String[]);
+}
 # Keep all enum classes
 -keepclassmembers enum * {
     public static **[] values();

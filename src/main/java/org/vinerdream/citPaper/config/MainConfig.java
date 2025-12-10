@@ -3,9 +3,11 @@ package org.vinerdream.citPaper.config;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
@@ -53,5 +55,9 @@ public class MainConfig {
                 NamespacedKey.fromString(config.getString("oraxen.defaultTrimMaterial", "minecraft:amethyst"))
         );
         this.oraxenRestartCommand = config.getString("oraxen.restartCommand", "restart");
+    }
+
+    public static MainConfig fromFile(final @NotNull File file) {
+        return new MainConfig(YamlConfiguration.loadConfiguration(file));
     }
 }
