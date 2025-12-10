@@ -15,7 +15,7 @@ plugins {
 }
 
 group = "org.vinerdream"
-version = "1.4.4-SNAPSHOT"
+version = "1.5.0"
 
 repositories {
     mavenLocal()
@@ -26,7 +26,7 @@ repositories {
 
 val proguard: Configuration by configurations.creating
 
-val citPaper = "org.vinerdream:CIT-paper:1.4.4-SNAPSHOT"
+val citPaper = "org.vinerdream:CIT-paper:1.5.0"
 val paperAPI = "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT"
 
 dependencies {
