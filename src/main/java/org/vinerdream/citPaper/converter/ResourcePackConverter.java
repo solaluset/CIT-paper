@@ -79,6 +79,9 @@ public class ResourcePackConverter {
         final JsonObject meta;
         try (FileReader reader = new FileReader(rootPath.resolve("pack.mcmeta").toFile())) {
             meta = new Gson().fromJson(reader, JsonObject.class);
+            if (meta == null) {
+                throw new IllegalStateException("pack.mcmeta is malformed");
+            }
         }
 
         FileUtils.removeDirectory(outputPath);
