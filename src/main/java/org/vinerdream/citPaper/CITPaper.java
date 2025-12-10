@@ -16,14 +16,12 @@ import org.vinerdream.citPaper.api.events.ResourcePacksPostGenerateEvent;
 import org.vinerdream.citPaper.commands.CITPaperCommand;
 import org.vinerdream.citPaper.config.MainConfig;
 import org.vinerdream.citPaper.config.Mode;
+import org.vinerdream.citPaper.converter.ConversionHelper;
 import org.vinerdream.citPaper.converter.OraxenData;
 import org.vinerdream.citPaper.converter.ParsedTextureProperties;
-import org.vinerdream.citPaper.converter.ResourcePackConverter;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.listeners.*;
 import org.vinerdream.citPaper.utils.*;
-import team.unnamed.creative.ResourcePack;
-import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -187,76 +185,18 @@ public final class CITPaper extends JavaPlugin {
     }
 
     public boolean generateResourcePacks() {
-        final Path inputPath = mainConfig.getConverterInputDirectory();
-        final Path outputPath = mainConfig.getConverterOutputDirectory();
-        final Path renamesPath = getRenamesPath();
-
-        if (!inputPath.toFile().isDirectory()) {
-            inputPath.toFile().mkdirs();
-        }
-        try {
-            if (mainConfig.isConverterClearConfigs()) {
-                FileUtils.removeDirectory(renamesPath);
-                FileUtils.removeDirectory(oraxenItemsPath);
-            }
-            if (mainConfig.isConverterClearOutputDirectory()) {
-                FileUtils.removeDirectory(outputPath);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-        if (mode == Mode.ORAXEN) {
-            oraxenItemsPath.toFile().mkdirs();
-        }
-
-        final List<Path> convertedResourcePacks = new ArrayList<>();
-        final Map<Path, Exception> failedResourcePacks = new HashMap<>();
-        final ResourcePack mergedPack = mainConfig.isConverterMergePacks() ? ResourcePack.resourcePack() : null;
-
-        try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
-            inputs.sorted().forEachOrdered(input -> {
-                if (input.equals(inputPath)) return;
-                ResourcePackConverter converter = new ResourcePackConverter(
-                        mode,
-                        input,
-                        outputPath.resolve(input.getFileName()),
-                        getCachePath(),
-                        mainConfig.isConverterPreserveCitDirectories(),
-                        getLogger(),
-                        mergedPack,
-                        oraxenArmorType
-                );
-                try {
-                    converter.convertResourcePack();
-                    converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
-                    if (mode == Mode.ORAXEN) {
-                        converter.saveOraxenConfig(oraxenItemsPath.resolve(input.getFileName() + ".yml"));
-                    }
-                    convertedResourcePacks.add(input);
-                } catch (Exception e) {
-                    failedResourcePacks.put(input, e);
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+        final List<Path> convertedResourcePacks;
+        final Map<Path, Exception> failedResourcePacks;
+        {
+            final var result = ConversionHelper.runConversion(mainConfig, getLogger(), getRenamesPath(), oraxenItemsPath);
+            convertedResourcePacks = result.getKey();
+            failedResourcePacks = result.getValue();
         }
 
         failedResourcePacks.forEach((path, exception) -> {
             getLogger().severe("Failed to convert " + path);
             exception.printStackTrace();
         });
-
-        if (mergedPack != null) {
-            outputPath.toFile().mkdirs();
-            final String fileName = mainConfig.getConverterMergedOutputFile();
-            if (fileName != null && !fileName.isEmpty()) {
-                MinecraftResourcePackWriter.minecraft().writeToZipFile(outputPath.resolve(fileName), mergedPack);
-            } else {
-                MinecraftResourcePackWriter.minecraft().writeToDirectory(outputPath.toFile(), mergedPack);
-            }
-        }
 
         if (isEnabled()) {
             SchedulerUtils.runTask(
