@@ -2,6 +2,9 @@
 # ORAXEN only works with Oraxen and may work on older versions
 mode: MODERN
 
+# enable for debugging
+verboseLogging: false
+
 # if empty, system-provided temporary folder will be used
 tempFolder: ""
 

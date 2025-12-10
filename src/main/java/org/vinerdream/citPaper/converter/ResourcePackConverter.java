@@ -7,6 +7,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.vinerdream.citPaper.config.MainConfig;
 import org.vinerdream.citPaper.config.Mode;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.FileUtils;
@@ -43,23 +44,28 @@ public class ResourcePackConverter {
     private final List<Map.Entry<Level, String>> logMessages = new ArrayList<>();
     private final @Nullable YamlConfiguration oraxenConfig;
     private final String oraxenArmorType;
+    private final boolean verboseLogging;
+    private int warningCounter = 0;
 
-    public ResourcePackConverter(Mode mode, Path resourcePackPath, Path resultPath, Path tempPath, boolean preserveCitDirectories, Logger logger, @Nullable ResourcePack resourcePackToMerge, String oraxenArmorType) {
-        this.mode = mode;
+    public ResourcePackConverter(MainConfig config, Path resourcePackPath, Path resultPath, Logger logger, @Nullable ResourcePack resourcePackToMerge) {
+        this.mode = config.getMode();
         this.resourcePackPath = resourcePackPath;
         this.resultPath = resultPath;
-        this.tempPath = tempPath;
-        this.preserveCitDirectories = preserveCitDirectories;
+        this.tempPath = config.getTempFolder();
+        this.preserveCitDirectories = config.isConverterPreserveCitDirectories();
         this.logger = logger;
         this.resourcePackToMerge = resourcePackToMerge;
         final CRC32 crc32 = new CRC32();
         crc32.update(resourcePackPath.getFileName().toString().getBytes(StandardCharsets.UTF_8));
         this.namespace = "cit-" + String.format("%08x", crc32.getValue());
         this.oraxenConfig = this.mode == Mode.ORAXEN ? new YamlConfiguration() : null;
-        this.oraxenArmorType = oraxenArmorType;
+        this.oraxenArmorType = config.getOraxenArmorType();
+        this.verboseLogging = config.isVerboseLogging();
     }
 
     public void convertResourcePack() throws IOException {
+        logger.info("Starting conversion of " + resourcePackPath);
+
         Path rootPath = resourcePackPath;
         Path outputPath = resultPath;
         final Path zipPath;
@@ -111,6 +117,9 @@ public class ResourcePackConverter {
         }
 
         FileUtils.removeDirectory(getTmpDir());
+
+        logger.info("Conversion completed with " + warningCounter + " warnings.");
+        warningCounter = 0;
     }
 
     public void convertCitDirectories(Path rootPath, Path outputPath) throws IOException {
@@ -125,10 +134,8 @@ public class ResourcePackConverter {
     }
 
     public void convertDirectory(Path directory, Path outputDirectory) throws IOException {
-        logger.info("Converting " + directory);
         File dir = directory.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
-            logger.info("Directory not found, skipping");
             return;
         }
         try (Stream<Path> contents = Files.walk(directory)) {
@@ -141,7 +148,10 @@ public class ResourcePackConverter {
                     try {
                         convertFile(directory, path, outputDirectory);
                     } finally {
-                        logMessages.forEach(entry -> logger.log(entry.getKey(), path + ": " + entry.getValue()));
+                        warningCounter += logMessages.size();
+                        if (verboseLogging) {
+                            logMessages.forEach(entry -> logger.log(entry.getKey(), path + ": " + entry.getValue()));
+                        }
                         logMessages.clear();
                     }
                 }

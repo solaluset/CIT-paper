@@ -49,14 +49,11 @@ public class ConversionHelper {
             inputs.sorted().forEachOrdered(input -> {
                 if (input.equals(inputPath)) return;
                 ResourcePackConverter converter = new ResourcePackConverter(
-                        mainConfig.getMode(),
+                        mainConfig,
                         input,
                         outputPath.resolve(input.getFileName()),
-                        mainConfig.getTempFolder(),
-                        mainConfig.isConverterPreserveCitDirectories(),
                         logger,
-                        mergedPack,
-                        mainConfig.getOraxenArmorType()
+                        mergedPack
                 );
                 try {
                     converter.convertResourcePack();

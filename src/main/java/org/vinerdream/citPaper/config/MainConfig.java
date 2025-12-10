@@ -15,6 +15,7 @@ import java.util.Objects;
 @Getter
 public class MainConfig {
     private final @NotNull Mode mode;
+    private final boolean verboseLogging;
     private final @NotNull Path tempFolder;
 
     private final boolean converterEnabled;
@@ -32,6 +33,7 @@ public class MainConfig {
 
     public MainConfig(final Configuration config) {
         this.mode = Mode.valueOf(Objects.requireNonNull(config.getString("mode")).toUpperCase(Locale.ROOT));
+        this.verboseLogging = config.getBoolean("verboseLogging");
 
         final String tempFolder = config.getString("tempFolder");
         this.tempFolder = Path.of(
