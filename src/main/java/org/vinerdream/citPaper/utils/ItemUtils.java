@@ -16,12 +16,12 @@ import java.util.Objects;
 
 @SuppressWarnings("deprecation")
 public class ItemUtils {
-    private static final Registry<ItemType> typeRegistry;
+    private static final Registry<@NotNull ItemType> typeRegistry;
     public static final boolean ITEM_MODEL_EXISTS = ReflectionUtils.hasMethod(ItemMeta.class, "getItemModel");
     public static final boolean EQUIPPABLE_EXISTS = ReflectionUtils.hasMethod(ItemMeta.class, "getEquippable");
 
     static {
-        Registry<ItemType> registry = null;
+        Registry<@NotNull ItemType> registry = null;
         try {
             registry = Bukkit.getRegistry(ItemType.class);
         } catch (NullPointerException ignored) {

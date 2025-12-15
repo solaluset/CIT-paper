@@ -5,7 +5,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.PrepareSmithingEvent;
 import org.bukkit.event.inventory.SmithItemEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ArmorMeta;
 import org.vinerdream.citPaper.CITPaper;
 import org.vinerdream.citPaper.config.Mode;
 

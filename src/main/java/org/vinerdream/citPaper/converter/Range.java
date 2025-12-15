@@ -1,5 +1,7 @@
 package org.vinerdream.citPaper.converter;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,7 +14,7 @@ public class Range {
             return value >= minimum && value <= maximum;
         }
 
-        public String toString() {
+        public @NotNull String toString() {
             String result = minimum + "-" + maximum;
             if (isPercents) {
                 return result + "%";

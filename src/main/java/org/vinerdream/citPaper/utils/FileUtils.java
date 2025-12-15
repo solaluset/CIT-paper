@@ -1,5 +1,7 @@
 package org.vinerdream.citPaper.utils;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -15,11 +17,11 @@ import static org.vinerdream.citPaper.utils.CollectionUtils.iterateStream;
 public class FileUtils {
     private static final Set<String> FILENAME_BLACKLIST = Set.of("desktop.ini");
 
-    public static boolean isBlacklisted(Path path) {
+    public static boolean isBlacklisted(@NotNull Path path) {
         return FILENAME_BLACKLIST.contains(path.getFileName().toString().toLowerCase(Locale.ROOT));
     }
 
-    public static void copyDirectory(Path source, Path destination) throws IOException {
+    public static void copyDirectory(@NotNull Path source, @NotNull Path destination) throws IOException {
         try (Stream<Path> contents = Files.walk(source)) {
             for (Path file : iterateStream(contents)) {
                 if (!file.toFile().isFile() || isBlacklisted(file)) continue;
@@ -30,27 +32,27 @@ public class FileUtils {
         }
     }
 
-    public static void removeDirectory(Path directory) throws IOException {
+    public static void removeDirectory(@NotNull Path directory) throws IOException {
         if (!directory.toFile().exists()) return;
         Files.walkFileTree(directory, new FileVisitor<>() {
             @Override
-            public FileVisitResult preVisitDirectory(Path path, BasicFileAttributes basicFileAttributes) {
+            public @NotNull FileVisitResult preVisitDirectory(@NotNull Path path, @NotNull BasicFileAttributes basicFileAttributes) {
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult visitFile(Path path, BasicFileAttributes basicFileAttributes) throws IOException {
+            public @NotNull FileVisitResult visitFile(@NotNull Path path, @NotNull BasicFileAttributes basicFileAttributes) throws IOException {
                 Files.delete(path);
                 return FileVisitResult.CONTINUE;
             }
 
             @Override
-            public FileVisitResult visitFileFailed(Path path, IOException e) throws IOException {
+            public @NotNull FileVisitResult visitFileFailed(@NotNull Path path, @NotNull IOException e) throws IOException {
                 throw e;
             }
 
             @Override
-            public FileVisitResult postVisitDirectory(Path path, IOException e) throws IOException {
+            public @NotNull FileVisitResult postVisitDirectory(@NotNull Path path, IOException e) throws IOException {
                 if (e == null) {
                     Files.delete(path);
                     return FileVisitResult.CONTINUE;
