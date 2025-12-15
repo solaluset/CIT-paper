@@ -1,5 +1,6 @@
 package org.vinerdream.citPaper.converter;
 
+import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.config.MainConfig;
 import org.vinerdream.citPaper.config.Mode;
 import org.vinerdream.citPaper.utils.FileUtils;
@@ -19,7 +20,7 @@ import java.util.stream.Stream;
 public class ConversionHelper {
     private static final Path MAIN_FAILURE = Path.of("MAIN");
 
-    public static Map.Entry<List<Path>, Map<Path, Exception>> runConversion(final MainConfig mainConfig, final Logger logger, final Path renamesPath, final Path oraxenItemsPath) {
+    public static Map.Entry<List<Path>, Map<Path, Exception>> runConversion(final MainConfig mainConfig, final Logger logger, final Path renamesPath, final @Nullable Path oraxenItemsPath) {
         final Path inputPath = mainConfig.getConverterInputDirectory();
         final Path outputPath = mainConfig.getConverterOutputDirectory();
 
@@ -29,7 +30,9 @@ public class ConversionHelper {
         try {
             if (mainConfig.isConverterClearConfigs()) {
                 FileUtils.removeDirectory(renamesPath);
-                FileUtils.removeDirectory(oraxenItemsPath);
+                if (oraxenItemsPath != null) {
+                    FileUtils.removeDirectory(oraxenItemsPath);
+                }
             }
             if (mainConfig.isConverterClearOutputDirectory()) {
                 FileUtils.removeDirectory(outputPath);
@@ -38,6 +41,7 @@ public class ConversionHelper {
             return Map.entry(List.of(), Map.of(MAIN_FAILURE, e));
         }
         if (mainConfig.getMode() == Mode.ORAXEN) {
+            assert oraxenItemsPath != null;
             oraxenItemsPath.toFile().mkdirs();
         }
 
@@ -59,6 +63,7 @@ public class ConversionHelper {
                     converter.convertResourcePack();
                     converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
                     if (mainConfig.getMode() == Mode.ORAXEN) {
+                        assert oraxenItemsPath != null;
                         converter.saveOraxenConfig(oraxenItemsPath.resolve(input.getFileName() + ".yml"));
                     }
                     convertedResourcePacks.add(input);
