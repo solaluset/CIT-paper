@@ -6,6 +6,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemType;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -85,6 +86,10 @@ public class ItemUtils {
     }
 
     public static void cleanModifiers(final Material fromMaterial, final Material toMaterial, final ItemMeta meta) {
+        if (toMaterial.equals(fromMaterial)) {
+            return;
+        }
+
         var modifiers = meta.getAttributeModifiers();
         if (modifiers == null) {
             modifiers = fromMaterial.getDefaultAttributeModifiers();
@@ -101,6 +106,20 @@ public class ItemUtils {
             }
             meta.addAttributeModifier(key, value);
         });
+        if (meta instanceof Damageable damageable) {
+            final int currentMaxDamage;
+            if (damageable.hasMaxDamage()) {
+                currentMaxDamage = damageable.getMaxDamage();
+            } else {
+                currentMaxDamage = fromMaterial.getMaxDurability();
+            }
+
+            if (currentMaxDamage != toMaterial.getMaxDurability()) {
+                damageable.setMaxDamage(currentMaxDamage);
+            } else {
+                damageable.setMaxDamage(null);
+            }
+        }
     }
 
     public static @NotNull String getOraxenMaterial(final String oraxenArmorType, final @NotNull String item) {
