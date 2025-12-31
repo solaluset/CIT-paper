@@ -1,5 +1,6 @@
 package org.vinerdream;
 
+import com.nexomc.nexo.utils.logs.Logs;
 import org.vinerdream.citPaper.config.MainConfig;
 import org.vinerdream.citPaper.converter.ConversionHelper;
 
@@ -20,6 +21,8 @@ public class CitCliMain {
             System.exit(1);
             return;
         }
+
+        Logs.logger = LOGGER::warning;
 
         final var result = ConversionHelper.runConversion(
                 MainConfig.fromFile(new File(args[0])),

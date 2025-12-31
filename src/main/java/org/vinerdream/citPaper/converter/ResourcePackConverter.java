@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.converter;
 import com.google.gson.*;
 import com.nexomc.nexo.api.NexoPack;
 import com.nexomc.nexo.pack.creative.NexoPackReader;
+import com.nexomc.nexo.utils.logs.Logs;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -118,7 +119,14 @@ public class ResourcePackConverter {
         }
 
         if (resourcePackToMerge != null) {
+            Logs.logger = message -> {
+                warningCounter++;
+                if (verboseLogging) {
+                    logger.log(Level.WARNING, message);
+                }
+            };
             NexoPack.mergePack(resourcePackToMerge, NexoPackReader.INSTANCE.readFromDirectory(outputPath.toFile()));
+            Logs.logger = null;
 
         } else if (zipPath != null) {
             ZipUtils.zip(outputPath, zipPath);
