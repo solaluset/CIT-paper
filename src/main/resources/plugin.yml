@@ -1,5 +1,5 @@
 name: CIT-paper
-version: '1.5.3'
+version: '1.5.4-SNAPSHOT'
 main: org.vinerdream.citPaper.CITPaper
 api-version: '1.21'
 folia-supported: true
