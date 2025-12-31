@@ -2,6 +2,8 @@ package org.vinerdream.citPaper.converter;
 
 import com.google.gson.*;
 import com.nexomc.nexo.api.NexoPack;
+import com.nexomc.nexo.configs.Settings;
+import com.nexomc.nexo.pack.creative.NexoPackReader;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -82,19 +84,26 @@ public class ResourcePackConverter {
             }
         }
 
-        final JsonObject meta;
-        try (FileReader reader = new FileReader(rootPath.resolve("pack.mcmeta").toFile())) {
-            meta = new Gson().fromJson(reader, JsonObject.class);
-            if (meta == null) {
-                throw new IllegalStateException("pack.mcmeta is malformed");
+        final @Nullable JsonObject meta;
+        final File mcmetaFile = rootPath.resolve("pack.mcmeta").toFile();
+        if (mcmetaFile.isFile()) {
+            try (FileReader reader = new FileReader(mcmetaFile)) {
+                meta = new Gson().fromJson(reader, JsonObject.class);
+                if (meta == null) {
+                    throw new IllegalStateException("pack.mcmeta is malformed");
+                }
             }
+        } else {
+            logger.warning("pack.mcmeta is missing");
+            meta = null;
         }
 
         FileUtils.removeDirectory(outputPath);
         FileUtils.copyDirectory(rootPath, outputPath);
 
         convertCitDirectories(rootPath, outputPath);
-        if (meta.get("overlays") != null && meta.get("overlays").isJsonObject()) {
+
+        if (meta != null && meta.get("overlays") != null && meta.get("overlays").isJsonObject()) {
             final JsonObject overlays = meta.getAsJsonObject("overlays");
             if (overlays.get("entries") != null && overlays.get("entries").isJsonArray()) {
                 final JsonArray entries = overlays.getAsJsonArray("entries");
@@ -111,7 +120,20 @@ public class ResourcePackConverter {
         }
 
         if (resourcePackToMerge != null) {
-            NexoPack.mergePack(resourcePackToMerge, MinecraftResourcePackReader.minecraft().readFromDirectory(outputPath.toFile()));
+            MinecraftResourcePackReader reader = MinecraftResourcePackReader.minecraft();
+            try {
+                final var valueField = Settings.class.getDeclaredField("_value");
+                valueField.setAccessible(true);
+                valueField.set(Settings.PACK_READER_LENIENT, false);
+                valueField.set(Settings.DEBUG, false);
+
+                reader = NexoPackReader.INSTANCE;
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                logger.warning("Failed to set up Nexo reader");
+            }
+
+            NexoPack.mergePack(resourcePackToMerge, reader.readFromDirectory(outputPath.toFile()));
+
         } else if (zipPath != null) {
             ZipUtils.zip(outputPath, zipPath);
         }
