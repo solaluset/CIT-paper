@@ -46,7 +46,7 @@ public final class CITPaper extends JavaPlugin {
     @Getter
     private final ItemUpdater itemUpdater;
     @Getter
-    private final MainConfig mainConfig;
+    private MainConfig mainConfig;
     @Getter
     private final Mode mode;
     @Getter
@@ -110,6 +110,12 @@ public final class CITPaper extends JavaPlugin {
         for (Listener listener : listeners) {
             Bukkit.getPluginManager().registerEvents(listener, this);
         }
+    }
+
+    @Override
+    public void reloadConfig() {
+        super.reloadConfig();
+        this.mainConfig = new MainConfig(super.getConfig());
     }
 
     @Override
