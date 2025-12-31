@@ -1,1 +1,2 @@
 -dontwarn **
+-dontoptimize

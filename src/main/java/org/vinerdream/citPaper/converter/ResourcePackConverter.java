@@ -2,7 +2,6 @@ package org.vinerdream.citPaper.converter;
 
 import com.google.gson.*;
 import com.nexomc.nexo.api.NexoPack;
-import com.nexomc.nexo.configs.Settings;
 import com.nexomc.nexo.pack.creative.NexoPackReader;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -15,7 +14,6 @@ import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.FileUtils;
 import org.vinerdream.citPaper.utils.ZipUtils;
 import team.unnamed.creative.ResourcePack;
-import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackReader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -120,19 +118,7 @@ public class ResourcePackConverter {
         }
 
         if (resourcePackToMerge != null) {
-            MinecraftResourcePackReader reader = MinecraftResourcePackReader.minecraft();
-            try {
-                final var valueField = Settings.class.getDeclaredField("_value");
-                valueField.setAccessible(true);
-                valueField.set(Settings.PACK_READER_LENIENT, false);
-                valueField.set(Settings.DEBUG, false);
-
-                reader = NexoPackReader.INSTANCE;
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                logger.warning("Failed to set up Nexo reader");
-            }
-
-            NexoPack.mergePack(resourcePackToMerge, reader.readFromDirectory(outputPath.toFile()));
+            NexoPack.mergePack(resourcePackToMerge, NexoPackReader.INSTANCE.readFromDirectory(outputPath.toFile()));
 
         } else if (zipPath != null) {
             ZipUtils.zip(outputPath, zipPath);

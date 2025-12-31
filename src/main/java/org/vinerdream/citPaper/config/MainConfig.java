@@ -32,7 +32,7 @@ public class MainConfig {
     private final @NotNull String oraxenRestartCommand;
 
     public MainConfig(final Configuration config) {
-        this.mode = Mode.valueOf(Objects.requireNonNull(config.getString("mode")).toUpperCase(Locale.ROOT));
+        this.mode = Mode.valueOf(config.getString("mode", "MODERN").toUpperCase(Locale.ROOT));
         this.verboseLogging = config.getBoolean("verboseLogging");
 
         final String tempFolder = config.getString("tempFolder");

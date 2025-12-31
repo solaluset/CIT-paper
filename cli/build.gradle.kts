@@ -67,6 +67,10 @@ tasks {
             "shaders/**",
         )
 
+        relocate("com.nexomc", "org.vinerdream.citPaper.libs.nexo")
+        relocate("kotlin", "org.vinerdream.citPaper.libs.kotlin")
+        relocate("team.unnamed", "org.vinerdream.citPaper.libs.unnamed")
+
         minimize()
     }
 }
