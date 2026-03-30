@@ -599,8 +599,6 @@ public class ResourcePackConverter {
     }
 
     private String armorTextureToModel(Path file, String texture, int type, String overlay, Path outputDirectory, Path prefix) throws IOException {
-        final Path armorTexturePath;
-
         if (mode == Mode.ORAXEN) {
             final var location = findResource(
                     List.of(file.getParent()),
@@ -608,7 +606,7 @@ public class ResourcePackConverter {
                     "png"
             );
             if (location == null) return null;
-            armorTexturePath = copyResource(
+            final Path armorTexturePath = copyResource(
                     location,
                     "png",
                     outputDirectory.resolve(Path.of(
@@ -630,36 +628,22 @@ public class ResourcePackConverter {
             return armorName;
         }
 
-        armorTexturePath = copyArmorTexture(
+        final String armorTextureName = copyArmorTexture(
                 file.getParent(),
                 texture,
                 type,
                 outputDirectory,
                 prefix
         );
-        if (armorTexturePath == null) return null;
-        final String armorTextureName = removeExtension(
-                armorTexturePath.getFileName().toString()
-        );
-        final String armorOverlayName;
-        if (overlay != null) {
-            final Path armorOverlayPath = copyArmorTexture(
-                    file.getParent(),
-                    overlay,
-                    type,
-                    outputDirectory,
-                    prefix
-            );
-            if (armorOverlayPath != null) {
-                armorOverlayName = removeExtension(
-                        armorOverlayPath.getFileName().toString()
-                );
-            } else {
-                armorOverlayName = null;
-            }
-        } else {
-            armorOverlayName = null;
-        }
+        if (armorTextureName == null) return null;
+        final String armorOverlayName = overlay != null ? copyArmorTexture(
+                file.getParent(),
+                overlay,
+                type,
+                outputDirectory,
+                prefix
+        ) : null;
+
         final String prefixString = prefixToString(prefix);
         final Path modelPath = outputDirectory.resolve(
                 Path.of("assets", namespace, "equipment")
@@ -725,7 +709,7 @@ public class ResourcePackConverter {
         ));
     }
 
-    private Path copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
+    private @Nullable String copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
         final String subfolder = switch (textureType) {
             case 1 -> "humanoid";
             case 2 -> "humanoid_leggings";
@@ -738,7 +722,7 @@ public class ResourcePackConverter {
                 "png"
         );
         if (location == null) return null;
-        return copyResource(
+        return resourceNameFromPath(copyResource(
                 location,
                 "png",
                 outputDirectory.resolve(Path.of(
@@ -750,7 +734,7 @@ public class ResourcePackConverter {
                         subfolder
                 )),
                 prefix
-        );
+        ));
     }
 
     private Path copyModel(Path inputDirectory, String model, String textureName, Path outputDirectory, Path prefix) throws IOException {
