@@ -94,6 +94,7 @@ public class ResourcePackConverter {
             }
         } else {
             logger.warning("pack.mcmeta is missing");
+            warningCounter++;
             meta = null;
         }
 
