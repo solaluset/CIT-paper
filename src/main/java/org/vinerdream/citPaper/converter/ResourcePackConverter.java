@@ -523,16 +523,9 @@ public class ResourcePackConverter {
             if (texture == null) {
                 return null;
             }
-            final Path texturePath = copyTexture(List.of(file.getParent()), texture, outputDirectory, prefix);
-            if (texturePath == null) return null;
-            final String textureName = resourceNameFromPath(texturePath);
-            String overlayName = null;
-            if (overlay != null) {
-                final Path overlayPath = copyTexture(List.of(file.getParent()), overlay, outputDirectory, prefix);
-                if (overlayPath != null) {
-                    overlayName = resourceNameFromPath(overlayPath);
-                }
-            }
+            final String textureName = copyTexture(List.of(file.getParent()), texture, outputDirectory, prefix);
+            if (textureName == null) return null;
+            final String overlayName = overlay != null ? copyTexture(List.of(file.getParent()), overlay, outputDirectory, prefix) : null;
 
             return textureToModel(textureName, overlayName, parent, outputDirectory, prefix);
         }
@@ -712,14 +705,14 @@ public class ResourcePackConverter {
         return prefixString + resourceNameFromPath(modelPath);
     }
 
-    private Path copyTexture(List<Path> inputDirectories, String texture, Path outputDirectory, Path prefix) throws IOException {
+    private @Nullable String copyTexture(List<Path> inputDirectories, String texture, Path outputDirectory, Path prefix) throws IOException {
         final var location = findResource(
                 inputDirectories,
                 texture.replaceFirst(":", "/textures/"),
                 "png"
         );
         if (location == null) return null;
-        return copyResource(
+        return resourceNameFromPath(copyResource(
                 location,
                 "png",
                 outputDirectory.resolve(Path.of(
@@ -729,7 +722,7 @@ public class ResourcePackConverter {
                         "item"
                 )),
                 prefix
-        );
+        ));
     }
 
     private Path copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
@@ -860,12 +853,12 @@ public class ResourcePackConverter {
             JsonObject textures = texturesElement.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
                 final String textureName = textureOverride == null ? entry.getValue().getAsString() : textureOverride;
-                final Path outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, modelName, "json").getParent()), textureName, outputDirectory, prefix);
+                final String outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, modelName, "json").getParent()), textureName, outputDirectory, prefix);
                 if (outputTexture != null) {
                     textures.addProperty(
                             entry.getKey(),
                             namespace
-                                    + ":item/" + prefixToString(prefix) + removeExtension(outputTexture.getFileName().toString())
+                                    + ":item/" + prefixToString(prefix) + outputTexture
                     );
                 } else {
                     textures.addProperty(entry.getKey(), textureName);
