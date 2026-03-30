@@ -34,6 +34,10 @@ public class FileUtils {
 
     public static void removeDirectory(@NotNull Path directory) throws IOException {
         if (!directory.toFile().exists()) return;
+        if (!directory.toFile().isDirectory()) {
+            directory.toFile().delete();
+            return;
+        }
         Files.walkFileTree(directory, new FileVisitor<>() {
             @Override
             public @NotNull FileVisitResult preVisitDirectory(@NotNull Path path, @NotNull BasicFileAttributes basicFileAttributes) {

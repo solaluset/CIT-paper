@@ -1,5 +1,8 @@
 package org.vinerdream.citPaper.converter;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.config.MainConfig;
 import org.vinerdream.citPaper.config.Mode;
@@ -7,18 +10,18 @@ import org.vinerdream.citPaper.utils.FileUtils;
 import team.unnamed.creative.ResourcePack;
 import team.unnamed.creative.serialize.minecraft.MinecraftResourcePackWriter;
 
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class ConversionHelper {
     private static final Path MAIN_FAILURE = Path.of("MAIN");
+    private static final String MODIFICATION_TIMES_FILENAME = "cit-paper-time-cache.json";
 
     public static Map.Entry<List<Path>, Map<Path, Exception>> runConversion(final MainConfig mainConfig, final Logger logger, final Path renamesPath, final @Nullable Path oraxenItemsPath) {
         final Path inputPath = mainConfig.getConverterInputDirectory();
@@ -34,9 +37,6 @@ public class ConversionHelper {
                     FileUtils.removeDirectory(oraxenItemsPath);
                 }
             }
-            if (mainConfig.isConverterClearOutputDirectory()) {
-                FileUtils.removeDirectory(outputPath);
-            }
         } catch (IOException e) {
             return Map.entry(List.of(), Map.of(MAIN_FAILURE, e));
         }
@@ -49,31 +49,70 @@ public class ConversionHelper {
         final Map<Path, Exception> failedResourcePacks = new HashMap<>();
         final ResourcePack mergedPack = mainConfig.isConverterMergePacks() ? ResourcePack.resourcePack() : null;
 
-        try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
-            inputs.sorted().forEachOrdered(input -> {
-                if (input.equals(inputPath)) return;
-                ResourcePackConverter converter = new ResourcePackConverter(
-                        mainConfig,
-                        input,
-                        outputPath.resolve(input.getFileName()),
-                        logger,
-                        mergedPack
-                );
-                try {
-                    converter.convertResourcePack();
-                    converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
-                    if (mainConfig.getMode() == Mode.ORAXEN) {
-                        assert oraxenItemsPath != null;
-                        converter.saveOraxenConfig(oraxenItemsPath.resolve(input.getFileName() + ".yml"));
-                    }
-                    convertedResourcePacks.add(input);
-                } catch (Exception e) {
-                    failedResourcePacks.put(input, e);
-                }
-            });
+        final @NotNull Map<Path, Long> actualTimes;
+        try {
+            actualTimes = getPackModificationTimes(inputPath);
         } catch (IOException e) {
             return Map.entry(List.of(), Map.of(MAIN_FAILURE, e));
         }
+        final @NotNull Map<Path, Long> savedTimes;
+        {
+            @NotNull Map<Path, Long> tmp;
+            try {
+                tmp = loadPackModificationTimes(outputPath);
+            } catch (Exception e) {
+                logger.warning("Unable to load timestamp cache, every resource pack will be regenerated: " + e.getMessage());
+                tmp = Map.of();
+            }
+            savedTimes = tmp;
+        }
+
+        if (actualTimes.equals(savedTimes)) {
+            logger.info("All packs are up to date - skipping conversion");
+            return Map.entry(List.of(), Map.of());
+        }
+
+        final @NotNull Set<Path> skip = new HashSet<>();
+        if (mergedPack == null) {
+            savedTimes.forEach((path, time) -> {
+                final @Nullable Long actualTime = actualTimes.get(path);
+                if (actualTime == null) {
+                    try {
+                        FileUtils.removeDirectory(outputPath.resolve(path.getFileName()));
+                    } catch (IOException e) {
+                        logger.severe("Unable to delete outdated pack: " + e.getMessage());
+                    }
+                } else if (Objects.equals(time, actualTime)) {
+                    skip.add(path);
+                }
+            });
+        }
+
+        actualTimes.keySet().stream().sorted().forEachOrdered(input -> {
+            if (skip.contains(input)) {
+                logger.info("Pack " + input + " is up to date - skipping conversion");
+                return;
+            }
+
+            ResourcePackConverter converter = new ResourcePackConverter(
+                    mainConfig,
+                    input,
+                    outputPath.resolve(input.getFileName()),
+                    logger,
+                    mergedPack
+            );
+            try {
+                converter.convertResourcePack();
+                converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
+                if (mainConfig.getMode() == Mode.ORAXEN) {
+                    assert oraxenItemsPath != null;
+                    converter.saveOraxenConfig(oraxenItemsPath.resolve(input.getFileName() + ".yml"));
+                }
+                convertedResourcePacks.add(input);
+            } catch (Exception e) {
+                failedResourcePacks.put(input, e);
+            }
+        });
 
         if (mergedPack != null) {
             outputPath.toFile().mkdirs();
@@ -85,11 +124,60 @@ public class ConversionHelper {
             }
         }
 
+        try {
+            savePackModificationTimes(outputPath, actualTimes);
+        } catch (IOException e) {
+            logger.warning("Unable to save timestamp cache: " + e.getMessage());
+        }
+
         failedResourcePacks.forEach((path, exception) -> {
             logger.severe("Failed to convert " + path);
             exception.printStackTrace();
         });
 
         return Map.entry(convertedResourcePacks, failedResourcePacks);
+    }
+
+    private static @NotNull Map<Path, Long> getPackModificationTimes(final @NotNull Path inputPath) throws IOException {
+        try (Stream<Path> inputs = Files.walk(inputPath, 1)) {
+            final Map<Path, Long> result = new HashMap<>();
+            inputs.forEach(input -> {
+                if (input.equals(inputPath)) return;
+
+                try {
+                    result.put(input, Files.getLastModifiedTime(input).toMillis());
+                } catch (IOException e) {
+                    result.put(input, 0L);
+                }
+            });
+            return result;
+        }
+    }
+
+    private static void savePackModificationTimes(final @NotNull Path outputPath, final Map<Path, Long> modificationTimes) throws IOException {
+        final JsonObject modificationTimesJson = new JsonObject();
+        modificationTimes.forEach((path, modificationTime) -> {
+            if (path.toFile().isDirectory()) {
+                // mtime of directories is unreliable
+                modificationTime = 0L;
+            }
+            modificationTimesJson.addProperty(path.toString(), modificationTime);
+        });
+        try (FileWriter writer = new FileWriter(outputPath.resolve(MODIFICATION_TIMES_FILENAME).toFile())) {
+            writer.write(new Gson().toJson(modificationTimesJson));
+        }
+    }
+
+    private static @NotNull Map<Path, Long> loadPackModificationTimes(final @NotNull Path outputPath) throws IOException {
+        final JsonObject data;
+        try (FileReader reader = new FileReader(outputPath.resolve(MODIFICATION_TIMES_FILENAME).toFile())) {
+            data = new Gson().fromJson(reader, JsonObject.class);
+            if (data == null) {
+                return Map.of();
+            }
+        }
+        final Map<Path, Long> result = new HashMap<>();
+        data.entrySet().forEach(entry -> result.put(Path.of(entry.getKey()), entry.getValue().getAsLong()));
+        return result;
     }
 }
