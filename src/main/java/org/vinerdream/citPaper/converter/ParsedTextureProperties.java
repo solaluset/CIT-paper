@@ -41,7 +41,7 @@ public class ParsedTextureProperties {
     private NamespacedKey key;
     private final @Nullable OraxenData oraxenData;
 
-    public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
+    public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) throws UnsupportedCitTypeException {
         final String typeString = popValue(properties, "item", "type");
         try {
             this.type = TextureType.valueOf(typeString.toUpperCase(Locale.ROOT));
