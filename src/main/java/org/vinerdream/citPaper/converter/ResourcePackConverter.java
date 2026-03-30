@@ -206,7 +206,12 @@ public class ResourcePackConverter {
         final String prefixString = prefixToString(prefix);
 
         if (data.getKey() == null) {
-            data.setKey(new NamespacedKey(namespace, prefixString + path.toLowerCase(Locale.ROOT)));
+            try {
+                data.setKey(new NamespacedKey(namespace, prefixString + path.toLowerCase(Locale.ROOT)));
+            } catch (IllegalArgumentException e) {
+                log(Level.WARNING, e.getMessage());
+                return List.of();
+            }
         } else return List.of(data.saveToMap());
 
         if (!data.hasAnyData()) {
