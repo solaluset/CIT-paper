@@ -558,14 +558,14 @@ public class ResourcePackConverter {
             }
             return armorTextureToModel(file, texture, type, overlay, outputDirectory, prefix);
         }
+        final var location = findResource(List.of(file.getParent()), texture.replaceFirst(":", "/models/"), "json");
+        if (location == null) return null;
         final Path modelPath = copyResource(
-                List.of(file.getParent()),
-                texture.replaceFirst(":", "/models/"),
+                location,
                 "json",
                 outputDirectory.resolve(Path.of("assets", namespace, "equipment")),
                 prefix
         );
-        if (modelPath == null) return null;
 
         return prefixToString(prefix) + resourceNameFromPath(modelPath);
     }
@@ -609,9 +609,14 @@ public class ResourcePackConverter {
         final Path armorTexturePath;
 
         if (mode == Mode.ORAXEN) {
-            armorTexturePath = copyResource(
+            final var location = findResource(
                     List.of(file.getParent()),
                     texture.replaceFirst(":", "/textures/"),
+                    "png"
+            );
+            if (location == null) return null;
+            armorTexturePath = copyResource(
+                    location,
                     "png",
                     outputDirectory.resolve(Path.of(
                             "assets",
@@ -621,7 +626,6 @@ public class ResourcePackConverter {
                     )),
                     Path.of("")
             );
-            if (armorTexturePath == null) return null;
             final String armorName = removeExtension(namespace + "_" + prefixToString(prefix).replace("/", "_") + armorTexturePath.getFileName());
             Files.move(
                     armorTexturePath,
@@ -709,9 +713,14 @@ public class ResourcePackConverter {
     }
 
     private Path copyTexture(List<Path> inputDirectories, String texture, Path outputDirectory, Path prefix) throws IOException {
-        return copyResource(
+        final var location = findResource(
                 inputDirectories,
                 texture.replaceFirst(":", "/textures/"),
+                "png"
+        );
+        if (location == null) return null;
+        return copyResource(
+                location,
                 "png",
                 outputDirectory.resolve(Path.of(
                         "assets",
@@ -730,9 +739,14 @@ public class ResourcePackConverter {
             case 3 -> "wings";
             default -> throw new IllegalStateException("Unexpected value: " + textureType);
         };
-        return copyResource(
+        final var location = findResource(
                 List.of(inputDirectory),
                 texture.replaceFirst(":", "/textures/"),
+                "png"
+        );
+        if (location == null) return null;
+        return copyResource(
+                location,
                 "png",
                 outputDirectory.resolve(Path.of(
                     "assets",
@@ -765,14 +779,19 @@ public class ResourcePackConverter {
 
         final Path texturePath = textureName != null ? resolveResource(inputDirectory, ensureExtension(textureName, "png"), ResourceType.TEXTURE) : null;
         model = model.replaceFirst(":", "/models/");
-        Path newPath = copyResource(
+        final var location = findResource(
                 List.of(inputDirectory),
                 model,
+                "json"
+        );
+        if (location == null) return null;
+        Path newPath = copyResource(
+                location,
                 "json",
                 modelDirectory,
                 prefix
         );
-        if (newPath == null || !processTextures) return newPath;
+        if (!processTextures) return newPath;
 
         seenParents.add(prefix.resolve(resourceNameFromPath(newPath)));
 
@@ -855,7 +874,7 @@ public class ResourcePackConverter {
         }
     }
 
-    private Path copyResource(List<Path> inputDirectories, String resource, String extension, Path outputDirectory, Path prefix) throws IOException {
+    private Map.Entry<Path, Path> findResource(List<Path> inputDirectories, String resource, String extension) throws IOException {
         Path foundDirectory = null;
         Path oldPath = null;
         for (Path inputDirectory : inputDirectories) {
@@ -869,14 +888,19 @@ public class ResourcePackConverter {
             final Path resourcePath = stringToPath(resource);
             if (!DEFAULT_MODEL_DIRECTORIES.contains(resourcePath.getName(0).toString())
                     && (resourcePath.getNameCount() != 1 || inputDirectories.size() != 1
-                        || !DEFAULT_MODEL_DIRECTORIES.contains(inputDirectories.getFirst().getFileName()
-                                .toString().replaceFirst("^minecraft:", "")))
+                    || !DEFAULT_MODEL_DIRECTORIES.contains(inputDirectories.getFirst().getFileName()
+                    .toString().replaceFirst("^minecraft:", "")))
             ) {
                 log(Level.WARNING, "Missing resource: " + resource + " (searched in: " + inputDirectories + ")");
             }
             return null;
         }
-        String outputName = removeExtension(joinPath(foundDirectory.relativize(oldPath)));
+        return Map.entry(foundDirectory, oldPath);
+    }
+
+    private Path copyResource(@NotNull Map.Entry<Path, Path> location, String extension, Path outputDirectory, Path prefix) throws IOException {
+        final var oldPath = location.getValue();
+        String outputName = removeExtension(joinPath(location.getKey().relativize(oldPath)));
         Path newPath = outputDirectory.resolve(prefix).resolve(ensureExtension(outputName.toLowerCase(Locale.ROOT), extension));
         newPath.getParent().toFile().mkdirs();
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
