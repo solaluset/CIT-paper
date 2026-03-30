@@ -523,11 +523,11 @@ public class ResourcePackConverter {
             if (texture == null) {
                 return null;
             }
-            final String textureName = copyTexture(List.of(file.getParent()), texture, outputDirectory, prefix);
-            if (textureName == null) return null;
-            final String overlayName = overlay != null ? copyTexture(List.of(file.getParent()), overlay, outputDirectory, prefix) : null;
+            final String textureKey = copyTexture(List.of(file.getParent()), texture, outputDirectory, prefix);
+            if (textureKey == null) return null;
+            final String overlayKey = overlay != null ? copyTexture(List.of(file.getParent()), overlay, outputDirectory, prefix) : null;
 
-            return textureToModel(textureName, overlayName, parent, outputDirectory, prefix);
+            return textureToModel(textureKey, overlayKey, parent, outputDirectory, prefix);
         }
         final Path modelPath = copyModel(file.getParent(), model, texture, outputDirectory, prefix);
         if (modelPath == null) return null;
@@ -580,20 +580,25 @@ public class ResourcePackConverter {
         return filename + "." + extension;
     }
 
-    private String textureToModel(String textureName, String overlayName, String parent, Path outputDirectory, Path prefix) throws IOException {
-        final Path tmpModelPath = getTmpDir().resolve("models").resolve(textureName + ".json");
+    private String textureToModel(String textureKey, String overlayKey, String parent, Path outputDirectory, Path prefix) throws IOException {
+        final String filename;
+        {
+            final String[] parts = textureKey.split(":", 2)[1].split("/");
+            filename = parts[parts.length - 1];
+        }
+        final Path tmpModelPath = getTmpDir().resolve("models").resolve(filename + ".json");
         final String prefixString = prefixToString(prefix);
         tmpModelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
-            if (overlayName == null) {
-                writer.write(String.format(readResource("/models/item.json"), parent, namespace, prefixString + textureName));
+            if (overlayKey == null) {
+                writer.write(String.format(readResource("/models/item.json"), parent, textureKey));
             } else {
-                writer.write(String.format(readResource("/models/item_with_overlay.json"), parent, namespace, prefixString + textureName, namespace, prefixString + overlayName));
+                writer.write(String.format(readResource("/models/item_with_overlay.json"), parent, textureKey, overlayKey));
             }
         }
 
         return prefixString + removeExtension(Objects.requireNonNull(
-                copyModel(tmpModelPath.getParent(), textureName, false, null, outputDirectory, prefix),
+                copyModel(tmpModelPath.getParent(), filename, false, null, outputDirectory, prefix),
                 "Failed to copy generated model!"
         ).getFileName().toString());
     }
@@ -696,7 +701,7 @@ public class ResourcePackConverter {
                 "png"
         );
         if (location == null) return null;
-        return resourceNameFromPath(copyResource(
+        return namespace + ":item/" + prefixToString(prefix) + resourceNameFromPath(copyResource(
                 location,
                 "png",
                 outputDirectory.resolve(Path.of(
@@ -815,7 +820,7 @@ public class ResourcePackConverter {
                 newJson.add("textures", json.get("textures"));
             } else {
                 final JsonObject textures = new JsonObject();
-                textures.addProperty("layer0", textureName);
+                textures.addProperty("layer0", namespace + ":item/" + prefixString + textureName);
                 newJson.add("textures", textures);
             }
             json = newJson;
@@ -838,15 +843,8 @@ public class ResourcePackConverter {
             for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
                 final String textureName = textureOverride == null ? entry.getValue().getAsString() : textureOverride;
                 final String outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, modelName, "json").getParent()), textureName, outputDirectory, prefix);
-                if (outputTexture != null) {
-                    textures.addProperty(
-                            entry.getKey(),
-                            namespace
-                                    + ":item/" + prefixToString(prefix) + outputTexture
-                    );
-                } else {
-                    textures.addProperty(entry.getKey(), textureName);
-                }
+
+                textures.addProperty(entry.getKey(), outputTexture != null ? outputTexture : textureName);
             }
         }
     }
