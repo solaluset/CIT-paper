@@ -2,17 +2,17 @@
   "layers": {
     "horse_body": [
       {
-        "texture": "%s:%s"
+        "texture": "%s"
       }
     ],
     "humanoid": [
       {
-        "texture": "%s:%s"
+        "texture": "%s"
       }
     ],
     "humanoid_leggings": [
       {
-        "texture": "%s:%s"
+        "texture": "%s"
       }
     ]
   }

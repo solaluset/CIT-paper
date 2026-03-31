@@ -2,7 +2,7 @@
   "layers": {
     "wings": [
       {
-        "texture": "%s:%s",
+        "texture": "%s",
         "use_player_texture": false
       }
     ]

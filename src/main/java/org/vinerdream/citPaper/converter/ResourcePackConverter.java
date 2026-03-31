@@ -629,15 +629,15 @@ public class ResourcePackConverter {
             return armorName;
         }
 
-        final String armorTextureName = copyArmorTexture(
+        final String armorTextureKey = copyArmorTexture(
                 file.getParent(),
                 texture,
                 type,
                 outputDirectory,
                 prefix
         );
-        if (armorTextureName == null) return null;
-        final String armorOverlayName = overlay != null ? copyArmorTexture(
+        if (armorTextureKey == null) return null;
+        final String armorOverlayKey = overlay != null ? copyArmorTexture(
                 file.getParent(),
                 overlay,
                 type,
@@ -648,42 +648,32 @@ public class ResourcePackConverter {
         final String prefixString = prefixToString(prefix);
         final Path modelPath = outputDirectory.resolve(
                 Path.of("assets", namespace, "equipment")
-        ).resolve(prefix).resolve(armorTextureName + ".json");
+        ).resolve(prefix).resolve(lastKeyPart(armorTextureKey) + ".json");
         modelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(modelPath.toFile())) {
             if (type != 3) {
-                if (armorOverlayName != null) {
+                if (armorOverlayKey != null) {
                     writer.write(String.format(
                             readResource("/models/armor_with_overlay.json"),
-                            namespace,
-                            prefixString + armorTextureName,
-                            namespace,
-                            prefixString + armorOverlayName,
-                            namespace,
-                            prefixString + armorTextureName,
-                            namespace,
-                            prefixString + armorOverlayName,
-                            namespace,
-                            prefixString + armorTextureName,
-                            namespace,
-                            prefixString + armorOverlayName
+                            armorTextureKey,
+                            armorOverlayKey,
+                            armorTextureKey,
+                            armorOverlayKey,
+                            armorTextureKey,
+                            armorOverlayKey
                     ));
                 } else {
                     writer.write(String.format(
                             readResource("/models/armor.json"),
-                            namespace,
-                            prefixString + armorTextureName,
-                            namespace,
-                            prefixString + armorTextureName,
-                            namespace,
-                            prefixString + armorTextureName
+                            armorTextureKey,
+                            armorTextureKey,
+                            armorTextureKey
                     ));
                 }
             } else {
                 writer.write(String.format(
                         readResource("/models/armor_elytra.json"),
-                        namespace,
-                        prefixString + armorTextureName
+                        armorTextureKey
                 ));
             }
         }
@@ -723,7 +713,7 @@ public class ResourcePackConverter {
                 "png"
         );
         if (location == null) return null;
-        return resourceNameFromPath(copyResource(
+        return namespace + ":" + prefixToString(prefix) + resourceNameFromPath(copyResource(
                 location,
                 "png",
                 outputDirectory.resolve(Path.of(
