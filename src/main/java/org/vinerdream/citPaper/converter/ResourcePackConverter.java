@@ -415,7 +415,7 @@ public class ResourcePackConverter {
 
         } else {
             if (modelName != null) {
-                jsonData = String.format(readResource("/models/default.json"), namespace + ":item/" + modelName);
+                jsonData = String.format(readResource("/models/default.json"), addNamespace(modelName));
             } else {
                 jsonData = String.format(readResource("/models/default.json"), data.getMainTextureData().getModel());
             }
@@ -581,11 +581,7 @@ public class ResourcePackConverter {
     }
 
     private String textureToModel(String textureKey, String overlayKey, String parent, Path outputDirectory, Path prefix) throws IOException {
-        final String filename;
-        {
-            final String[] parts = textureKey.split(":", 2)[1].split("/");
-            filename = parts[parts.length - 1];
-        }
+        final String filename = lastKeyPart(textureKey);
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(filename + ".json");
         final String prefixString = prefixToString(prefix);
         tmpModelPath.getParent().toFile().mkdirs();
@@ -701,7 +697,7 @@ public class ResourcePackConverter {
                 "png"
         );
         if (location == null) return null;
-        return namespace + ":item/" + prefixToString(prefix) + resourceNameFromPath(copyResource(
+        return addNamespace(prefixToString(prefix) + resourceNameFromPath(copyResource(
                 location,
                 "png",
                 outputDirectory.resolve(Path.of(
@@ -711,7 +707,7 @@ public class ResourcePackConverter {
                         "item"
                 )),
                 prefix
-        ));
+        )));
     }
 
     private @Nullable String copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
@@ -801,7 +797,7 @@ public class ResourcePackConverter {
                     }
                     final Path parentModel = copyModel(parentInputDirectory, parentPath.getFileName().toString(), true, null, outputDirectory, parentPrefix, seenParents);
                     if (parentModel != null) {
-                        json.addProperty("parent", namespace + ":item/" + prefixToString(parentPrefix) + resourceNameFromPath(parentModel));
+                        json.addProperty("parent", addNamespace(prefixToString(parentPrefix) + resourceNameFromPath(parentModel)));
                     }
                 } else {
                     log(Level.WARNING, "Recursive model detected (the model is parent of itself)");
@@ -815,12 +811,12 @@ public class ResourcePackConverter {
                 writer.write(new Gson().toJson(json));
             }
             final JsonObject newJson = new JsonObject();
-            newJson.addProperty("parent", namespace + ":item/" + prefixString + resourceNameFromPath(newPath));
+            newJson.addProperty("parent", addNamespace(prefixString + resourceNameFromPath(newPath)));
             if (json.get("textures") != null) {
                 newJson.add("textures", json.get("textures"));
             } else {
                 final JsonObject textures = new JsonObject();
-                textures.addProperty("layer0", namespace + ":item/" + prefixString + textureName);
+                textures.addProperty("layer0", addNamespace(prefixString + textureName));
                 newJson.add("textures", textures);
             }
             json = newJson;
@@ -904,6 +900,11 @@ public class ResourcePackConverter {
             return string;
         }
         return string + "/";
+    }
+
+    private @NotNull String lastKeyPart(@NotNull String key) {
+        final String[] parts = key.split(":", 2)[1].split("/");
+        return parts[parts.length - 1];
     }
 
     private @NotNull String addNamespace(@NotNull String path) {
