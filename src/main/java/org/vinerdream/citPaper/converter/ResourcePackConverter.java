@@ -1,5 +1,7 @@
 package org.vinerdream.citPaper.converter;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.gson.*;
 import com.nexomc.nexo.api.NexoPack;
 import com.nexomc.nexo.pack.creative.NexoPackReader;
@@ -230,9 +232,8 @@ public class ResourcePackConverter {
             data.getArmorData().setModel(ns + ":" + armorModel);
         }
 
-        final String modelName;
         if (data.getMainTextureData() != null) {
-            modelName = convertTextureData(file, data.getMainTextureData(), guessParent(data), null, outputDirectory, prefix);
+            convertTextureData(file, data.getMainTextureData(), guessParent(data), null, outputDirectory, prefix);
         } else return List.of(data.saveToMap());
 
         if (mode == Mode.ORAXEN) {
@@ -245,60 +246,55 @@ public class ResourcePackConverter {
                 BowTextureData bowTextureData = data.getBowTextureData();
                 normalizeData(file, bowTextureData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
-                config.set("model", addNamespace(bowTextureData.getModel()));
+                config.set("model", bowTextureData.getModel());
                 config.set("pulling_models", List.of(
-                        addNamespace(bowTextureData.getPulling_0().getModel()),
-                        addNamespace(bowTextureData.getPulling_1().getModel()),
-                        addNamespace(bowTextureData.getPulling_2().getModel())
+                        bowTextureData.getPulling_0().getModel(),
+                        bowTextureData.getPulling_1().getModel(),
+                        bowTextureData.getPulling_2().getModel()
                 ));
 
             } else if (data.getCrossbowTextureData() != null) {
                 CrossbowTextureData crossbowTextureData = data.getCrossbowTextureData();
                 normalizeData(file, crossbowTextureData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
-                config.set("model", addNamespace(crossbowTextureData.getModel()));
+                config.set("model", crossbowTextureData.getModel());
                 config.set("pulling_models", List.of(
-                        addNamespace(crossbowTextureData.getPulling_0().getModel()),
-                        addNamespace(crossbowTextureData.getPulling_1().getModel()),
-                        addNamespace(crossbowTextureData.getPulling_2().getModel())
+                        crossbowTextureData.getPulling_0().getModel(),
+                        crossbowTextureData.getPulling_1().getModel(),
+                        crossbowTextureData.getPulling_2().getModel()
                 ));
-                config.set("charged_model", addNamespace(crossbowTextureData.getWithArrow().getModel()));
-                config.set("firework_model", addNamespace(crossbowTextureData.getWithFirework().getModel()));
+                config.set("charged_model", crossbowTextureData.getWithArrow().getModel());
+                config.set("firework_model", crossbowTextureData.getWithFirework().getModel());
 
             } else if (data.getTridentTextureData() != null) {
                 TridentTextureData tridentData = data.getTridentTextureData();
                 normalizeData(file, tridentData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
                 // not supported by Oraxen
-                config.set("model", addNamespace(tridentData.getModel()));
+                config.set("model", tridentData.getModel());
 
             } else if (data.getFishingRodTextureData() != null) {
                 FishingRodTextureData fishingRodData = data.getFishingRodTextureData();
                 normalizeData(file, fishingRodData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
-                config.set("model", addNamespace(fishingRodData.getModel()));
-                config.set("cast_model", addNamespace(fishingRodData.getCast().getModel()));
+                config.set("model", fishingRodData.getModel());
+                config.set("cast_model", fishingRodData.getCast().getModel());
 
             } else if (data.getElytraTextureData() != null) {
                 ElytraTextureData elytraData = data.getElytraTextureData();
                 normalizeData(file, elytraData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
-                config.set("model", addNamespace(elytraData.getModel()));
+                config.set("model", elytraData.getModel());
 
             } else if (data.getShieldTextureData() != null) {
                 final ShieldTextureData shieldData = data.getShieldTextureData();
                 normalizeData(file, shieldData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
-                config.set("model", addNamespace(shieldData.getModel()));
-                config.set("blocking_model", addNamespace(shieldData.getBlocking().getModel()));
+                config.set("model", shieldData.getModel());
+                config.set("blocking_model", shieldData.getBlocking().getModel());
 
             } else {
-                if (modelName != null) {
-                    config.set("model", addNamespace(modelName));
-                } else {
-                    config.set("model", addNamespace(data.getMainTextureData().getModel()));
-                }
-
+                config.set("model", data.getMainTextureData().getModel());
             }
 
             final List<Map<String, String>> renames = new ArrayList<>();
@@ -338,13 +334,9 @@ public class ResourcePackConverter {
 
             jsonData = String.format(
                     readResource("/models/bow.json"),
-                    namespace,
                     bowTextureData.getModel(),
-                    namespace,
                     bowTextureData.getPulling_1().getModel(),
-                    namespace,
                     bowTextureData.getPulling_2().getModel(),
-                    namespace,
                     bowTextureData.getPulling_0().getModel()
             );
         } else if (data.getCrossbowTextureData() != null) {
@@ -353,17 +345,11 @@ public class ResourcePackConverter {
 
             jsonData = String.format(
                     readResource("/models/crossbow.json"),
-                    namespace,
                     crossbowTextureData.getWithArrow().getModel(),
-                    namespace,
                     crossbowTextureData.getWithFirework().getModel(),
-                    namespace,
                     crossbowTextureData.getModel(),
-                    namespace,
                     crossbowTextureData.getPulling_1().getModel(),
-                    namespace,
                     crossbowTextureData.getPulling_2().getModel(),
-                    namespace,
                     crossbowTextureData.getPulling_0().getModel()
             );
         } else if (data.getTridentTextureData() != null) {
@@ -372,11 +358,8 @@ public class ResourcePackConverter {
 
             jsonData = String.format(
                     readResource("/models/trident.json"),
-                    namespace,
                     tridentData.getModel(),
-                    namespace,
                     tridentData.getInHand().getModel(),
-                    namespace,
                     tridentData.getThrowing().getModel()
             );
         } else if (data.getFishingRodTextureData() != null) {
@@ -385,9 +368,7 @@ public class ResourcePackConverter {
 
             jsonData = String.format(
                     readResource("/models/fishing_rod.json"),
-                    namespace,
                     fishingRodData.getModel(),
-                    namespace,
                     fishingRodData.getCast().getModel()
             );
         } else if (data.getElytraTextureData() != null) {
@@ -396,9 +377,7 @@ public class ResourcePackConverter {
 
             jsonData = String.format(
                     readResource("/models/elytra.json"),
-                    namespace,
                     elytraData.getModel(),
-                    namespace,
                     elytraData.getBroken().getModel()
             );
         } else if (data.getShieldTextureData() != null) {
@@ -407,18 +386,12 @@ public class ResourcePackConverter {
 
             jsonData = String.format(
                     readResource("/models/shield.json"),
-                    namespace,
                     shieldData.getModel(),
-                    namespace,
                     shieldData.getBlocking().getModel()
             );
 
         } else {
-            if (modelName != null) {
-                jsonData = String.format(readResource("/models/default.json"), addNamespace(modelName));
-            } else {
-                jsonData = String.format(readResource("/models/default.json"), data.getMainTextureData().getModel());
-            }
+            jsonData = String.format(readResource("/models/default.json"), data.getMainTextureData().getModel());
         }
         jsonPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
@@ -457,7 +430,7 @@ public class ResourcePackConverter {
             if (first == null) {
                 first = data1;
             }
-            data1.setModel(convertTextureData(file, data1, parent, fallbackTexture, outputDirectory, prefix));
+            convertTextureData(file, data1, parent, fallbackTexture, outputDirectory, prefix);
         }
         assert first != null;
         if (data.getModel() == null) {
@@ -507,7 +480,7 @@ public class ResourcePackConverter {
         }
     }
 
-    private String convertTextureData(Path file, TextureData data, String parent, String fallbackTexture, Path outputDirectory, Path prefix) throws IOException {
+    private void convertTextureData(Path file, TextureData data, String parent, String fallbackTexture, Path outputDirectory, Path prefix) throws IOException {
         final String model = removeExtension(data.getModel());
         final String texture;
         if (data.getTexture() != null) {
@@ -517,22 +490,19 @@ public class ResourcePackConverter {
         }
         final String overlay = removeExtension(data.getOverlay());
 
-        final String prefixString = prefixToString(prefix);
-
         if (model == null) {
             if (texture == null) {
-                return null;
+                return;
             }
             final String textureKey = copyTexture(List.of(file.getParent()), texture, outputDirectory, prefix);
-            if (textureKey == null) return null;
+            if (textureKey == null) return;
             final String overlayKey = overlay != null ? copyTexture(List.of(file.getParent()), overlay, outputDirectory, prefix) : null;
 
-            return textureToModel(textureKey, overlayKey, parent, outputDirectory, prefix);
+            data.setModel(textureToModel(textureKey, overlayKey, parent, outputDirectory, prefix, null));
+            return;
         }
-        final Path modelPath = copyModel(file.getParent(), model, texture, outputDirectory, prefix);
-        if (modelPath == null) return null;
 
-        return prefixString + resourceNameFromPath(modelPath);
+        data.setModel(copyModel(file.getParent(), model, texture, outputDirectory, prefix));
     }
 
     private String convertArmorTextureData(Path file, TextureData data, int type, String fallbackTexture, Path outputDirectory, Path prefix) throws IOException {
@@ -580,10 +550,9 @@ public class ResourcePackConverter {
         return filename + "." + extension;
     }
 
-    private String textureToModel(String textureKey, String overlayKey, String parent, Path outputDirectory, Path prefix) throws IOException {
+    private @NotNull String textureToModel(String textureKey, String overlayKey, String parent, Path outputDirectory, Path prefix, Object n) throws IOException {
         final String filename = lastKeyPart(textureKey);
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(filename + ".json");
-        final String prefixString = prefixToString(prefix);
         tmpModelPath.getParent().toFile().mkdirs();
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
             if (overlayKey == null) {
@@ -593,10 +562,10 @@ public class ResourcePackConverter {
             }
         }
 
-        return prefixString + removeExtension(Objects.requireNonNull(
+        return Objects.requireNonNull(
                 copyModel(tmpModelPath.getParent(), filename, false, null, outputDirectory, prefix),
                 "Failed to copy generated model!"
-        ).getFileName().toString());
+        );
     }
 
     private String armorTextureToModel(Path file, String texture, int type, String overlay, Path outputDirectory, Path prefix) throws IOException {
@@ -680,14 +649,22 @@ public class ResourcePackConverter {
         return prefixString + resourceNameFromPath(modelPath);
     }
 
+    private final BiMap<Path, String> copiedTextures = HashBiMap.create();
+
     private @Nullable String copyTexture(List<Path> inputDirectories, String texture, Path outputDirectory, Path prefix) throws IOException {
+        if (copiedTextures.containsValue(texture)) {
+            return texture;
+        }
         final var location = findResource(
                 inputDirectories,
                 texture.replaceFirst(":", "/textures/"),
                 "png"
         );
         if (location == null) return null;
-        return addNamespace(prefixToString(prefix) + resourceNameFromPath(copyResource(
+        if (copiedTextures.containsKey(location.getValue())) {
+            return copiedTextures.get(location.getValue());
+        }
+        final String key = addNamespace(prefixToString(prefix) + resourceNameFromPath(copyResource(
                 location,
                 "png",
                 outputDirectory.resolve(Path.of(
@@ -698,6 +675,8 @@ public class ResourcePackConverter {
                 )),
                 prefix
         )));
+        copiedTextures.put(location.getValue(), key);
+        return key;
     }
 
     private @Nullable String copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
@@ -728,15 +707,39 @@ public class ResourcePackConverter {
         ));
     }
 
-    private Path copyModel(Path inputDirectory, String model, String textureName, Path outputDirectory, Path prefix) throws IOException {
+    private final Map<Path, String> copiedModels = new HashMap<>();
+    private final Set<String> copiedModelKeys = new HashSet<>();
+
+    private @Nullable String copyModel(Path inputDirectory, String model, String textureName, Path outputDirectory, Path prefix) throws IOException {
         return copyModel(inputDirectory, model, true, textureName, outputDirectory, prefix);
     }
 
-    private Path copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix) throws IOException {
+    private @Nullable String copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix) throws IOException {
         return copyModel(inputDirectory, model, processTextures, textureName, outputDirectory, prefix, new ArrayList<>());
     }
 
-    private Path copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
+    private @Nullable String copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
+        if (copiedModelKeys.contains(model)) {
+            return model;
+        }
+        final var result = _copyModel(inputDirectory, model, processTextures, textureName, outputDirectory, prefix, seenParents);
+        if (result == null) return null;
+        final Path newModelPath = result.getValue().orElse(null);
+        if (newModelPath == null) {
+            return copiedModels.get(result.getKey().orElseThrow());
+        }
+        final String key = addNamespace(prefixToString(prefix) + resourceNameFromPath(newModelPath));
+        result.getKey().ifPresent(sourcePath -> copiedModels.put(sourcePath, key));
+        copiedModelKeys.add(key);
+        return key;
+    }
+
+    /*
+        returns Entry<sourcePath, copiedPath>
+        if copiedPath is empty, sourcePath must be not empty; retrieve cache by sourcePath
+        if sourcePath is empty, do not record cache
+    */
+    private @Nullable Map.Entry<@NotNull Optional<Path>, @NotNull Optional<Path>> _copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
         final Path modelDirectory = outputDirectory.resolve(Path.of(
                 "assets",
                 namespace,
@@ -753,13 +756,17 @@ public class ResourcePackConverter {
                 "json"
         );
         if (location == null) return null;
+        Path cachedSourcePath = location.getValue();
+        if (texturePath == null && copiedModels.containsKey(cachedSourcePath)) {
+            return Map.entry(Optional.of(cachedSourcePath), Optional.empty());
+        }
         Path newPath = copyResource(
                 location,
                 "json",
                 modelDirectory,
                 prefix
         );
-        if (!processTextures) return newPath;
+        if (!processTextures) return Map.entry(Optional.empty(), Optional.of(newPath));
 
         seenParents.add(prefix.resolve(resourceNameFromPath(newPath)));
 
@@ -770,7 +777,7 @@ public class ResourcePackConverter {
             } catch (JsonSyntaxException ignored) {
                 final Path originalPath = resolveOldPath(inputDirectory, model, "json");
                 log(Level.WARNING, "Invalid JSON: " + originalPath);
-                return newPath;
+                return Map.entry(Optional.of(cachedSourcePath), Optional.of(newPath));
             }
             final JsonElement parent = json.get("parent");
             if (parent != null) {
@@ -785,9 +792,9 @@ public class ResourcePackConverter {
                         parentInputDirectory = parentInputDirectory.resolve(parentPath.getParent());
                         parentPrefix = parentPrefix.resolve(parentPath.getParent());
                     }
-                    final Path parentModel = copyModel(parentInputDirectory, parentPath.getFileName().toString(), true, null, outputDirectory, parentPrefix, seenParents);
+                    final String parentModel = copyModel(parentInputDirectory, parentPath.getFileName().toString(), true, null, outputDirectory, parentPrefix, seenParents);
                     if (parentModel != null) {
-                        json.addProperty("parent", addNamespace(prefixToString(parentPrefix) + resourceNameFromPath(parentModel)));
+                        json.addProperty("parent", parentModel);
                     }
                 } else {
                     log(Level.WARNING, "Recursive model detected (the model is parent of itself)");
@@ -814,12 +821,13 @@ public class ResourcePackConverter {
                     removeExtension(newPath.getFileName().toString())
                             + "_" + removeExtension(texturePath.getFileName().toString()) + ".json"
             );
+            cachedSourcePath = null;
         }
         fixTextures(inputDirectory, model, json, textureName, outputDirectory, prefix);
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
             writer.write(new Gson().toJson(json));
         }
-        return newPath;
+        return Map.entry(Optional.ofNullable(cachedSourcePath), Optional.of(newPath));
     }
 
     private void fixTextures(Path inputDirectory, String modelName, JsonObject model, String textureOverride, Path outputDirectory, Path prefix) throws IOException {

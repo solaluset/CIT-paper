@@ -3,11 +3,11 @@
     "type": "minecraft:condition",
     "on_false": {
       "type": "minecraft:model",
-      "model": "%s:item/%s"
+      "model": "%s"
     },
     "on_true": {
       "type": "minecraft:model",
-      "model": "%s:item/%s"
+      "model": "%s"
     },
     "property": "minecraft:broken"
   }

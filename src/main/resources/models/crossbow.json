@@ -7,21 +7,21 @@
         {
           "model": {
             "type": "minecraft:model",
-            "model": "%s:item/%s"
+            "model": "%s"
           },
           "when": "arrow"
         },
         {
           "model": {
             "type": "minecraft:model",
-            "model": "%s:item/%s"
+            "model": "%s"
           },
           "when": "rocket"
         }
       ],
       "fallback": {
         "type": "minecraft:model",
-        "model": "%s:item/%s"
+        "model": "%s"
       },
       "property": "minecraft:charge_type"
     },
@@ -31,21 +31,21 @@
         {
           "model": {
             "type": "minecraft:model",
-            "model": "%s:item/%s"
+            "model": "%s"
           },
           "threshold": 0.58
         },
         {
           "model": {
             "type": "minecraft:model",
-            "model": "%s:item/%s"
+            "model": "%s"
           },
           "threshold": 1.0
         }
       ],
       "fallback": {
         "type": "minecraft:model",
-        "model": "%s:item/%s"
+        "model": "%s"
       },
       "property": "minecraft:crossbow/pull"
     },
