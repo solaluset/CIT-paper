@@ -19,9 +19,12 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static org.vinerdream.citPaper.utils.ReflectionUtils.readResource;
+
 public class ConversionHelper {
     private static final Path MAIN_FAILURE = Path.of("MAIN");
     private static final String MODIFICATION_TIMES_FILENAME = "cit-paper-time-cache.json";
+    private static final String VERSION = getVersion();
 
     public static Map.Entry<List<Path>, Map<Path, Exception>> runConversion(final MainConfig mainConfig, final Logger logger, final Path renamesPath, final @Nullable Path oraxenItemsPath) {
         final Path inputPath = mainConfig.getConverterInputDirectory();
@@ -156,6 +159,7 @@ public class ConversionHelper {
 
     private static void savePackModificationTimes(final @NotNull Path outputPath, final Map<Path, Long> modificationTimes) throws IOException {
         final JsonObject modificationTimesJson = new JsonObject();
+        modificationTimesJson.addProperty("!version", VERSION);
         modificationTimes.forEach((path, modificationTime) -> {
             if (path.toFile().isDirectory()) {
                 // mtime of directories is unreliable
@@ -172,12 +176,28 @@ public class ConversionHelper {
         final JsonObject data;
         try (FileReader reader = new FileReader(outputPath.resolve(MODIFICATION_TIMES_FILENAME).toFile())) {
             data = new Gson().fromJson(reader, JsonObject.class);
-            if (data == null) {
-                return Map.of();
-            }
+        }
+        if (data == null) {
+            return Map.of();
+        }
+        final var version = data.remove("!version");
+        if (version == null || !VERSION.equals(version.getAsString())) {
+            return Map.of();
         }
         final Map<Path, Long> result = new HashMap<>();
         data.entrySet().forEach(entry -> result.put(Path.of(entry.getKey()), entry.getValue().getAsLong()));
         return result;
+    }
+
+    private static @NotNull String getVersion() {
+        try {
+            for (String line : readResource("/plugin.yml").split("\n")) {
+                if (line.startsWith("version:")) {
+                    line = line.split(":", 2)[1].strip();
+                    return line.substring(1, line.length() - 1);
+                }
+            }
+        } catch (IOException ignored) {}
+        throw new RuntimeException("Unable to get version from resource plugin.yml");
     }
 }

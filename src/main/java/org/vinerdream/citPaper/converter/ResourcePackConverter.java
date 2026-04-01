@@ -31,6 +31,7 @@ import java.util.zip.CRC32;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.*;
 import static org.vinerdream.citPaper.utils.ItemUtils.*;
+import static org.vinerdream.citPaper.utils.ReflectionUtils.readResource;
 
 public class ResourcePackConverter {
     private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item", "items");
@@ -986,22 +987,6 @@ public class ResourcePackConverter {
 
     private Path getTmpPackDir() {
         return getTmpDir().resolve(UUID.randomUUID().toString());
-    }
-
-    private String readResource(String path) throws IOException {
-        try (InputStream input = getClass().getResourceAsStream(path)) {
-            assert input != null;
-            try (InputStreamReader inputStreamReader = new InputStreamReader(input)) {
-                try (BufferedReader reader = new BufferedReader(inputStreamReader)) {
-                    StringBuilder builder = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        builder.append(line.strip());
-                    }
-                    return builder.toString();
-                }
-            }
-        }
     }
 
     private void log(@NotNull Level level, @NotNull String message) {
