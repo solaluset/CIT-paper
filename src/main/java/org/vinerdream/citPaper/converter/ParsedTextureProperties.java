@@ -168,11 +168,31 @@ public class ParsedTextureProperties {
         if (mainTextureData == null) {
             mainTextureData = fishingRodTextureData;
         }
-        this.mainTextureData = mainTextureData;
 
-        for (String key : properties.keySet()) {
+        String model = null;
+        String texture = null;
+        String overlay = null;
+        if (mainTextureData != null) {
+            model = mainTextureData.getModel();
+            texture = mainTextureData.getTexture();
+            overlay = mainTextureData.getOverlay();
+        }
+        for (String key : new ArrayList<>(properties.keySet())) {
+            if (key.startsWith("model.") && model == null) {
+                model = popValue(properties, null, key);
+                continue;
+            }
+            if (key.startsWith("texture.") && key.endsWith("_overlay") && overlay == null) {
+                overlay = popValue(properties, null, key);
+                continue;
+            }
+            if (key.startsWith("texture.") && texture == null) {
+                texture = popValue(properties, null, key);
+                continue;
+            }
             logger.accept("Unknown property: " + key);
         }
+        this.mainTextureData = new TextureData(model, texture, overlay);
     }
 
     public Map<String, String> saveToMap() {
