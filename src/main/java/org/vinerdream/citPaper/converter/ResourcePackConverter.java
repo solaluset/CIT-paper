@@ -718,28 +718,15 @@ public class ResourcePackConverter {
         return copyModel(inputDirectory, model, processTextures, textureName, outputDirectory, prefix, new ArrayList<>());
     }
 
-    private @Nullable String copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
-        if (copiedModelKeys.contains(model)) {
-            return model;
-        }
-        final var result = _copyModel(inputDirectory, model, processTextures, textureName, outputDirectory, prefix, seenParents);
-        if (result == null) return null;
-        final Path newModelPath = result.getValue().orElse(null);
-        if (newModelPath == null) {
-            return copiedModels.get(result.getKey().orElseThrow());
-        }
-        final String key = addNamespace(prefixToString(prefix) + resourceNameFromPath(newModelPath));
-        result.getKey().ifPresent(sourcePath -> copiedModels.put(sourcePath, key));
-        copiedModelKeys.add(key);
-        return key;
-    }
-
     /*
         returns Entry<sourcePath, copiedPath>
         if copiedPath is empty, sourcePath must be not empty; retrieve cache by sourcePath
         if sourcePath is empty, do not record cache
     */
-    private @Nullable Map.Entry<@NotNull Optional<Path>, @NotNull Optional<Path>> _copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
+    private @Nullable String copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
+        if (copiedModelKeys.contains(model)) {
+            return model;
+        }
         final Path modelDirectory = outputDirectory.resolve(Path.of(
                 "assets",
                 namespace,
@@ -756,28 +743,41 @@ public class ResourcePackConverter {
                 "json"
         );
         if (location == null) return null;
-        Path cachedSourcePath = location.getValue();
-        if (texturePath == null && copiedModels.containsKey(cachedSourcePath)) {
-            return Map.entry(Optional.of(cachedSourcePath), Optional.empty());
-        }
-        Path newPath = copyResource(
-                location,
-                "json",
-                modelDirectory,
-                prefix
-        );
-        if (!processTextures) return Map.entry(Optional.empty(), Optional.of(newPath));
 
-        seenParents.add(prefix.resolve(resourceNameFromPath(newPath)));
+        final @NotNull String parentModelKey;
+        if (copiedModels.containsKey(location.getValue())) {
+            if (texturePath == null) {
+                return copiedModels.get(location.getValue());
+            } else {
+                parentModelKey = copiedModels.get(location.getValue());
+            }
+        } else {
+            final Path newPath = copyResource(
+                    location,
+                    "json",
+                    modelDirectory,
+                    prefix
+            );
+            if (!processTextures) {
+                final var key = addNamespace(prefixString + resourceNameFromPath(newPath));
+                // skip path caching
+                copiedModelKeys.add(key);
+                return key;
+            }
 
-        JsonObject json;
-        try (FileReader reader = new FileReader(newPath.toFile())) {
-            try {
-                json = new Gson().fromJson(reader, JsonObject.class);
-            } catch (JsonSyntaxException ignored) {
-                final Path originalPath = resolveOldPath(inputDirectory, model, "json");
-                log(Level.WARNING, "Invalid JSON: " + originalPath);
-                return Map.entry(Optional.of(cachedSourcePath), Optional.of(newPath));
+            seenParents.add(prefix.resolve(resourceNameFromPath(newPath)));
+
+            final JsonObject json;
+            try (FileReader reader = new FileReader(newPath.toFile())) {
+                try {
+                    json = new Gson().fromJson(reader, JsonObject.class);
+                } catch (JsonSyntaxException ignored) {
+                    log(Level.WARNING, "Invalid JSON: " + location.getValue());
+                    final var key = addNamespace(prefixString + resourceNameFromPath(newPath));
+                    copiedModels.put(location.getValue(), key);
+                    copiedModelKeys.add(key);
+                    return key;
+                }
             }
             final JsonElement parent = json.get("parent");
             if (parent != null) {
@@ -801,33 +801,59 @@ public class ResourcePackConverter {
                     json.remove("parent");
                 }
             }
-        }
-        if (texturePath != null) {
             fixTextures(inputDirectory, model, json, null, outputDirectory, prefix);
             try (FileWriter writer = new FileWriter(newPath.toFile())) {
                 writer.write(new Gson().toJson(json));
             }
-            final JsonObject newJson = new JsonObject();
-            newJson.addProperty("parent", addNamespace(prefixString + resourceNameFromPath(newPath)));
-            if (json.get("textures") != null) {
-                newJson.add("textures", json.get("textures"));
-            } else {
-                final JsonObject textures = new JsonObject();
-                textures.addProperty("layer0", addNamespace(prefixString + textureName));
-                newJson.add("textures", textures);
-            }
-            json = newJson;
-            newPath = newPath.getParent().resolve(
-                    removeExtension(newPath.getFileName().toString())
-                            + "_" + removeExtension(texturePath.getFileName().toString()) + ".json"
+
+            parentModelKey = addNamespace(prefixString + resourceNameFromPath(newPath));
+
+            copiedModels.put(location.getValue(), parentModelKey);
+            copiedModelKeys.add(parentModelKey);
+        }
+
+        if (texturePath == null) {
+            return Objects.requireNonNull(
+                    copiedModels.get(location.getValue()),
+                    location.getValue() + " was not yet processed"
             );
-            cachedSourcePath = null;
         }
-        fixTextures(inputDirectory, model, json, textureName, outputDirectory, prefix);
+
+        final Path parentPath = Objects.requireNonNull(
+                findResource(List.of(outputDirectory.resolve("assets")), parentModelKey.replaceFirst(":", "/models/"), "json"),
+                "Model " + parentModelKey + " must've been cached but not found"
+        ).getValue();
+        final JsonObject parentJson;
+        try (FileReader reader = new FileReader(parentPath.toFile())) {
+            try {
+                parentJson = new Gson().fromJson(reader, JsonObject.class);
+            } catch (JsonSyntaxException ignored) {
+                log(Level.WARNING, "Invalid JSON: " + parentPath);
+                return copiedModels.get(location.getValue());
+            }
+        }
+
+        final JsonObject newJson = new JsonObject();
+        newJson.addProperty("parent", parentModelKey);
+        if (parentJson.get("textures") != null) {
+            newJson.add("textures", parentJson.get("textures"));
+        } else {
+            final JsonObject textures = new JsonObject();
+            textures.addProperty("layer0", addNamespace(prefixString + textureName));
+            newJson.add("textures", textures);
+        }
+        final Path newPath = parentPath.resolveSibling(
+                resourceNameFromPath(parentPath)
+                        + "_" + resourceNameFromPath(texturePath) + ".json"
+        );
+        fixTextures(inputDirectory, model, newJson, textureName, outputDirectory, prefix);
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
-            writer.write(new Gson().toJson(json));
+            writer.write(new Gson().toJson(newJson));
         }
-        return Map.entry(Optional.ofNullable(cachedSourcePath), Optional.of(newPath));
+
+        final var key = namespace + ":" + parentModelKey.split(":", 2)[1].replaceFirst("[^/$]*$", "") + resourceNameFromPath(newPath);
+        copiedModelKeys.add(key);
+        return key;
     }
 
     private void fixTextures(Path inputDirectory, String modelName, JsonObject model, String textureOverride, Path outputDirectory, Path prefix) throws IOException {
@@ -978,7 +1004,7 @@ public class ResourcePackConverter {
         }
     }
 
-    private void log(Level level, String message) {
+    private void log(@NotNull Level level, @NotNull String message) {
         logMessages.add(Map.entry(level, message));
     }
 }
