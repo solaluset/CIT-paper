@@ -248,7 +248,7 @@ public class ResourcePackConverter {
                 normalizeData(file, bowTextureData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
                 config.set("model", bowTextureData.getModel());
-                config.set("pulling_models", List.of(
+                config.set("pulling_models", Arrays.asList(
                         bowTextureData.getPulling_0().getModel(),
                         bowTextureData.getPulling_1().getModel(),
                         bowTextureData.getPulling_2().getModel()
@@ -259,7 +259,7 @@ public class ResourcePackConverter {
                 normalizeData(file, crossbowTextureData, data.getMainTextureData().getTexture(), outputDirectory, prefix);
 
                 config.set("model", crossbowTextureData.getModel());
-                config.set("pulling_models", List.of(
+                config.set("pulling_models", Arrays.asList(
                         crossbowTextureData.getPulling_0().getModel(),
                         crossbowTextureData.getPulling_1().getModel(),
                         crossbowTextureData.getPulling_2().getModel()
