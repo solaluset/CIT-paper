@@ -3,10 +3,11 @@ package org.vinerdream.citPaper.converter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
-public class Range {
-    private record RangePart(int minimum, int maximum, boolean isPercents) {
+public class Range implements Comparable<Range> {
+    private record RangePart(int minimum, int maximum, boolean isPercents) implements Comparable<RangePart> {
         private boolean check(int value, int maxValue) {
             if (isPercents) {
                 value = (int) Math.round((double) value / maxValue * 100);
@@ -46,6 +47,20 @@ public class Range {
             }
             return new RangePart(min, max, isPercents);
         }
+
+        @Override
+        public int compareTo(@NotNull RangePart other) {
+            if (this.isPercents) {
+                if (!other.isPercents) {
+                    return 1;
+                }
+            } else if (other.isPercents) {
+                return -1;
+            }
+            final int thisRange = this.maximum - this.minimum;
+            final int otherRange = other.maximum - other.minimum;
+            return Integer.compare(thisRange, otherRange);
+        }
     }
 
     private final List<RangePart> ranges;
@@ -56,6 +71,14 @@ public class Range {
 
     public boolean check(int value, int maxValue) {
         return ranges.stream().anyMatch(part -> part.check(value, maxValue));
+    }
+
+    @Override
+    public int compareTo(@NotNull Range other) {
+        return Comparator.comparing(
+                (Range r) -> r.ranges.stream().min(Comparator.naturalOrder()).orElse(null),
+                Comparator.nullsLast(Comparator.naturalOrder())
+        ).reversed().compare(this, other);
     }
 
     public String toString() {

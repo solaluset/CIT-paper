@@ -1,6 +1,8 @@
 package org.vinerdream.citPaper.converter;
 
 import org.bukkit.enchantments.Enchantment;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10,11 +12,11 @@ import java.util.stream.Collectors;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
-public class EnchantmentsData {
-    private final List<String> enchantments;
-    private final Range enchantmentLevels;
+public class EnchantmentsData implements Comparable<EnchantmentsData> {
+    private final @Nullable List<String> enchantments;
+    private final @Nullable Range enchantmentLevels;
 
-    public EnchantmentsData(List<String> enchantments, Range enchantmentLevels) {
+    public EnchantmentsData(@Nullable List<String> enchantments, @Nullable Range enchantmentLevels) {
         this.enchantments = enchantments;
         this.enchantmentLevels = enchantmentLevels;
     }
@@ -53,5 +55,20 @@ public class EnchantmentsData {
         if (enchantmentLevels != null) {
             map.put("enchantmentLevels", enchantmentLevels.toString());
         }
+    }
+
+    @Override
+    public int compareTo(@NotNull EnchantmentsData other) {
+        if (this.enchantmentLevels != null) {
+            if (other.enchantmentLevels == null) {
+                return 1;
+            }
+        } else if (other.enchantmentLevels != null) {
+            return -1;
+        }
+        return Integer.compare(
+                this.enchantments != null ? this.enchantments.size() : 0,
+                other.enchantments != null ? other.enchantments.size() : 0
+        );
     }
 }
