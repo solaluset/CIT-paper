@@ -35,6 +35,11 @@ import static org.vinerdream.citPaper.utils.ReflectionUtils.readResource;
 
 public class ResourcePackConverter {
     private static final Set<String> DEFAULT_MODEL_DIRECTORIES = Set.of("builtin", "item", "items");
+    private static final Set<Path> CIT_PATHS = Set.of(
+            Path.of("assets", "minecraft", "optifine", "cit"),
+            Path.of("assets", "minecraft", "mcpatcher", "cit"),
+            Path.of("assets", "optifine", "cit")
+    );
 
     private final Mode mode;
     private final Path resourcePackPath;
@@ -143,13 +148,14 @@ public class ResourcePackConverter {
     }
 
     public void convertCitDirectories(Path rootPath, Path outputPath) throws IOException {
-        Path directory = rootPath.resolve("assets").resolve("minecraft");
-        convertDirectory(directory.resolve("optifine").resolve("cit"), outputPath);
-        convertDirectory(directory.resolve("mcpatcher").resolve("cit"), outputPath);
+        for (Path dir : CIT_PATHS) {
+            convertDirectory(rootPath.resolve(dir), outputPath);
+        }
+
         if (!preserveCitDirectories) {
-            directory = outputPath.resolve("assets").resolve("minecraft");
-            FileUtils.removeDirectory(directory.resolve("optifine").resolve("cit"));
-            FileUtils.removeDirectory(directory.resolve("mcpatcher").resolve("cit"));
+            for (Path dir : CIT_PATHS) {
+                FileUtils.removeDirectory(outputPath.resolve(dir));
+            }
         }
     }
 
