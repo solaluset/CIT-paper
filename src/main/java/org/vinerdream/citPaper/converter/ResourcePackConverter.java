@@ -589,14 +589,15 @@ public class ResourcePackConverter {
             final TextureData data = entry.getValue();
 
             final JsonArray textures = new JsonArray();
-            final Consumer<String> addTexture = texture -> {
-                final JsonObject obj = new JsonObject();
-                obj.addProperty("texture", texture);
-                textures.add(obj);
+            final String[] textureKeys = new String[]{
+                    data.getTexture(),
+                    data.getOverlay(),
             };
-            addTexture.accept(data.getTexture());
-            if (data.getOverlay() != null) {
-                addTexture.accept(data.getOverlay());
+            for (var textureKey : textureKeys) {
+                if (textureKey == null) continue;
+                final JsonObject obj = new JsonObject();
+                obj.addProperty("texture", textureKey);
+                textures.add(obj);
             }
             layers.add(type, textures);
         }
