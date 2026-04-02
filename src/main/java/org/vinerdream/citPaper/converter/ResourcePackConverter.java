@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -219,20 +218,20 @@ public class ResourcePackConverter {
             }
         } else return List.of(data.saveToMap());
 
-        if (!data.hasAnyData()) {
+        if (data.getMainTextureData().isEmpty()) {
             if (file.getParent().resolve(path + ".json").toFile().isFile()) {
-                data.setMainTextureData(new TextureData(path, null));
+                data.getMainTextureData().setModel(path);
             } else if (file.getParent().resolve(path + ".png").toFile().isFile()) {
-                data.setMainTextureData(new TextureData(null, path));
+                data.getMainTextureData().setTexture(path);
             }
         }
 
         if (!data.getArmorData().isEmpty()) {
-            final String armorModel = convertArmorTextureData(file, data.getArmorData(), data.getMainTextureData() != null ? data.getMainTextureData().getTexture() : null, outputDirectory, prefix);
+            final String armorModel = convertArmorTextureData(file, data.getArmorData(), data.getMainTextureData().getTexture(), outputDirectory, prefix);
             data.setArmorModel(armorModel);
         }
 
-        if (data.getMainTextureData() != null) {
+        if (!data.getMainTextureData().isEmpty()) {
             convertTextureData(file, data.getMainTextureData(), guessParent(data), null, outputDirectory, prefix);
         } else return List.of(data.saveToMap());
 

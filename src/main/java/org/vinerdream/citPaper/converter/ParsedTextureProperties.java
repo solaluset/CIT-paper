@@ -20,8 +20,7 @@ public class ParsedTextureProperties {
 
     private final TextureType type;
     private final List<String> items;
-    @Setter
-    private TextureData mainTextureData;
+    private final @NotNull TextureData mainTextureData;
     private final ElytraTextureData elytraTextureData;
     private final ShieldTextureData shieldTextureData;
     private final @NotNull Map<Integer, TextureData> armorData = new HashMap<>();
@@ -227,24 +226,5 @@ public class ParsedTextureProperties {
             oraxenData.toMap(result);
         }
         return result;
-    }
-
-    public boolean itemEquals(ParsedTextureProperties other, Consumer<String> logger) {
-        boolean almostEquals = (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())))
-                && this.customModelData == other.customModelData && Objects.equals(this.damage, other.damage) && Objects.equals(this.potion, other.potion);
-        if (!almostEquals) return false;
-        if (this.items.equals(other.items)) {
-            return true;
-        }
-        if (this.items.stream().anyMatch(other.items::contains)) {
-            logger.accept("Potential item conflict in " + this.namePattern);
-        }
-        return false;
-    }
-
-    public boolean hasAnyData() {
-        return mainTextureData != null || elytraTextureData != null || shieldTextureData != null
-                || armorData != null || bowTextureData != null || crossbowTextureData != null
-                || fishingRodTextureData != null;
     }
 }
