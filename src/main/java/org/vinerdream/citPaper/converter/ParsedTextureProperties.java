@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.converter;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.NameMatcher;
@@ -23,9 +24,9 @@ public class ParsedTextureProperties {
     private TextureData mainTextureData;
     private final ElytraTextureData elytraTextureData;
     private final ShieldTextureData shieldTextureData;
+    private final @NotNull Map<Integer, TextureData> armorData = new HashMap<>();
     @Setter
-    private TextureData armorData;
-    private final int armorDataType;
+    private @Nullable String armorModel;
     private final BowTextureData bowTextureData;
     private final CrossbowTextureData crossbowTextureData;
     private final TridentTextureData tridentTextureData;
@@ -89,26 +90,25 @@ public class ParsedTextureProperties {
 
         this.shieldTextureData = ShieldTextureData.fromMap(properties, mainTextureData);
 
-        String armorTexture = null;
-        String armorOverlay = null;
-        int armorTextureType = 0;
         String itemTexture = null;
         String itemOverlay = null;
         // iterate over a COPY of key set
         // because we modify the map in the loop
         for (String key : new ArrayList<>(properties.keySet())) {
             if (key.startsWith("texture.") && key.contains("_layer_")) {
-                String value = popValue(properties, null, key);
+                final int type = Integer.parseInt(key.split("_layer_", 2)[1].split("_", 2)[0]);
+                final String value = popValue(properties, null, key);
+
+                if (!armorData.containsKey(type)) {
+                    armorData.put(type, new TextureData(null, null));
+                }
+
                 if (key.endsWith("_overlay")) {
-                    armorOverlay = value;
+                    armorData.get(type).setOverlay(value);
                     continue;
                 }
-                if (armorTexture == null) {
-                    armorTexture = value;
-                    armorTextureType = Integer.parseInt(key.split("_layer_")[1]);
-                } else if (!armorTexture.equals(value)) {
-                    logger.accept("Different armor textures not supported: " + armorTexture + " != " + value);
-                }
+                armorData.get(type).setTexture(value);
+
             } else if (key.startsWith("texture.leather_")) {
                 if (key.endsWith("_overlay")) {
                     itemOverlay = popValue(properties, null, key);
@@ -124,16 +124,7 @@ public class ParsedTextureProperties {
                 );
             }
         }
-        if (armorTexture == null && type == TextureType.ELYTRA) {
-            armorTexture = mainTextureData != null ? mainTextureData.getTexture() : null;
-            this.armorDataType = 3;
-        } else {
-            this.armorDataType = armorTextureType;
-        }
-        this.armorData = new TextureData(popValue(properties, null, "armorModel"), armorTexture, armorOverlay);
-        if (this.armorData.isEmpty()) {
-            this.armorData = null;
-        }
+        this.armorModel = popValue(properties, null, "armorModel");
         if (mainTextureData == null) {
             mainTextureData = new TextureData(null, itemTexture, itemOverlay);
             if (mainTextureData.isEmpty()) {
@@ -193,6 +184,9 @@ public class ParsedTextureProperties {
             logger.accept("Unknown property: " + key);
         }
         this.mainTextureData = new TextureData(model, texture, overlay);
+        if (type == TextureType.ELYTRA && !armorData.containsKey(3) && texture != null) {
+            armorData.put(3, new TextureData(null, texture, overlay));
+        }
     }
 
     public Map<String, String> saveToMap() {
@@ -214,8 +208,8 @@ public class ParsedTextureProperties {
         if (potion != null) {
             result.put("nbt.Potion", potion);
         }
-        if (armorData != null) {
-            result.put("armorModel", armorData.getModel());
+        if (armorModel != null) {
+            result.put("armorModel", armorModel);
         }
         if (customModelData != -1) {
             result.put("customModelData", String.valueOf(customModelData));

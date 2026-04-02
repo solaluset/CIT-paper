@@ -234,7 +234,7 @@ public class ItemUpdater {
                 }
                 appliedItem = true;
             }
-            if (data.getArmorData() != null && !appliedArmor) {
+            if (data.getArmorModel() != null && !appliedArmor) {
                 if (getNestedKey(
                         pdc,
                         PersistentDataType.STRING,
@@ -265,7 +265,7 @@ public class ItemUpdater {
                         );
                     }
                 }
-                final NamespacedKey armorModel = NamespacedKey.fromString(data.getArmorData().getModel());
+                final NamespacedKey armorModel = NamespacedKey.fromString(data.getArmorModel());
                 assert armorModel != null;
                 if (!armorModel.getNamespace().equals("oraxen")) {
                     setArmorTexture(meta, type.getKey().getKey(), armorModel);

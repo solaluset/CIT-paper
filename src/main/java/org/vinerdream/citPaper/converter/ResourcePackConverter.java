@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -226,11 +227,9 @@ public class ResourcePackConverter {
             }
         }
 
-        if (data.getArmorData() != null) {
-            final String armorModel = convertArmorTextureData(file, data.getArmorData(), data.getArmorDataType(), data.getMainTextureData() != null ? data.getMainTextureData().getTexture() : null, outputDirectory, prefix);
-
-            final var ns = mode != Mode.ORAXEN ? namespace : "oraxen";
-            data.getArmorData().setModel(ns + ":" + armorModel);
+        if (!data.getArmorData().isEmpty()) {
+            final String armorModel = convertArmorTextureData(file, data.getArmorData(), data.getMainTextureData() != null ? data.getMainTextureData().getTexture() : null, outputDirectory, prefix);
+            data.setArmorModel(armorModel);
         }
 
         if (data.getMainTextureData() != null) {
@@ -506,32 +505,103 @@ public class ResourcePackConverter {
         data.setModel(copyModel(file.getParent(), model, texture, outputDirectory, prefix));
     }
 
-    private String convertArmorTextureData(Path file, TextureData data, int type, String fallbackTexture, Path outputDirectory, Path prefix) throws IOException {
-        final String model = removeExtension(data.getModel());
-        final String texture;
-        if (data.getTexture() != null) {
-            texture = removeExtension(data.getTexture());
-        } else {
-            texture = fallbackTexture;
-        }
-        final String overlay = removeExtension(data.getOverlay());
+    private String convertArmorTextureData(Path file, Map<Integer, TextureData> armorData, String fallbackTexture, Path outputDirectory, Path prefix) throws IOException {
+        if (mode == Mode.ORAXEN) {
+            String armorName = null;
+            for (var entry : armorData.entrySet()) {
+                final int type = entry.getKey();
+                final TextureData data = entry.getValue();
 
-        if (model == null) {
-            if (texture == null) {
-                return null;
+                final String texture = data.getTexture() != null ? data.getTexture() : fallbackTexture;
+                if (texture != null) {
+                    armorName = copyArmorOraxen(file, texture, armorName, String.valueOf(type), outputDirectory, prefix);
+                }
+                if (data.getOverlay() != null) {
+                    armorName = copyArmorOraxen(file, data.getOverlay(), armorName, type + "_overlay", outputDirectory, prefix);
+                }
             }
-            return armorTextureToModel(file, texture, type, overlay, outputDirectory, prefix);
+            return "oraxen:" + armorName;
         }
-        final var location = findResource(List.of(file.getParent()), texture.replaceFirst(":", "/models/"), "json");
-        if (location == null) return null;
-        final Path modelPath = copyResource(
-                location,
-                "json",
-                outputDirectory.resolve(Path.of("assets", namespace, "equipment")),
-                prefix
-        );
 
-        return prefixToString(prefix) + resourceNameFromPath(modelPath);
+        for (var entry : armorData.entrySet()) {
+            final int type = entry.getKey();
+            final TextureData data = entry.getValue();
+
+            final String texture = data.getTexture() != null ? data.getTexture() : fallbackTexture;
+            if (texture != null) {
+                final String armorTextureKey = copyArmorTexture(
+                        file.getParent(),
+                        texture,
+                        type,
+                        outputDirectory,
+                        prefix
+                );
+                if (armorTextureKey != null) {
+                    data.setTexture(armorTextureKey);
+                }
+            }
+
+            if (data.getOverlay() != null) {
+                final String armorOverlayKey = copyArmorTexture(
+                        file.getParent(),
+                        data.getOverlay(),
+                        type,
+                        outputDirectory,
+                        prefix
+                );
+                if (armorOverlayKey != null) {
+                    data.setOverlay(armorOverlayKey);
+                }
+            }
+        }
+
+        final @NotNull TextureData mainData;
+        {
+            TextureData mdata = null;
+            for (int i = 1; i <= 3; i++) {
+                final TextureData data = armorData.get(i);
+                if (data == null) continue;
+                if (data.getTexture() != null) {
+                    mdata = data;
+                    break;
+                }
+            }
+            mainData = Objects.requireNonNull(mdata, "no armor texture found");
+        }
+
+        final JsonObject json = buildArmorJson(armorData);
+
+        final Path modelPath = outputDirectory.resolve(
+                Path.of("assets", namespace, "equipment")
+        ).resolve(prefix).resolve(lastKeyPart(mainData.getTexture()) + ".json");
+        modelPath.getParent().toFile().mkdirs();
+        try (FileWriter writer = new FileWriter(modelPath.toFile())) {
+            writer.write(new Gson().toJson(json));
+        }
+        return namespace + ":" + prefixToString(prefix) + resourceNameFromPath(modelPath);
+    }
+
+    private @NotNull JsonObject buildArmorJson(Map<Integer, TextureData> armorData) {
+        final JsonObject json = new JsonObject();
+        final JsonObject layers = new JsonObject();
+        for (var entry : armorData.entrySet()) {
+            final String type = armorNameFromTypeCode(entry.getKey());
+            final TextureData data = entry.getValue();
+
+            final JsonArray textures = new JsonArray();
+            final Consumer<String> addTexture = texture -> {
+                final JsonObject obj = new JsonObject();
+                obj.addProperty("texture", texture);
+                textures.add(obj);
+            };
+            addTexture.accept(data.getTexture());
+            if (data.getOverlay() != null) {
+                addTexture.accept(data.getOverlay());
+            }
+            layers.add(type, textures);
+        }
+        json.add("layers", layers);
+        return json;
     }
 
     private String resourceNameFromPath(Path path) {
@@ -569,85 +639,35 @@ public class ResourcePackConverter {
         );
     }
 
-    private String armorTextureToModel(Path file, String texture, int type, String overlay, Path outputDirectory, Path prefix) throws IOException {
-        if (mode == Mode.ORAXEN) {
-            final var location = findResource(
-                    List.of(file.getParent()),
-                    texture.replaceFirst(":", "/textures/"),
-                    "png"
-            );
-            if (location == null) return null;
-            final Path armorTexturePath = copyResource(
-                    location,
-                    "png",
-                    outputDirectory.resolve(Path.of(
-                            "assets",
-                            namespace,
-                            "textures",
-                            "armor"
-                    )),
-                    Path.of("")
-            );
-            final String armorName = removeExtension(namespace + "_" + prefixToString(prefix).replace("/", "_") + armorTexturePath.getFileName());
-            Files.move(
-                    armorTexturePath,
-                    armorTexturePath.resolveSibling(
-                            String.format("%s_armor_layer_%s.png", armorName, type)
-                    ),
-                    StandardCopyOption.REPLACE_EXISTING
-            );
-            return armorName;
-        }
-
-        final String armorTextureKey = copyArmorTexture(
-                file.getParent(),
-                texture,
-                type,
-                outputDirectory,
-                prefix
+    private @Nullable String copyArmorOraxen(Path file, String texture, @Nullable String armorName, String type, Path outputDirectory, Path prefix) throws IOException {
+        final var location = findResource(
+                List.of(file.getParent()),
+                removeExtension(texture.replaceFirst(":", "/textures/")),
+                "png"
         );
-        if (armorTextureKey == null) return null;
-        final String armorOverlayKey = overlay != null ? copyArmorTexture(
-                file.getParent(),
-                overlay,
-                type,
-                outputDirectory,
-                prefix
-        ) : null;
-
-        final String prefixString = prefixToString(prefix);
-        final Path modelPath = outputDirectory.resolve(
-                Path.of("assets", namespace, "equipment")
-        ).resolve(prefix).resolve(lastKeyPart(armorTextureKey) + ".json");
-        modelPath.getParent().toFile().mkdirs();
-        try (FileWriter writer = new FileWriter(modelPath.toFile())) {
-            if (type != 3) {
-                if (armorOverlayKey != null) {
-                    writer.write(String.format(
-                            readResource("/models/armor_with_overlay.json"),
-                            armorTextureKey,
-                            armorOverlayKey,
-                            armorTextureKey,
-                            armorOverlayKey,
-                            armorTextureKey,
-                            armorOverlayKey
-                    ));
-                } else {
-                    writer.write(String.format(
-                            readResource("/models/armor.json"),
-                            armorTextureKey,
-                            armorTextureKey,
-                            armorTextureKey
-                    ));
-                }
-            } else {
-                writer.write(String.format(
-                        readResource("/models/armor_elytra.json"),
-                        armorTextureKey
-                ));
-            }
+        if (location == null) return null;
+        final Path armorTexturePath = copyResource(
+                location,
+                "png",
+                outputDirectory.resolve(Path.of(
+                        "assets",
+                        namespace,
+                        "textures",
+                        "armor"
+                )),
+                Path.of("")
+        );
+        if (armorName == null) {
+            armorName = removeExtension(namespace + "_" + prefixToString(prefix).replace("/", "_") + armorTexturePath.getFileName());
         }
-        return prefixString + resourceNameFromPath(modelPath);
+        Files.move(
+                armorTexturePath,
+                armorTexturePath.resolveSibling(
+                        String.format("%s_armor_layer_%s.png", armorName, type)
+                ),
+                StandardCopyOption.REPLACE_EXISTING
+        );
+        return armorName;
     }
 
     private final BiMap<Path, String> copiedTextures = HashBiMap.create();
@@ -680,16 +700,20 @@ public class ResourcePackConverter {
         return key;
     }
 
-    private @Nullable String copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
-        final String subfolder = switch (textureType) {
+    private @NotNull String armorNameFromTypeCode(final int type) {
+        return switch (type) {
             case 1 -> "humanoid";
             case 2 -> "humanoid_leggings";
             case 3 -> "wings";
-            default -> throw new IllegalStateException("Unexpected value: " + textureType);
+            default -> throw new IllegalStateException("Unexpected value: " + type);
         };
+    }
+
+    private @Nullable String copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
+        final String subfolder = armorNameFromTypeCode(textureType);
         final var location = findResource(
                 List.of(inputDirectory),
-                texture.replaceFirst(":", "/textures/"),
+                removeExtension(texture.replaceFirst(":", "/textures/")),
                 "png"
         );
         if (location == null) return null;
