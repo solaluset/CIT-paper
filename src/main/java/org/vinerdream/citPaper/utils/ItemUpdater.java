@@ -180,7 +180,9 @@ public class ItemUpdater {
                 }
             }
             if (data.getDamage() != null && meta instanceof Damageable damageable) {
-                if (!data.getDamage().check(damageable.getDamage() + damage, type.getMaxDurability())) {
+                final int dmg = damageable.hasDamageValue() ? damageable.getDamage() : 0;
+                final int maxDmg = damageable.hasMaxDamage() ? damageable.getMaxDamage() : type.getMaxDurability();
+                if (!data.getDamage().check(dmg + damage, maxDmg)) {
                     continue;
                 }
             }
