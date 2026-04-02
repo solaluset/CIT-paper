@@ -497,7 +497,7 @@ public class ResourcePackConverter {
             if (textureKey == null) return;
             final String overlayKey = overlay != null ? copyTexture(List.of(file.getParent()), overlay, outputDirectory, prefix) : null;
 
-            data.setModel(textureToModel(textureKey, overlayKey, parent, outputDirectory, prefix, null));
+            data.setModel(textureToModel(textureKey, overlayKey, parent, outputDirectory, prefix));
             return;
         }
 
@@ -621,7 +621,7 @@ public class ResourcePackConverter {
         return filename + "." + extension;
     }
 
-    private @NotNull String textureToModel(String textureKey, String overlayKey, String parent, Path outputDirectory, Path prefix, Object n) throws IOException {
+    private @NotNull String textureToModel(String textureKey, String overlayKey, String parent, Path outputDirectory, Path prefix) throws IOException {
         final String filename = lastKeyPart(textureKey);
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(filename + ".json");
         tmpModelPath.getParent().toFile().mkdirs();
