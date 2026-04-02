@@ -715,7 +715,13 @@ public class ResourcePackConverter {
         };
     }
 
+    private final Map<Map.Entry<Path, Integer>, String> copiedArmorTextures = new HashMap<>();
+
     private @Nullable String copyArmorTexture(Path inputDirectory, String texture, int textureType, Path outputDirectory, Path prefix) throws IOException {
+        if (copiedArmorTextures.containsValue(texture)) {
+            return texture;
+        }
+
         final String subfolder = armorNameFromTypeCode(textureType);
         final var location = findResource(
                 List.of(inputDirectory),
@@ -723,7 +729,11 @@ public class ResourcePackConverter {
                 "png"
         );
         if (location == null) return null;
-        return namespace + ":" + prefixToString(prefix) + resourceNameFromPath(copyResource(
+        final Map.Entry<Path, Integer> cacheKey = Map.entry(location.getValue(), textureType);
+        if (copiedArmorTextures.containsKey(cacheKey)) {
+            return copiedArmorTextures.get(cacheKey);
+        }
+        final String key = namespace + ":" + prefixToString(prefix) + resourceNameFromPath(copyResource(
                 location,
                 "png",
                 outputDirectory.resolve(Path.of(
@@ -736,6 +746,8 @@ public class ResourcePackConverter {
                 )),
                 prefix
         ));
+        copiedArmorTextures.put(cacheKey, key);
+        return key;
     }
 
     private final Map<Path, String> copiedModels = new HashMap<>();
