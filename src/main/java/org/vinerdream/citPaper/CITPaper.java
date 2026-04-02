@@ -132,7 +132,11 @@ public final class CITPaper extends JavaPlugin {
         renames.clear();
         Path renamesPath = getRenamesPath();
         if (!renamesPath.toFile().isDirectory()) {
-            renamesPath.toFile().mkdirs();
+            try {
+                Files.createDirectories(renamesPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         try (Stream<Path> contents = Files.walk(renamesPath)) {
             contents.forEach(path -> {

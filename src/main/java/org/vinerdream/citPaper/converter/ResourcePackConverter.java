@@ -392,7 +392,7 @@ public class ResourcePackConverter {
         } else {
             jsonData = String.format(readResource("/models/default.json"), data.getMainTextureData().getModel());
         }
-        jsonPath.getParent().toFile().mkdirs();
+        Files.createDirectories(jsonPath.getParent());
         try (FileWriter writer = new FileWriter(jsonPath.toFile())) {
             writer.write(jsonData);
         }
@@ -573,7 +573,7 @@ public class ResourcePackConverter {
         final Path modelPath = outputDirectory.resolve(
                 Path.of("assets", namespace, "equipment")
         ).resolve(prefix).resolve(lastKeyPart(mainData.getTexture()) + ".json");
-        modelPath.getParent().toFile().mkdirs();
+        Files.createDirectories(modelPath.getParent());
         try (FileWriter writer = new FileWriter(modelPath.toFile())) {
             writer.write(new Gson().toJson(json));
         }
@@ -624,7 +624,7 @@ public class ResourcePackConverter {
     private @NotNull String textureToModel(String textureKey, String overlayKey, String parent, Path outputDirectory, Path prefix) throws IOException {
         final String filename = lastKeyPart(textureKey);
         final Path tmpModelPath = getTmpDir().resolve("models").resolve(filename + ".json");
-        tmpModelPath.getParent().toFile().mkdirs();
+        Files.createDirectories(tmpModelPath.getParent());
         try (FileWriter writer = new FileWriter(tmpModelPath.toFile())) {
             if (overlayKey == null) {
                 writer.write(String.format(readResource("/models/item.json"), parent, textureKey));
@@ -922,7 +922,7 @@ public class ResourcePackConverter {
         final var oldPath = location.getValue();
         String outputName = removeExtension(joinPath(location.getKey().relativize(oldPath)));
         Path newPath = outputDirectory.resolve(prefix).resolve(ensureExtension(outputName.toLowerCase(Locale.ROOT), extension));
-        newPath.getParent().toFile().mkdirs();
+        Files.createDirectories(newPath.getParent());
         Files.copy(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
         if (addMcmeta(oldPath).toFile().isFile()) {
             Files.copy(addMcmeta(oldPath), addMcmeta(newPath), StandardCopyOption.REPLACE_EXISTING);

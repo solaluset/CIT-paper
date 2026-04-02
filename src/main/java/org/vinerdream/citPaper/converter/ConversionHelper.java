@@ -30,9 +30,6 @@ public class ConversionHelper {
         final Path inputPath = mainConfig.getConverterInputDirectory();
         final Path outputPath = mainConfig.getConverterOutputDirectory();
 
-        if (!inputPath.toFile().isDirectory()) {
-            inputPath.toFile().mkdirs();
-        }
         try {
             if (mainConfig.isConverterClearConfigs()) {
                 FileUtils.removeDirectory(renamesPath);
@@ -40,12 +37,19 @@ public class ConversionHelper {
                     FileUtils.removeDirectory(oraxenItemsPath);
                 }
             }
+
+            if (!inputPath.toFile().isDirectory()) {
+                Files.createDirectories(inputPath);
+            }
+
+            if (mainConfig.getMode() == Mode.ORAXEN) {
+                assert oraxenItemsPath != null;
+                Files.createDirectories(oraxenItemsPath);
+            }
+
+            Files.createDirectories(outputPath);
         } catch (IOException e) {
             return Map.entry(List.of(), Map.of(MAIN_FAILURE, e));
-        }
-        if (mainConfig.getMode() == Mode.ORAXEN) {
-            assert oraxenItemsPath != null;
-            oraxenItemsPath.toFile().mkdirs();
         }
 
         final List<Path> convertedResourcePacks = new ArrayList<>();
@@ -118,7 +122,6 @@ public class ConversionHelper {
         });
 
         if (mergedPack != null) {
-            outputPath.toFile().mkdirs();
             final String fileName = mainConfig.getConverterMergedOutputFile();
             if (fileName != null && !fileName.isEmpty()) {
                 MinecraftResourcePackWriter.minecraft().writeToZipFile(outputPath.resolve(fileName), mergedPack);

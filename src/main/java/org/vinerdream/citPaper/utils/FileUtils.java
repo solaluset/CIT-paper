@@ -26,7 +26,7 @@ public class FileUtils {
             for (Path file : iterateStream(contents)) {
                 if (!file.toFile().isFile() || isBlacklisted(file)) continue;
                 final Path destinationFilePath = destination.resolve(source.relativize(file));
-                destinationFilePath.getParent().toFile().mkdirs();
+                Files.createDirectories(destinationFilePath.getParent());
                 Files.copy(file, destinationFilePath);
             }
         }
@@ -35,7 +35,7 @@ public class FileUtils {
     public static void removeDirectory(@NotNull Path directory) throws IOException {
         if (!directory.toFile().exists()) return;
         if (!directory.toFile().isDirectory()) {
-            directory.toFile().delete();
+            Files.delete(directory);
             return;
         }
         Files.walkFileTree(directory, new FileVisitor<>() {

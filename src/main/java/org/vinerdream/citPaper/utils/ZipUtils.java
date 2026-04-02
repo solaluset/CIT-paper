@@ -21,7 +21,7 @@ public class ZipUtils {
                 if (isBlacklisted(extractedPath)) {
                     continue;
                 }
-                extractedPath.getParent().toFile().mkdirs();
+                Files.createDirectories(extractedPath.getParent());
                 try (FileOutputStream stream = new FileOutputStream(extractedPath.toFile())) {
                     zip.getInputStream(entry).transferTo(stream);
                 }
@@ -31,7 +31,7 @@ public class ZipUtils {
 
     public static void zip(Path directory, Path outputFile) throws IOException {
         if (outputFile.getParent() != null) {
-            outputFile.getParent().toFile().mkdirs();
+            Files.createDirectories(outputFile.getParent());
         }
         try (OutputStream stream = new FileOutputStream(outputFile.toFile())) {
             try (ZipOutputStream zip = new ZipOutputStream(stream)) {
