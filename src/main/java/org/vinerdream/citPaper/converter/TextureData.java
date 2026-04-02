@@ -33,6 +33,13 @@ public class TextureData {
         return new TextureData[]{this};
     }
 
+    public void fillFrom(final @Nullable TextureData other) {
+        if (other == null) return;
+        if (this.model == null) this.model = other.model;
+        if (this.texture == null) this.texture = other.texture;
+        if (this.overlay == null) this.overlay = other.overlay;
+    }
+
     public static TextureData fromMap(Map<String, String> map, String key) {
         final TextureData result;
         if (key == null) {
