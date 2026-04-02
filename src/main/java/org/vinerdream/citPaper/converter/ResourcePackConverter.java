@@ -31,6 +31,7 @@ import java.util.zip.CRC32;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.*;
 import static org.vinerdream.citPaper.utils.ItemUtils.*;
+import static org.vinerdream.citPaper.utils.JsonUtils.GSON;
 import static org.vinerdream.citPaper.utils.ReflectionUtils.readResource;
 
 public class ResourcePackConverter {
@@ -95,7 +96,7 @@ public class ResourcePackConverter {
         final File mcmetaFile = rootPath.resolve("pack.mcmeta").toFile();
         if (mcmetaFile.isFile()) {
             try (FileReader reader = new FileReader(mcmetaFile)) {
-                meta = new Gson().fromJson(reader, JsonObject.class);
+                meta = GSON.fromJson(reader, JsonObject.class);
                 if (meta == null) {
                     throw new IllegalStateException("pack.mcmeta is malformed");
                 }
@@ -581,7 +582,7 @@ public class ResourcePackConverter {
         ).resolve(prefix).resolve(lastKeyPart(mainData.getTexture()) + ".json");
         Files.createDirectories(modelPath.getParent());
         try (FileWriter writer = new FileWriter(modelPath.toFile())) {
-            writer.write(new Gson().toJson(json));
+            writer.write(GSON.toJson(json));
         }
         return namespace + ":" + prefixToString(prefix) + resourceNameFromPath(modelPath);
     }
@@ -813,7 +814,7 @@ public class ResourcePackConverter {
             final JsonObject json;
             try (FileReader reader = new FileReader(newPath.toFile())) {
                 try {
-                    json = new Gson().fromJson(reader, JsonObject.class);
+                    json = GSON.fromJson(reader, JsonObject.class);
                 } catch (JsonSyntaxException ignored) {
                     log(Level.WARNING, "Invalid JSON: " + location.getValue());
                     final var key = addNamespace(prefixString + resourceNameFromPath(newPath));
@@ -846,7 +847,7 @@ public class ResourcePackConverter {
             }
             fixTextures(inputDirectory, model, json, null, outputDirectory, prefix);
             try (FileWriter writer = new FileWriter(newPath.toFile())) {
-                writer.write(new Gson().toJson(json));
+                writer.write(GSON.toJson(json));
             }
 
             parentModelKey = addNamespace(prefixString + resourceNameFromPath(newPath));
@@ -869,7 +870,7 @@ public class ResourcePackConverter {
         final JsonObject parentJson;
         try (FileReader reader = new FileReader(parentPath.toFile())) {
             try {
-                parentJson = new Gson().fromJson(reader, JsonObject.class);
+                parentJson = GSON.fromJson(reader, JsonObject.class);
             } catch (JsonSyntaxException ignored) {
                 log(Level.WARNING, "Invalid JSON: " + parentPath);
                 return copiedModels.get(location.getValue());
@@ -891,7 +892,7 @@ public class ResourcePackConverter {
         );
         fixTextures(inputDirectory, model, newJson, textureName, outputDirectory, prefix);
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
-            writer.write(new Gson().toJson(newJson));
+            writer.write(GSON.toJson(newJson));
         }
 
         final var key = namespace + ":" + parentModelKey.split(":", 2)[1].replaceFirst("[^/$]*$", "") + resourceNameFromPath(newPath);

@@ -1,6 +1,5 @@
 package org.vinerdream.citPaper.utils;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import org.bukkit.Bukkit;
@@ -10,6 +9,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
+
+import static org.vinerdream.citPaper.utils.JsonUtils.GSON;
 
 public class OraxenDatapackHelper {
     public static Set<String> getCurrentTrimsFiles() {
@@ -21,13 +22,13 @@ public class OraxenDatapackHelper {
 
     public static Set<String> getCachedTrimsFiles(File file) throws IOException {
         try (FileReader reader = new FileReader(file)) {
-            return Set.of(new Gson().fromJson(reader, JsonArray.class).asList().stream().map(JsonElement::getAsString).toArray(String[]::new));
+            return Set.of(GSON.fromJson(reader, JsonArray.class).asList().stream().map(JsonElement::getAsString).toArray(String[]::new));
         }
     }
 
     public static void cacheTrimsFiles(File file, Set<String> trims) throws IOException {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write(new Gson().toJson(trims));
+            writer.write(GSON.toJson(trims));
         }
     }
 }

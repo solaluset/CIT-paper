@@ -1,6 +1,5 @@
 package org.vinerdream.citPaper.converter;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +18,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import static org.vinerdream.citPaper.utils.JsonUtils.GSON;
 import static org.vinerdream.citPaper.utils.ReflectionUtils.readResource;
 
 public class ConversionHelper {
@@ -171,14 +171,14 @@ public class ConversionHelper {
             modificationTimesJson.addProperty(path.toString(), modificationTime);
         });
         try (FileWriter writer = new FileWriter(outputPath.resolve(MODIFICATION_TIMES_FILENAME).toFile())) {
-            writer.write(new Gson().toJson(modificationTimesJson));
+            writer.write(GSON.toJson(modificationTimesJson));
         }
     }
 
     private static @NotNull Map<Path, Long> loadPackModificationTimes(final @NotNull Path outputPath) throws IOException {
         final JsonObject data;
         try (FileReader reader = new FileReader(outputPath.resolve(MODIFICATION_TIMES_FILENAME).toFile())) {
-            data = new Gson().fromJson(reader, JsonObject.class);
+            data = GSON.fromJson(reader, JsonObject.class);
         }
         if (data == null) {
             return Map.of();
