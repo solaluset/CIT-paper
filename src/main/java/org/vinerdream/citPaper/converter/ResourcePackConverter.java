@@ -235,7 +235,9 @@ public class ResourcePackConverter {
 
         if (!data.getArmorData().isEmpty()) {
             final String armorModel = convertArmorTextureData(file, data.getArmorData(), data.getMainTextureData().getTexture(), outputDirectory, prefix);
-            data.setArmorModel(armorModel);
+            if (armorModel != null) {
+                data.setArmorModel(armorModel);
+            }
         }
 
         if (!data.getMainTextureData().isEmpty()) {
@@ -511,7 +513,7 @@ public class ResourcePackConverter {
         data.setModel(copyModel(file.getParent(), model, texture, outputDirectory, prefix));
     }
 
-    private String convertArmorTextureData(Path file, Map<Integer, TextureData> armorData, String fallbackTexture, Path outputDirectory, Path prefix) throws IOException {
+    private @Nullable String convertArmorTextureData(Path file, Map<Integer, TextureData> armorData, String fallbackTexture, Path outputDirectory, Path prefix) throws IOException {
         if (mode == Mode.ORAXEN) {
             String armorName = null;
             for (var entry : armorData.entrySet()) {
@@ -572,7 +574,11 @@ public class ResourcePackConverter {
                     break;
                 }
             }
-            mainData = Objects.requireNonNull(mdata, "no armor texture found");
+            if (mdata == null) {
+                log(Level.WARNING, "No texture set for armor");
+                return null;
+            }
+            mainData = mdata;
         }
 
         final JsonObject json = buildArmorJson(armorData);
