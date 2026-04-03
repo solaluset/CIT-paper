@@ -108,9 +108,9 @@ public class ParsedTextureProperties {
 
                 if (key.endsWith("_overlay")) {
                     armorData.get(type).setOverlay(value);
-                    continue;
+                } else {
+                    armorData.get(type).setTexture(value);
                 }
-                armorData.get(type).setTexture(value);
 
                 continue;
             }
