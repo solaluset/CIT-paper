@@ -132,7 +132,11 @@ public final class CITPaper extends JavaPlugin {
         renames.clear();
         Path renamesPath = getRenamesPath();
         if (!renamesPath.toFile().isDirectory()) {
-            renamesPath.toFile().mkdirs();
+            try {
+                Files.createDirectories(renamesPath);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         try (Stream<Path> contents = Files.walk(renamesPath)) {
             contents.forEach(path -> {
@@ -167,6 +171,9 @@ public final class CITPaper extends JavaPlugin {
         renames.sort(
                 Comparator.comparingInt(ParsedTextureProperties::getWeight)
                         .thenComparing(properties -> properties.getNamePattern() != null ? properties.getNamePattern().pattern().length() : 0)
+                        .thenComparing(properties -> properties.getLoreData().size())
+                        .thenComparing(ParsedTextureProperties::getDamage, Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(ParsedTextureProperties::getEnchantments, Comparator.nullsFirst(Comparator.naturalOrder()))
                         .reversed()
         );
     }

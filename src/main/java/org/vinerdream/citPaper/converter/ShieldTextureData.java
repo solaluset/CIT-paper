@@ -41,14 +41,7 @@ public class ShieldTextureData extends TextureData {
                 TextureData.fromMap(map, "shield_blocking")
         );
         if (result.isEmpty()) return null;
-        if (mainData != null) {
-            if (result.getModel() == null) {
-                result.setModel(mainData.getModel());
-            }
-            if (result.getTexture() == null) {
-                result.setTexture(mainData.getTexture());
-            }
-        }
+        result.fillFrom(mainData);
         return result;
     }
 }

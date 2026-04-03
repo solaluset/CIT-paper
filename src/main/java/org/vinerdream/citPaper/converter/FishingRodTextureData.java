@@ -41,14 +41,7 @@ public class FishingRodTextureData extends TextureData {
                 TextureData.fromMap(map, "fishing_rod_cast")
         );
         if (result.isEmpty()) return null;
-        if (mainData != null) {
-            if (result.getModel() == null) {
-                result.setModel(mainData.getModel());
-            }
-            if (result.getTexture() == null) {
-                result.setTexture(mainData.getTexture());
-            }
-        }
+        result.fillFrom(mainData);
         return result;
     }
 }

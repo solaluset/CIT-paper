@@ -23,7 +23,6 @@ public class MainConfig {
     private final @NotNull Path converterOutputDirectory;
     private final boolean converterPreserveCitDirectories;
     private final boolean converterClearConfigs;
-    private final boolean converterClearOutputDirectory;
     private final boolean converterMergePacks;
     private final @Nullable String converterMergedOutputFile;
 
@@ -47,7 +46,6 @@ public class MainConfig {
         this.converterInputDirectory = Path.of(Objects.requireNonNull(config.getString("converter.inputDirectory")));
         this.converterOutputDirectory = Path.of(Objects.requireNonNull(config.getString("converter.outputDirectory")));
         this.converterClearConfigs = config.getBoolean("converter.clearConfigs");
-        this.converterClearOutputDirectory = config.getBoolean("converter.clearOutputDirectory");
         this.converterPreserveCitDirectories = config.getBoolean("converter.preserveCitDirectories");
         this.converterMergePacks = config.getBoolean("converter.mergePacks");
         this.converterMergedOutputFile = config.getString("converter.mergedOutputFile");

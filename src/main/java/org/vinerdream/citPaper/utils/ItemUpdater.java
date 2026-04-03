@@ -180,7 +180,9 @@ public class ItemUpdater {
                 }
             }
             if (data.getDamage() != null && meta instanceof Damageable damageable) {
-                if (!data.getDamage().check(damageable.getDamage() + damage, type.getMaxDurability())) {
+                final int dmg = damageable.hasDamageValue() ? damageable.getDamage() : 0;
+                final int maxDmg = damageable.hasMaxDamage() ? damageable.getMaxDamage() : type.getMaxDurability();
+                if (!data.getDamage().check(dmg + damage, maxDmg)) {
                     continue;
                 }
             }
@@ -232,7 +234,7 @@ public class ItemUpdater {
                 }
                 appliedItem = true;
             }
-            if (data.getArmorData() != null && !appliedArmor) {
+            if (data.getArmorModel() != null && !appliedArmor) {
                 if (getNestedKey(
                         pdc,
                         PersistentDataType.STRING,
@@ -263,7 +265,7 @@ public class ItemUpdater {
                         );
                     }
                 }
-                final NamespacedKey armorModel = NamespacedKey.fromString(data.getArmorData().getModel());
+                final NamespacedKey armorModel = NamespacedKey.fromString(data.getArmorModel());
                 assert armorModel != null;
                 if (!armorModel.getNamespace().equals("oraxen")) {
                     setArmorTexture(meta, type.getKey().getKey(), armorModel);

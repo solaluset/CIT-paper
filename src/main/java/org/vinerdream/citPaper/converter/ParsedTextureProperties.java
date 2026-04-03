@@ -3,6 +3,7 @@ package org.vinerdream.citPaper.converter;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.vinerdream.citPaper.exceptions.UnsupportedCitTypeException;
 import org.vinerdream.citPaper.utils.NameMatcher;
@@ -15,17 +16,21 @@ import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
 @Getter
 public class ParsedTextureProperties {
-    private final static String LORE_PREFIX = "nbt.display.Lore.";
+    private final static List<String> LORE_PREFIXES = List.of(
+            "lore.",
+            "nbt.display.Lore.",
+            "component.lore.",
+            "component.minecraft:lore."
+    );
 
     private final TextureType type;
     private final List<String> items;
-    @Setter
-    private TextureData mainTextureData;
+    private final @NotNull TextureData mainTextureData;
     private final ElytraTextureData elytraTextureData;
     private final ShieldTextureData shieldTextureData;
+    private final @NotNull Map<Integer, TextureData> armorData = new HashMap<>();
     @Setter
-    private TextureData armorData;
-    private final int armorDataType;
+    private @Nullable String armorModel;
     private final BowTextureData bowTextureData;
     private final CrossbowTextureData crossbowTextureData;
     private final TridentTextureData tridentTextureData;
@@ -41,7 +46,7 @@ public class ParsedTextureProperties {
     private NamespacedKey key;
     private final @Nullable OraxenData oraxenData;
 
-    public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) {
+    public ParsedTextureProperties(Map<String, String> properties, Consumer<String> logger) throws UnsupportedCitTypeException {
         final String typeString = popValue(properties, "item", "type");
         try {
             this.type = TextureType.valueOf(typeString.toUpperCase(Locale.ROOT));
@@ -79,7 +84,8 @@ public class ParsedTextureProperties {
                 "-1",
                 "customModelData",
                 "nbt.CustomModelData",
-                "components.custom_model_data"
+                "components.custom_model_data",
+                "components.minecraft:custom_model_data"
         ));
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popValue(properties, null, "key"));
@@ -89,34 +95,28 @@ public class ParsedTextureProperties {
 
         this.shieldTextureData = ShieldTextureData.fromMap(properties, mainTextureData);
 
-        String armorTexture = null;
-        String armorOverlay = null;
-        int armorTextureType = 0;
-        String itemTexture = null;
-        String itemOverlay = null;
         // iterate over a COPY of key set
         // because we modify the map in the loop
         for (String key : new ArrayList<>(properties.keySet())) {
             if (key.startsWith("texture.") && key.contains("_layer_")) {
-                String value = popValue(properties, null, key);
-                if (key.endsWith("_overlay")) {
-                    armorOverlay = value;
-                    continue;
+                final int type = Integer.parseInt(key.split("_layer_", 2)[1].split("_", 2)[0]);
+                final String value = popValue(properties, null, key);
+
+                if (!armorData.containsKey(type)) {
+                    armorData.put(type, new TextureData(null, null));
                 }
-                if (armorTexture == null) {
-                    armorTexture = value;
-                    armorTextureType = Integer.parseInt(key.split("_layer_")[1]);
-                } else if (!armorTexture.equals(value)) {
-                    logger.accept("Different armor textures not supported: " + armorTexture + " != " + value);
-                }
-            } else if (key.startsWith("texture.leather_")) {
+
                 if (key.endsWith("_overlay")) {
-                    itemOverlay = popValue(properties, null, key);
+                    armorData.get(type).setOverlay(value);
                 } else {
-                    itemTexture = popValue(properties, null, key);
+                    armorData.get(type).setTexture(value);
                 }
-            } else if (key.startsWith(LORE_PREFIX)) {
-                final String lineNumber = key.replace(LORE_PREFIX, "");
+
+                continue;
+            }
+            final String prefix = LORE_PREFIXES.stream().filter(key::startsWith).findAny().orElse(null);
+            if (prefix != null) {
+                final String lineNumber = key.replace(prefix, "");
                 final String value = popValue(properties, null, key);
                 this.loreData.put(
                         lineNumber.equals("*") ? null : Integer.parseInt(lineNumber),
@@ -124,29 +124,7 @@ public class ParsedTextureProperties {
                 );
             }
         }
-        if (armorTexture == null && type == TextureType.ELYTRA) {
-            armorTexture = mainTextureData != null ? mainTextureData.getTexture() : null;
-            this.armorDataType = 3;
-        } else {
-            this.armorDataType = armorTextureType;
-        }
-        this.armorData = new TextureData(popValue(properties, null, "armorModel"), armorTexture, armorOverlay);
-        if (this.armorData.isEmpty()) {
-            this.armorData = null;
-        }
-        if (mainTextureData == null) {
-            mainTextureData = new TextureData(null, itemTexture, itemOverlay);
-            if (mainTextureData.isEmpty()) {
-                mainTextureData = null;
-            }
-        } else {
-            if (mainTextureData.getTexture() == null) {
-                mainTextureData.setTexture(itemTexture);
-            }
-            if (mainTextureData.getOverlay() == null) {
-                mainTextureData.setOverlay(itemOverlay);
-            }
-        }
+        this.armorModel = popValue(properties, null, "armorModel");
 
         this.elytraTextureData = ElytraTextureData.fromMap(properties, mainTextureData);
         if (mainTextureData == null) {
@@ -168,10 +146,33 @@ public class ParsedTextureProperties {
         if (mainTextureData == null) {
             mainTextureData = fishingRodTextureData;
         }
-        this.mainTextureData = mainTextureData;
 
-        for (String key : properties.keySet()) {
+        String model = null;
+        String texture = null;
+        String overlay = null;
+        if (mainTextureData != null) {
+            model = mainTextureData.getModel();
+            texture = mainTextureData.getTexture();
+            overlay = mainTextureData.getOverlay();
+        }
+        for (String key : new ArrayList<>(properties.keySet())) {
+            if (key.startsWith("model.") && model == null) {
+                model = popValue(properties, null, key);
+                continue;
+            }
+            if (key.startsWith("texture.") && key.endsWith("_overlay") && overlay == null) {
+                overlay = popValue(properties, null, key);
+                continue;
+            }
+            if (key.startsWith("texture.") && texture == null) {
+                texture = popValue(properties, null, key);
+                continue;
+            }
             logger.accept("Unknown property: " + key);
+        }
+        this.mainTextureData = new TextureData(model, texture, overlay);
+        if (type == TextureType.ELYTRA && !armorData.containsKey(3) && texture != null) {
+            armorData.put(3, new TextureData(null, texture, overlay));
         }
     }
 
@@ -194,15 +195,15 @@ public class ParsedTextureProperties {
         if (potion != null) {
             result.put("nbt.Potion", potion);
         }
-        if (armorData != null) {
-            result.put("armorModel", armorData.getModel());
+        if (armorModel != null) {
+            result.put("armorModel", armorModel);
         }
         if (customModelData != -1) {
             result.put("customModelData", String.valueOf(customModelData));
         }
         for (var entry : loreData.entrySet()) {
             result.put(
-                    LORE_PREFIX + (entry.getKey() == null ? "*" : entry.getKey()),
+                    LORE_PREFIXES.getFirst() + (entry.getKey() == null ? "*" : entry.getKey()),
                     NameMatcher.patternToFilter(entry.getValue())
             );
         }
@@ -213,24 +214,5 @@ public class ParsedTextureProperties {
             oraxenData.toMap(result);
         }
         return result;
-    }
-
-    public boolean itemEquals(ParsedTextureProperties other, Consumer<String> logger) {
-        boolean almostEquals = (this.namePattern == null ? other.namePattern == null : (other.namePattern != null && this.namePattern.pattern().equals(other.namePattern.pattern())))
-                && this.customModelData == other.customModelData && Objects.equals(this.damage, other.damage) && Objects.equals(this.potion, other.potion);
-        if (!almostEquals) return false;
-        if (this.items.equals(other.items)) {
-            return true;
-        }
-        if (this.items.stream().anyMatch(other.items::contains)) {
-            logger.accept("Potential item conflict in " + this.namePattern);
-        }
-        return false;
-    }
-
-    public boolean hasAnyData() {
-        return mainTextureData != null || elytraTextureData != null || shieldTextureData != null
-                || armorData != null || bowTextureData != null || crossbowTextureData != null
-                || fishingRodTextureData != null;
     }
 }

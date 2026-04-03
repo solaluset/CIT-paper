@@ -1,10 +1,13 @@
 package org.vinerdream.citPaper.converter;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Comparator;
 import java.util.Map;
 
 import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
-public class DamageData {
+public class DamageData implements Comparable<DamageData> {
     private final Range range;
     private final int mask;
 
@@ -28,5 +31,10 @@ public class DamageData {
         final String data = popValue(map, null, "damage", "components.damage");
         if (data == null) return null;
         return new DamageData(new Range(data), Integer.parseInt(popValue(map, "0", "damageMask")));
+    }
+
+    @Override
+    public int compareTo(@NotNull DamageData other) {
+        return Comparator.comparing((DamageData d) -> d.range).compare(this, other);
     }
 }
