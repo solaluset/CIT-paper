@@ -23,4 +23,17 @@ For now everything is concentrated in the Discord server. Please join to communi
 This works by setting item_model component when items acquire corresponding state (it can be renaming, enchanting, damaging etc). Resource pack structure is changed accordingly to work with vanilla clients.
 
 ## CLI converter
-In case you run GitHub actions or any other CI/CD service, you can use a standalone [CLI jar](https://github.com/solaluset/CIT-paper/releases) for resource pack conversion. Please note it's still necessary to install CIT-paper on the server.
+**If you don't understand what this is you probably don't need it**
+
+In case you run GitHub actions or any other CI/CD service, you can use a standalone [CLI jar](https://github.com/solaluset/CIT-paper/releases) for resource pack conversion.
+Please note it's still necessary to install CIT-paper on the server.
+
+Usage:
+```shell
+java -jar CIT-paper-cli.jar /path/to/config.yml
+```
+
+Input and output folders are specified in the config.
+
+The converter will also write rename YAMLs into `./renames` folder.
+You need to upload them to `plugins/CIT-paper/renames` on your server for renames to work.
