@@ -846,7 +846,7 @@ public class ResourcePackConverter {
                     json.remove("parent");
                 }
             }
-            fixTextures(inputDirectory, model, json, null, outputDirectory, prefix);
+            fixTextures(List.of(inputDirectory, location.getValue().getParent()), json, null, outputDirectory, prefix);
             try (FileWriter writer = new FileWriter(newPath.toFile())) {
                 writer.write(GSON.toJson(json));
             }
@@ -891,7 +891,7 @@ public class ResourcePackConverter {
                 resourceNameFromPath(parentPath)
                         + "_" + resourceNameFromPath(texturePath) + ".json"
         );
-        fixTextures(inputDirectory, model, newJson, textureName, outputDirectory, prefix);
+        fixTextures(List.of(inputDirectory, location.getValue().getParent()), newJson, textureName, outputDirectory, prefix);
         try (FileWriter writer = new FileWriter(newPath.toFile())) {
             writer.write(GSON.toJson(newJson));
         }
@@ -901,13 +901,13 @@ public class ResourcePackConverter {
         return key;
     }
 
-    private void fixTextures(Path inputDirectory, String modelName, JsonObject model, String textureOverride, Path outputDirectory, Path prefix) throws IOException {
+    private void fixTextures(List<Path> inputDirectories, JsonObject model, String textureOverride, Path outputDirectory, Path prefix) throws IOException {
         JsonElement texturesElement = model.get("textures");
         if (texturesElement != null) {
             JsonObject textures = texturesElement.getAsJsonObject();
             for (Map.Entry<String, JsonElement> entry : textures.entrySet()) {
                 final String textureName = textureOverride == null ? entry.getValue().getAsString() : textureOverride;
-                final String outputTexture = copyTexture(List.of(inputDirectory, resolveOldPath(inputDirectory, modelName, "json").getParent()), textureName, outputDirectory, prefix);
+                final String outputTexture = copyTexture(inputDirectories, textureName, outputDirectory, prefix);
 
                 textures.addProperty(entry.getKey(), outputTexture != null ? outputTexture : textureName);
             }
