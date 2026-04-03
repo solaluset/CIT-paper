@@ -16,7 +16,12 @@ import static org.vinerdream.citPaper.utils.CollectionUtils.popValue;
 
 @Getter
 public class ParsedTextureProperties {
-    private final static String LORE_PREFIX = "nbt.display.Lore.";
+    private final static List<String> LORE_PREFIXES = List.of(
+            "lore.",
+            "nbt.display.Lore.",
+            "component.lore.",
+            "component.minecraft:lore."
+    );
 
     private final TextureType type;
     private final List<String> items;
@@ -90,8 +95,6 @@ public class ParsedTextureProperties {
 
         this.shieldTextureData = ShieldTextureData.fromMap(properties, mainTextureData);
 
-        String itemTexture = null;
-        String itemOverlay = null;
         // iterate over a COPY of key set
         // because we modify the map in the loop
         for (String key : new ArrayList<>(properties.keySet())) {
@@ -109,14 +112,11 @@ public class ParsedTextureProperties {
                 }
                 armorData.get(type).setTexture(value);
 
-            } else if (key.startsWith("texture.leather_")) {
-                if (key.endsWith("_overlay")) {
-                    itemOverlay = popValue(properties, null, key);
-                } else {
-                    itemTexture = popValue(properties, null, key);
-                }
-            } else if (key.startsWith(LORE_PREFIX)) {
-                final String lineNumber = key.replace(LORE_PREFIX, "");
+                continue;
+            }
+            final String prefix = LORE_PREFIXES.stream().filter(key::startsWith).findAny().orElse(null);
+            if (prefix != null) {
+                final String lineNumber = key.replace(prefix, "");
                 final String value = popValue(properties, null, key);
                 this.loreData.put(
                         lineNumber.equals("*") ? null : Integer.parseInt(lineNumber),
@@ -125,19 +125,6 @@ public class ParsedTextureProperties {
             }
         }
         this.armorModel = popValue(properties, null, "armorModel");
-        if (mainTextureData == null) {
-            mainTextureData = new TextureData(null, itemTexture, itemOverlay);
-            if (mainTextureData.isEmpty()) {
-                mainTextureData = null;
-            }
-        } else {
-            if (mainTextureData.getTexture() == null) {
-                mainTextureData.setTexture(itemTexture);
-            }
-            if (mainTextureData.getOverlay() == null) {
-                mainTextureData.setOverlay(itemOverlay);
-            }
-        }
 
         this.elytraTextureData = ElytraTextureData.fromMap(properties, mainTextureData);
         if (mainTextureData == null) {
@@ -216,7 +203,7 @@ public class ParsedTextureProperties {
         }
         for (var entry : loreData.entrySet()) {
             result.put(
-                    LORE_PREFIX + (entry.getKey() == null ? "*" : entry.getKey()),
+                    LORE_PREFIXES.getFirst() + (entry.getKey() == null ? "*" : entry.getKey()),
                     NameMatcher.patternToFilter(entry.getValue())
             );
         }
