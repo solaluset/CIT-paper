@@ -884,7 +884,7 @@ public class ResourcePackConverter {
             newJson.add("textures", parentJson.get("textures"));
         } else {
             final JsonObject textures = new JsonObject();
-            textures.addProperty("layer0", addNamespace(prefixString + textureName));
+            textures.addProperty("layer0", textureName);
             newJson.add("textures", textures);
         }
         final Path newPath = parentPath.resolveSibling(
