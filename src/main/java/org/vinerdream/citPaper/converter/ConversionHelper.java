@@ -31,13 +31,6 @@ public class ConversionHelper {
         final Path outputPath = mainConfig.getConverterOutputDirectory();
 
         try {
-            if (mainConfig.isConverterClearConfigs()) {
-                FileUtils.removeDirectory(renamesPath);
-                if (oraxenItemsPath != null) {
-                    FileUtils.removeDirectory(oraxenItemsPath);
-                }
-            }
-
             if (!inputPath.toFile().isDirectory()) {
                 Files.createDirectories(inputPath);
             }
@@ -86,6 +79,10 @@ public class ConversionHelper {
                 if (actualTime == null) {
                     try {
                         FileUtils.removeDirectory(outputPath.resolve(path.getFileName()));
+                        Files.deleteIfExists(renamesPath.resolve(getConfigFile(path)));
+                        if (oraxenItemsPath != null) {
+                            Files.deleteIfExists(oraxenItemsPath.resolve(getConfigFile(path)));
+                        }
                     } catch (IOException e) {
                         logger.severe("Unable to delete outdated pack: " + e.getMessage());
                     }
@@ -110,10 +107,10 @@ public class ConversionHelper {
             );
             try {
                 converter.convertResourcePack();
-                converter.saveConfiguration(renamesPath.resolve(input.getFileName() + ".yml"));
+                converter.saveConfiguration(renamesPath.resolve(getConfigFile(input)));
                 if (mainConfig.getMode() == Mode.ORAXEN) {
                     assert oraxenItemsPath != null;
-                    converter.saveOraxenConfig(oraxenItemsPath.resolve(input.getFileName() + ".yml"));
+                    converter.saveOraxenConfig(oraxenItemsPath.resolve(getConfigFile(input)));
                 }
                 convertedResourcePacks.add(input);
             } catch (Exception e) {
@@ -142,6 +139,10 @@ public class ConversionHelper {
         });
 
         return Map.entry(convertedResourcePacks, failedResourcePacks);
+    }
+
+    private static @NotNull String getConfigFile(final @NotNull Path input) {
+        return input.getFileName() + ".yml";
     }
 
     private static @NotNull Map<Path, Long> getPackModificationTimes(final @NotNull Path inputPath) throws IOException {
