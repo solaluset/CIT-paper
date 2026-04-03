@@ -35,6 +35,8 @@ public class ConversionHelper {
                 Files.createDirectories(inputPath);
             }
 
+            Files.createDirectories(renamesPath);
+
             if (mainConfig.getMode() == Mode.ORAXEN) {
                 assert oraxenItemsPath != null;
                 Files.createDirectories(oraxenItemsPath);
@@ -90,6 +92,15 @@ public class ConversionHelper {
                     skip.add(path);
                 }
             });
+        } else {
+            try {
+                FileUtils.clearDirectory(renamesPath);
+                if (oraxenItemsPath != null) {
+                    FileUtils.clearDirectory(oraxenItemsPath);
+                }
+            } catch (IOException e) {
+                logger.severe("Unable to delete outdated YAMLs: " + e.getMessage());
+            }
         }
 
         actualTimes.keySet().stream().sorted().forEachOrdered(input -> {

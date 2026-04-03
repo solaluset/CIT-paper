@@ -32,7 +32,15 @@ public class FileUtils {
         }
     }
 
-    public static void removeDirectory(@NotNull Path directory) throws IOException {
+    public static void removeDirectory(final @NotNull Path directory) throws IOException {
+        removeDirectory(directory, true);
+    }
+
+    public static void clearDirectory(final @NotNull Path directory) throws IOException {
+        removeDirectory(directory, false);
+    }
+
+    public static void removeDirectory(final @NotNull Path directory, final boolean removeRoot) throws IOException {
         if (!directory.toFile().exists()) return;
         if (!directory.toFile().isDirectory()) {
             Files.delete(directory);
@@ -58,7 +66,9 @@ public class FileUtils {
             @Override
             public @NotNull FileVisitResult postVisitDirectory(@NotNull Path path, IOException e) throws IOException {
                 if (e == null) {
-                    Files.delete(path);
+                    if (!path.equals(directory) || removeRoot) {
+                        Files.delete(path);
+                    }
                     return FileVisitResult.CONTINUE;
                 } else {
                     throw e;
