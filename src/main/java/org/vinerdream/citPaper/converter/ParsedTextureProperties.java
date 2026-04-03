@@ -79,7 +79,8 @@ public class ParsedTextureProperties {
                 "-1",
                 "customModelData",
                 "nbt.CustomModelData",
-                "components.custom_model_data"
+                "components.custom_model_data",
+                "components.minecraft:custom_model_data"
         ));
         if (properties.containsKey("key")) {
             this.key = NamespacedKey.fromString(popValue(properties, null, "key"));
