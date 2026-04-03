@@ -762,11 +762,6 @@ public class ResourcePackConverter {
         return copyModel(inputDirectory, model, processTextures, textureName, outputDirectory, prefix, new ArrayList<>());
     }
 
-    /*
-        returns Entry<sourcePath, copiedPath>
-        if copiedPath is empty, sourcePath must be not empty; retrieve cache by sourcePath
-        if sourcePath is empty, do not record cache
-    */
     private @Nullable String copyModel(Path inputDirectory, String model, boolean processTextures, String textureName, Path outputDirectory, Path prefix, List<Path> seenParents) throws IOException {
         if (copiedModelKeys.contains(model)) {
             return model;
